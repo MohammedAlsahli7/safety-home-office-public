@@ -65,7 +65,7 @@ function start() {
     session,
     onMessage: m => {
       if (m && m.t === "stage" && typeof m.s === "string") chain = chain.then(() => acceptStage(m)).catch(() => {});
-      else if (m && m.t === "join" && typeof m.p === "string" && m.p !== state.pid && typeof m.n === "string") nameTaken(m.p, m.n);
+      else if (m && m.t === "join" && typeof m.p === "string" && typeof m.n === "string") seenJoin(m.p, m.n);
     }
   });
   relay.connect();
@@ -132,7 +132,7 @@ function start() {
     renderSheet();
   }
 
-  const topbar = right => `<div class="topbar">${mono("Home Office Check-up")}${right || `<span class="chip"><i></i>${esc(state.nick)}</span>`}</div>`;
+  const topbar = right => `<div class="topbar">${mono("Home Office Check-up")}${right || `<span class="chip"><i></i><span data-nick>${esc(state.nick)}</span></span>`}</div>`;
 
   /* ---------- Landing: pull the lamp cord, pick a nickname, join ---------- */
   function landing() {
@@ -198,11 +198,34 @@ function start() {
   /* ---------- Nicknames: skip the ones other phones in this session already use ---------- */
   const others = new Map();
   const takenNames = () => new Set(others.values());
+  /* A free name at random; once all 60 are taken, numbered ones: "Lag 2", "Ping 3", … */
   function freeName(not) {
     const taken = takenNames();
-    const free = NICKNAMES.filter(x => !taken.has(x) && x !== not);
-    const pool = free.length ? free : NICKNAMES.filter(x => x !== not);
-    return pool[Math.floor(Math.random() * pool.length)];
+    for (let k = 1; k < 100; k++) {
+      const pool = NICKNAMES.map(x => (k === 1 ? x : `${x} ${k}`)).filter(x => !taken.has(x) && x !== not);
+      if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+    }
+    return `${NICKNAMES[0]} ${Date.now() % 1000}`;
+  }
+  /* The same name with the next free number: "Lag" → "Lag 2" */
+  function numbered(nick) {
+    const taken = takenNames(), base = nick.replace(/ \d+$/, "");
+    for (let k = 2; k < 1000; k++) if (!taken.has(`${base} ${k}`)) return `${base} ${k}`;
+    return freeName(nick);
+  }
+  /* Joins arrive in the same order on every phone. If two phones joined with the same name, the one
+     that joined second takes a number and joins again under it, so every name on screen is unique. */
+  const joins = [];
+  function seenJoin(pid, nick) {
+    joins.push([pid, nick]);
+    if (pid !== state.pid) { nameTaken(pid, nick); return; }
+    if (nick !== state.nick) return;
+    const clash = joins.slice(0, -1).some(([p, n]) => p !== state.pid && n === nick && others.get(p) === nick);
+    if (!clash) return;
+    state.nick = numbered(nick);
+    save();
+    send({ t: "join", n: state.nick, L: Math.round(state.L) });
+    app.querySelectorAll("[data-nick]").forEach(x => { x.textContent = state.nick; });
   }
   function nameTaken(pid, nick) {
     others.set(pid, nick);
@@ -297,7 +320,7 @@ function start() {
       <div class="lobby">
         <div class="lobby-lamp">${lampSVG(state.L)}</div>
         <h1>You’re in</h1>
-        <p class="sub">Playing as <b>${esc(state.nick)}</b> · ${lightName(state.L)}</p>
+        <p class="sub">Playing as <b data-nick>${esc(state.nick)}</b> · ${lightName(state.L)}</p>
         <div class="waiting"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>${stage === null ? "Connecting…" : "Waiting for the presenter to start"}</div>
         <p class="fine">Keep this page open. Each card appears here when the presenter moves on.</p>
         <button type="button" class="link" data-a="edit">Change my name or light</button>

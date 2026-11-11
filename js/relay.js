@@ -4,7 +4,6 @@
    - Messages are de-duplicated by id, because EventSource reconnects replay the cache.
    - Failed publishes go to an outbox and are retried, so a flaky phone connection loses nothing. */
 import { config, topicFor } from "./config.js";
-import { randomCode } from "./store.js";
 
 class Relay {
   constructor({ session, onMessage, onStatus }) {
@@ -87,55 +86,5 @@ class Relay {
   }
 }
 
-/* Demo transport: same interface, no network. Pages on the same origin (presenter and
-   phone previews) share messages over BroadcastChannel; a newcomer asks peers to replay. */
-class DemoRelay {
-  constructor({ session, onMessage, onStatus }) {
-    this.onMessage = onMessage || (() => {});
-    this.onStatus = onStatus || (() => {});
-    this.seen = new Set();
-    this.log = [];
-    this.status = "idle";
-    try { this.ch = new BroadcastChannel("hoc-demo-" + session); } catch (_) { this.ch = null; }
-  }
-
-  connect() {
-    if (this.ch) {
-      this.ch.onmessage = e => {
-        const d = e.data || {};
-        if (d.msg) this._deliver(d.msg);
-        else if (d.sync) this.ch.postMessage({ replay: this.log });
-        else if (Array.isArray(d.replay)) d.replay.forEach(m => this._deliver(m));
-      };
-    }
-    setTimeout(() => {
-      this._setStatus("live");
-      if (this.ch) this.ch.postMessage({ sync: true });
-    }, 120);
-  }
-
-  send(payload) {
-    const msg = { id: randomCode(12), payload };
-    this._deliver(msg);
-    if (this.ch) this.ch.postMessage({ msg });
-  }
-
-  close() {
-    if (this.ch) { this.ch.onmessage = null; this.ch.close(); this.ch = null; }
-  }
-
-  _deliver(msg) {
-    if (!msg || !msg.id || this.seen.has(msg.id)) return;
-    this.seen.add(msg.id);
-    this.log.push(msg);
-    this.onMessage(msg.payload, { id: msg.id });
-  }
-
-  _setStatus(status) {
-    if (status === this.status) return;
-    this.status = status;
-    this.onStatus(status);
-  }
-}
-
-export const createRelay = opts => (config.demo ? new DemoRelay(opts) : new Relay(opts));
+/* Demo mode uses the real relay too, so real phones can join a demo; its simulated players stay local. */
+export const createRelay = opts => new Relay(opts);

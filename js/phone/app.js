@@ -20,7 +20,7 @@ const sheet = document.getElementById("sheet");
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const mono = (t, cls = "") => `<span class="mono-cap ${cls}">${t}</span>`;
 
-const session = config.demo ? (config.session || "demo") : config.session;
+const session = config.session;
 
 /* Which view a presenter stage asks for: "lobby", "q1".."q11", then anything else is after the game */
 const cardIndexOf = s => (typeof s === "string" && /^q([1-9]|1[01])$/.test(s) ? Number(s.slice(1)) - 1 : -1);
@@ -58,7 +58,7 @@ function start() {
   }
   async function acceptStage(m) {
     if (!Number.isFinite(m.at) || m.at <= lastAt) return;
-    if (!config.demo) {
+    {
       if (canSign()) {
         const v = await verifierFor(m.pk);
         if (!v || !(await v(stageText(session, m.s, m.at), m.sig))) return;

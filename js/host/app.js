@@ -7,7 +7,7 @@
    locked page, and phones ignore unsigned or replayed stages.
    Buttons on screen, or keys: → Space PageDown next · ← PageUp back · F full screen · P presenter tools */
 import { config, isSessionCode } from "../config.js";
-import { store, randomCode } from "../store.js";
+import { store } from "../store.js";
 import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
 import { CARDS, POSES, poseIndex, lightName } from "../content.js";
@@ -37,9 +37,10 @@ const FIRST_SLIDE = SCREENS.findIndex(s => s.slide);
 let session = null, hostKey = null, sign = null, verifyOwn = null;
 const keyFor = s => { const k = store.get("host.key." + s); return k && k.priv && k.pub ? k : null; };
 
-async function freshSession() {
+async function freshSession(keep = true) {
   hostKey = await newHostKey();
   session = await fingerprint(hostKey.pub);   /* the session code is the key's fingerprint */
+  if (!keep) return;                          /* a demo session lives only in this tab */
   store.set("host.key." + session, hostKey);
   store.set("host.session", session);
   store.set("host.screen." + session, 0);
@@ -57,18 +58,22 @@ function importKeyFromHash() {
 
 /* Returns true when this browser may present this session */
 async function claimSession() {
-  if (config.demo) { session = "demo" + randomCode(4); return true; }
   if (!canSign()) return false;
-  const matches = async s => { const k = keyFor(s); return k && (await fingerprint(k.pub)) === s ? k : null; };
-  if (isSessionCode(config.session)) {
-    session = config.session;
-    hostKey = await matches(session);
-    if (!hostKey) return false;
+  if (config.demo) {
+    /* Demo: a real, signed session (so real phones can join), kept apart from the meeting's session */
+    await freshSession(false);
   } else {
-    const saved = store.get("host.session");
-    const k = isSessionCode(saved) ? await matches(saved) : null;
-    if (k) { session = saved; hostKey = k; }
-    else await freshSession();   /* also replaces sessions from before the short links */
+    const matches = async s => { const k = keyFor(s); return k && (await fingerprint(k.pub)) === s ? k : null; };
+    if (isSessionCode(config.session)) {
+      session = config.session;
+      hostKey = await matches(session);
+      if (!hostKey) return false;
+    } else {
+      const saved = store.get("host.session");
+      const k = isSessionCode(saved) ? await matches(saved) : null;
+      if (k) { session = saved; hostKey = k; }
+      else await freshSession();   /* also replaces sessions from before the short links */
+    }
   }
   sign = await signer(hostKey.priv);
   verifyOwn = await verifier(hostKey.pub);
@@ -82,8 +87,7 @@ function joinUrl() {
   u.hash = "";
   u.searchParams.set("s", session);
   if (config.customRelay) u.searchParams.set("relay", config.customRelay);
-  if (config.demo) u.searchParams.set("demo", "");
-  return u.toString().replace("demo=", "demo");
+  return u.toString();
 }
 
 /* ---------- State ---------- */
@@ -142,7 +146,8 @@ function boot() {
     onStatus: s => { status = s; scheduleRender(); renderTools(); }
   });
   relay.connect();
-  if (config.demo) demo = startDemo(m => relay.send(m));
+  /* Simulated players play on this laptop only. Their joins also go out, so real phones skip their names. */
+  if (config.demo) demo = startDemo(m => { onMessage(m); if (m.t === "join") relay.send(m); });
   show();
 }
 
@@ -344,7 +349,7 @@ function renderTools() {
     <button type="button" data-a="notes">Open speaker notes (N): a separate window only you see</button>
     <button type="button" data-a="talk">Skip to the talk (KPI slides)</button>
     ${config.demo ? "" : `<button type="button" data-a="new">Start a new session (clears rehearsal answers)</button>`}
-    <button type="button" data-a="demo">${config.demo ? "Leave demo mode" : "Rehearse with 14 simulated players"}</button>
+    <button type="button" data-a="demo">${config.demo ? "Leave demo mode" : "Demo: add 14 simulated players (real phones can join too)"}</button>
     <form id="kpiform" style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #DDD3C2">
       <b>KPI slide figures</b>
       <span style="color: #5F6A6B; font-size: 12px">Paste the KPI JSON. It stays in this browser only and is never published.</span>

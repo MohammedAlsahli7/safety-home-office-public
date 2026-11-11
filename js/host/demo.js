@@ -1,6 +1,7 @@
 /* Demo mode (host.html?demo): 14 simulated players with the sample answers used in the
    proposal PDF. They follow the presenter like real phones: join in the lobby, answer the card
-   on screen a few seconds after it appears, tap the confessions and vote during the talk. */
+   on screen a few seconds after it appears, tap the confessions and vote during the talk.
+   They run on the presenter's laptop only, alongside any real phones that scan the QR code. */
 import { NICKNAMES, CARDS } from "../content.js";
 
 const SAMPLE = {

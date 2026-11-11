@@ -140,7 +140,7 @@ export function questionScreen({ index, stats, players, feed, status, shown }) {
       <div class="q-main">
         <h2 class="h" style="font-size: ${card.title.length > 26 ? 64 : 76}px">${esc(card.title)}</h2>
         <p class="q-sub">${esc(card.sub)}</p>
-        <div class="q-visual">${r && r.wait ? `<span class="wait">Answers show at ${config.minGroup}. ${r.n} so far.</span>` : ""}${cardVisual(card, r && !r.wait ? r : null)}</div>
+        <div class="q-visual">${r && r.wait ? `<span class="q-wait">Counts appear once ${config.minGroup} people have answered, to keep answers anonymous. ${r.n} so far.</span>` : ""}${cardVisual(card, r && !r.wait ? r : null)}</div>
       </div>
       <div class="q-side">
         <div class="q-count${all ? " all" : ""}">

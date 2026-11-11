@@ -90,6 +90,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .rooms { display: grid; grid-template-columns: repeat(7, 24px); gap: 7px; justify-content: center; padding-top: 6px; }
 .room { display: block; width: 24px; height: 20px; border-radius: 3px; border: 2px solid #B9AE9C; opacity: 0.45; transition: opacity 0.3s, border-color 0.3s; }
 .room.in { opacity: 1; border-color: var(--accent); }
+.q-wait { align-self: flex-start; margin-bottom: 14px; padding: 10px 16px; border-radius: 12px; background: var(--tint); border: 1.5px solid var(--accent); color: var(--tint-ink); font-size: 19px; font-weight: 600; }
 .q-moment { display: flex; align-items: baseline; gap: 14px; min-height: 28px; font-size: 19px; }
 .q-moment > span:last-child { animation: fadein 0.5s ease-out; }
 @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }

@@ -214,10 +214,11 @@ function fit() {
 }
 
 /* ---------- Navigation and phone stages ---------- */
+/* Every card gets a "Show answers" step. Below the minimum group the screen says how many more are
+   needed, and the counts fill in by themselves when the 5th answer arrives. */
 function canReveal() {
   const sc = SCREENS[screen];
-  if (sc.card === undefined || revealed.has(sc.card) || !lastStats) return false;
-  return (lastStats.answered[CARDS[sc.card].key] || 0) >= config.minGroup;
+  return sc.card !== undefined && !revealed.has(sc.card);
 }
 
 /* Next: on a card, show its answers first (like Kahoot's results), then move on */

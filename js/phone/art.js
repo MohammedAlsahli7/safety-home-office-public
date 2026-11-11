@@ -74,7 +74,7 @@ export function newsPhone(opt) {
       <span class="notch"></span>
       <div class="feed">
         ${refresh ? `<span class="spin-wrap"><svg class="spin" width="22" height="22" viewBox="0 0 24 24" fill="none" style="stroke: var(--accent)" stroke-width="2.2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M20 4v5h-5"/></svg></span>` : ""}
-        ${quiet ? `<span class="quiet"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" style="stroke: var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span>Quiet until 4:00</span></span>` : alerts}
+        ${quiet ? `<span class="quiet"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" style="stroke: var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span>Muted · news later</span></span>` : alerts}
       </div>
     </div>`;
 }

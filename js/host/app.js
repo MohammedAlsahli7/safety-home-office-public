@@ -2,6 +2,9 @@
    The presenter drives the pace: every screen change is published as a `stage`, and phones
    show exactly that card (or the lobby, the report, a confession, the vote). Phones never move on
    by themselves. Share this tab in Teams.
+   Only the browser that started the session can move the phones: every stage is signed with a key
+   that never leaves it (see ../sign.js). Anyone else who opens host.html with the session code gets a
+   locked page, and phones ignore unsigned or replayed stages.
    Buttons on screen, or keys: → Space PageDown next · ← PageUp back · F full screen · P presenter tools */
 import { config, isSessionCode } from "../config.js";
 import { store, randomCode } from "../store.js";
@@ -13,6 +16,7 @@ import { joinScreen, questionScreen, wrapScreen } from "./screens.js";
 import { startDemo } from "./demo.js";
 import { esc } from "./parts.js";
 import { rawKpis, saveKpis, encodeKpis, importKpisFromHash } from "../kpis.js";
+import { canSign, newHostKey, signer, verifier, stageText, b64url, fromB64url } from "../sign.js";
 
 const stageEl = document.getElementById("stage");
 const toolsEl = document.getElementById("tools");
@@ -29,22 +33,51 @@ const SCREENS = [
 ];
 const FIRST_SLIDE = SCREENS.findIndex(s => s.slide);
 
-/* ---------- Session ---------- */
-function pickSession() {
-  if (config.demo) return "demo" + randomCode(4);
-  if (isSessionCode(config.session)) return config.session;
-  const saved = store.get("host.session");
-  if (isSessionCode(saved)) return saved;
-  const fresh = randomCode(10);
-  store.set("host.session", fresh);
-  return fresh;
+/* ---------- Session and presenter key ---------- */
+let session = null, hostKey = null, sign = null, verifyOwn = null;
+const keyFor = s => { const k = store.get("host.key." + s); return k && k.priv && k.pub ? k : null; };
+
+async function freshSession() {
+  session = randomCode(10);
+  hostKey = await newHostKey();
+  store.set("host.key." + session, hostKey);
+  store.set("host.session", session);
+  store.set("host.screen." + session, 0);
 }
-let session = pickSession();
+
+/* The private presenter link carries the key in its #hash: host.html?s=…#key=… */
+function importKeyFromHash() {
+  const m = location.hash.match(/(?:^#|&)key=([A-Za-z0-9_-]+)/);
+  if (!m || !isSessionCode(config.session)) return;
+  try {
+    const k = JSON.parse(new TextDecoder().decode(fromB64url(m[1])));
+    if (k && k.priv && k.pub) { store.set("host.key." + config.session, k); store.set("host.session", config.session); }
+  } catch (_) { /* a damaged link: ignore it */ }
+}
+
+/* Returns true when this browser may present this session */
+async function claimSession() {
+  if (config.demo) { session = "demo" + randomCode(4); return true; }
+  if (!canSign()) return false;
+  if (isSessionCode(config.session)) {
+    session = config.session;
+    hostKey = keyFor(session);
+    if (!hostKey) return false;
+  } else {
+    const saved = store.get("host.session");
+    if (isSessionCode(saved) && keyFor(saved)) { session = saved; hostKey = keyFor(saved); }
+    else await freshSession();
+  }
+  sign = await signer(hostKey.priv);
+  verifyOwn = await verifier(hostKey.pub);
+  return true;
+}
 
 function joinUrl() {
   const u = new URL("index.html", location.href);
   u.search = "";
   u.searchParams.set("s", session);
+  if (hostKey) u.searchParams.set("k", hostKey.pub);
   if (config.customRelay) u.searchParams.set("relay", config.customRelay);
   if (config.demo) u.searchParams.set("demo", "");
   return u.toString().replace("demo=", "demo");
@@ -52,12 +85,15 @@ function joinUrl() {
 
 /* ---------- State ---------- */
 let state, feed, newest, screen, relay, demo, lastStage, status = "idle", renderTimer = null, clockTimer = null, cardStarted = 0;
+let lastAt = 0, sendChain = Promise.resolve(), revealed = new Set(), lastStats = null;
 
 function boot() {
   state = { players: {}, taps: {}, votes: {} };
   feed = [];
   newest = null;
   lastStage = null;
+  lastAt = 0;
+  revealed = new Set();
   screen = config.demo ? 0 : Math.min(store.get("host.screen." + session, 0), SCREENS.length - 1);
   if (relay) relay.close();
   if (demo) demo.stop();
@@ -72,7 +108,11 @@ function boot() {
 }
 
 function onMessage(m) {
-  if (m && m.t === "stage") { lastStage = m.s; return; }
+  if (m && m.t === "stage") {
+    /* Our own earlier stages (after a reload or on a second device) keep the clock moving forward */
+    if (verifyOwn && Number.isFinite(m.at) && m.at > lastAt) verifyOwn(stageText(session, m.s, m.at), m.sig).then(ok => { if (ok) lastAt = Math.max(lastAt, m.at); });
+    return;
+  }
   const known = m && typeof m.p === "string" ? state.players[m.p] : null;
   const first = m && ((m.t === "ans" && known?.answers?.[m.k] === undefined) || (m.t === "join" && !known));
   if (!applyMessage(state, m)) return;
@@ -103,7 +143,7 @@ function moment(t, k, p) {
     case "laptop": return v === "bed" ? "Someone’s laptop lives in bed with them." : v === "lap" ? "Someone works from the sofa office." : null;
     case "lunch": return v === "none" ? "Someone skipped lunch yesterday." : null;
     case "news": return v === "refresh" ? "Someone refreshes the news before the alerts arrive." : null;
-    case "logoff": return v === "open" || v === "meeting" ? "Someone’s laptop is still open at 4:30." : null;
+    case "logoff": return v === "open" || v === "meeting" ? "Someone’s laptop is still open at 5:00." : null;
     case "verdict": return v === 10 ? "Someone is never going back to the office." : v === 0 ? "Someone wants the office back." : null;
     default: return null;
   }
@@ -117,14 +157,23 @@ function scheduleRender() {
 
 function render() {
   const sc = SCREENS[screen];
-  const stats = teamStats(state);
+  const stats = lastStats = teamStats(state);
+  const card = sc.card !== undefined ? CARDS[sc.card] : null;
+  const answered = card ? stats.answered[card.key] || 0 : 0;
+  const everyone = stats.joined > 0 && answered >= stats.joined;
+  /* Results appear by themselves once everyone has answered, or when the presenter asks */
+  if (card && everyone && answered >= config.minGroup) revealed.add(sc.card);
   if (sc.id === "join") screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest });
-  else if (sc.card !== undefined) screenEl.innerHTML = questionScreen({ index: sc.card, stats, players: state.players, feed, status });
+  else if (sc.card !== undefined) screenEl.innerHTML = questionScreen({ index: sc.card, stats, players: state.players, feed, status, shown: revealed.has(sc.card) });
   else if (sc.id === "wrap") screenEl.innerHTML = wrapScreen({ stats, feed, status });
   else screenEl.innerHTML = sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats);
-  /* Highlight Next once everyone has answered (the button itself is never re-created here) */
+  /* The main button: "Show answers" first, then "Next card". Only its text changes here, never the element */
   const next = controlsEl.querySelector('[data-go="next"]');
-  if (next && sc.card !== undefined) next.classList.toggle("ready", stats.joined > 0 && stats.answered[CARDS[sc.card].key] >= stats.joined);
+  if (next && card) {
+    const label = canReveal() ? "Show answers" : sc.card === CARDS.length - 1 ? "Finish and send reports →" : "Next card →";
+    if (next.textContent !== label) next.textContent = label;
+    next.classList.toggle("ready", everyone);
+  }
 }
 
 /* The control bar is rebuilt only when the screen changes, so a click is never lost to a live update */
@@ -165,6 +214,18 @@ function fit() {
 }
 
 /* ---------- Navigation and phone stages ---------- */
+function canReveal() {
+  const sc = SCREENS[screen];
+  if (sc.card === undefined || revealed.has(sc.card) || !lastStats) return false;
+  return (lastStats.answered[CARDS[sc.card].key] || 0) >= config.minGroup;
+}
+
+/* Next: on a card, show its answers first (like Kahoot's results), then move on */
+function advance() {
+  if (canReveal()) { revealed.add(SCREENS[screen].card); render(); return; }
+  go(screen + 1);
+}
+
 function go(i) {
   const to = Math.max(0, Math.min(SCREENS.length - 1, i));
   if (to === screen) return;
@@ -177,24 +238,30 @@ function publishStage() {
   const s = SCREENS[screen].stage;
   if (s === lastStage) return;
   lastStage = s;
-  relay.send({ t: "stage", p: "host", s, at: Date.now() });
   if (demo) demo.onStage(s);
+  /* Signed and sent in order; `at` only ever grows, so phones can drop replays */
+  sendChain = sendChain.then(async () => {
+    const at = lastAt = Math.max(Date.now(), lastAt + 1);
+    const msg = { t: "stage", p: "host", s, at };
+    if (sign) msg.sig = await sign(stageText(session, s, at));
+    relay.send(msg);
+  }).catch(() => { /* never block later stages */ });
 }
 
 controlsEl.addEventListener("click", e => {
   const b = e.target.closest("[data-go]");
   if (!b) return;
-  go(screen + (b.dataset.go === "next" ? 1 : -1));
+  if (b.dataset.go === "next") advance(); else go(screen - 1);
   b.blur();
 });
 
 document.addEventListener("keydown", e => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!relay || e.metaKey || e.ctrlKey || e.altKey) return;
   const t = e.target.closest ? e.target : null;
   if (t && t.closest("input, textarea") && e.key !== "Escape") return;
   if (t && t.closest("button") && (e.key === " " || e.key === "Enter")) return;   /* the button handles it */
   const k = e.key;
-  if (k === "ArrowRight" || k === " " || k === "PageDown" || k === "Enter") { e.preventDefault(); go(screen + 1); }
+  if (k === "ArrowRight" || k === " " || k === "PageDown" || k === "Enter") { e.preventDefault(); advance(); }
   else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(screen - 1); }
   else if (k === "Home") go(0);
   else if (k === "f" || k === "F") toggleFullscreen();
@@ -226,7 +293,7 @@ function renderTools() {
       <span style="color: #5F6A6B; font-size: 12px">Paste the KPI JSON. It stays in this browser only and is never published.</span>
       <textarea name="kpi" rows="9" spellcheck="false">${esc(JSON.stringify(rawKpis(), null, 2))}</textarea>
       <button type="submit">Save KPIs</button>
-      <button type="button" data-a="kpilink">Copy a private presenter link with these KPIs</button>
+      <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
     </form>
     <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>F: full screen</li><li>P or Esc: close this panel</li></ul>`;
 }
@@ -247,7 +314,10 @@ toolsEl.addEventListener("click", async e => {
   const a = e.target.closest("[data-a]")?.dataset.a;
   if (a === "kpilink") {
     const u = new URL("host.html", location.href);
-    u.hash = "kpi=" + encodeKpis(rawKpis());
+    u.search = "";
+    if (!config.demo) u.searchParams.set("s", session);
+    if (config.customRelay) u.searchParams.set("relay", config.customRelay);
+    u.hash = "kpi=" + encodeKpis(rawKpis()) + (hostKey ? "&key=" + b64url(new TextEncoder().encode(JSON.stringify(hostKey))) : "");
     try { await navigator.clipboard.writeText(u.toString()); e.target.textContent = "Copied. Share it privately only."; } catch (_) { e.target.textContent = "Copy failed"; }
     return;
   }
@@ -257,9 +327,9 @@ toolsEl.addEventListener("click", async e => {
     toolsEl.hidden = true;
     go(FIRST_SLIDE);
   } else if (a === "new" && confirm("Start a new session? Phones on the old QR code won't count.")) {
-    session = randomCode(10);
-    store.set("host.session", session);
-    store.set("host.screen." + session, 0);
+    await freshSession();
+    sign = await signer(hostKey.priv);
+    verifyOwn = await verifier(hostKey.pub);
     const u = new URL(location.href); u.searchParams.delete("s"); history.replaceState(null, "", u);
     boot();
     renderTools();
@@ -270,9 +340,28 @@ toolsEl.addEventListener("click", async e => {
   }
 });
 
+/* Someone else's session: a locked page that sends nothing */
+function locked() {
+  screenEl.innerHTML = `
+  <div class="slide">
+    <div class="s-body" style="justify-content: center; max-width: 900px; gap: 24px">
+      <h1 class="h" style="font-size: 96px">This presenter view is locked</h1>
+      <p style="margin: 0; font-size: 26px; line-height: 1.4; color: var(--sub)">${canSign()
+        ? "The game is run from the presenter’s own browser, and phones only follow that one. Opening this page changes nothing for anyone."
+        : "This browser can’t sign the presenter’s moves here. Open the presenter page over https (GitHub Pages) or on localhost."}</p>
+      <p style="margin: 0; font-size: 19px; line-height: 1.5; color: var(--muted)">Presenting? Open host.html without a session code to start your own session, or use your private presenter link.</p>
+    </div>
+  </div>`;
+}
+
 addEventListener("resize", fit);
+importKeyFromHash();
 importKpisFromHash();
+if (location.hash) history.replaceState(null, "", location.pathname + location.search);
 fit();
-boot();
-hintEl.classList.add("show");
-setTimeout(() => hintEl.classList.remove("show"), 5000);
+claimSession().then(ok => {
+  if (!ok) { locked(); return; }
+  boot();
+  hintEl.classList.add("show");
+  setTimeout(() => hintEl.classList.remove("show"), 5000);
+});

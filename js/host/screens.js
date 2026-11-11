@@ -1,7 +1,9 @@
-/* Presenter screens for the game: join (QR), one screen per card while phones answer it,
-   and the wrap-up when reports land on the phones. The buttons live in a separate control
+/* Presenter screens for the game: join (QR), one screen per card while phones answer it (then,
+   on the presenter's click, how many picked each answer, or the team average), and the wrap-up
+   when reports land on the phones. The buttons live in a separate control
    bar (app.js), so live updates here never swallow a click. */
-import { CARDS, POSES, VERDICT_NOTES } from "../content.js";
+import { CARDS, POSES, VERDICT_NOTES, poseIndex } from "../content.js";
+import { config } from "../config.js";
 import { skeletonSVG } from "../skeleton.js";
 import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass } from "../phone/art.js";
 import { C, esc, lamp, qrSVG, roomColours } from "./parts.js";
@@ -27,7 +29,7 @@ export function joinScreen({ url, players, status, newest }) {
         <div class="names-row" style="max-height: 92px; overflow: hidden">${names}</div>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: center">
-        <div class="qr-card">
+        <div class="qr-card" data-join="${esc(url)}">
           ${qrSVG(url, 290)}
           <span style="font-size: 28px; font-weight: 800; font-stretch: 80%">Scan to play</span>
           <span style="font-family: var(--mono); font-size: 12px; color: ${C.muted}; text-align: center; word-break: break-all">${esc(url.replace(/^https?:\/\//, ""))}</span>
@@ -37,27 +39,53 @@ export function joinScreen({ url, players, status, newest }) {
   </div>`;
 }
 
-/* ---------- One card while phones answer it ---------- */
-const pick = (o, cls = "") => `<div class="m-pick ${cls}"><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span></div>`;
+/* ---------- One card while phones answer it, then its results ---------- */
+const pick = (o, extra = "", cls = "") => `<div class="m-pick ${cls}"><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span>${extra}</div>`;
+const pct = (c, n) => (n ? Math.round(c / n * 100) : 0);
+const resBar = (c, n, lead) => `<span class="m-res${lead ? " lead" : ""}"><span class="m-bar"><i style="width: ${pct(c, n)}%"></i></span><b>${c}</b></span>`;
+const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
 
-function cardVisual(card) {
+/* The numbers behind a card, once the presenter shows them (never below the minimum group) */
+function results(card, stats) {
+  const n = stats.answered[card.key] || 0;
+  if (n < config.minGroup) return { n, wait: true };
+  if (card.kind === "options") {
+    const counts = stats[card.key].counts;
+    return { n, count: v => counts[v] || 0, max: Math.max(...Object.values(counts)) };
+  }
+  if (card.kind === "dial") return { n, counts: stats.posture.counts, max: Math.max(...stats.posture.counts), avg: stats.posture.avg };
+  if (card.kind === "fuel") return { n, coffee: stats.fuel.coffee / stats.fuel.n, water: stats.fuel.water / stats.fuel.n };
+  if (card.kind === "stare") return { n, avg: stats.stare.avg };
+  if (card.kind === "verdict") return { n, hist: stats.verdict.hist, max: Math.max(...stats.verdict.hist), avg: stats.verdict.avg };
+  return { n };
+}
+
+function cardVisual(card, r) {
   const kind = card.kind === "options" ? card.layout : card.kind;
+  const lead = o => r && r.count && r.count(o.v) === r.max && r.max > 0;
+  const bar = o => (r && r.count ? resBar(r.count(o.v), r.n, lead(o)) : "");
   switch (kind) {
     case "tiles":
-      return `<div class="m-tiles">${card.options.map(o => `<div class="m-tile"><span class="pic">${TILE_ART[card.key][o.v]}</span><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span></div>`).join("")}</div>`;
+      return `<div class="m-tiles${r ? " shown" : ""}">${card.options.map(o => `<div class="m-tile${lead(o) ? " lead" : ""}"><span class="pic">${TILE_ART[card.key][o.v]}</span><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span>${bar(o)}</div>`).join("")}</div>`;
     case "routes":
-      return `<div class="m-routes">${card.options.map(o => `<div class="m-route"><span class="txt"><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span></span><span class="icons">${ROUTES[o.v]}</span></div>`).join("")}</div>`;
+      return `<div class="m-routes">${card.options.map(o => `<div class="m-route${lead(o) ? " lead" : ""}"><span class="txt"><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span></span>${r ? bar(o) : `<span class="icons">${ROUTES[o.v]}</span>`}</div>`).join("")}</div>`;
     case "stand":
-      return `<div class="m-split"><div class="m-ring">${standRing(0.5, 210)}</div><div class="m-grid2">${card.options.map(o => pick(o)).join("")}</div></div>`;
+      return `<div class="m-split"><div class="m-ring">${standRing(0.5, 210)}</div><div class="m-grid2">${card.options.map(o => pick(o, bar(o), lead(o) ? "lead" : "")).join("")}</div></div>`;
     case "news":
-      return `<div class="m-split"><div class="m-news">${newsPhone(card.options[2])}</div><div class="m-grid2">${card.options.map(o => pick(o)).join("")}</div></div>`;
-    case "dial":
-      return `<div class="m-poses">${POSES.map((name, i) => `<div class="m-pose"><span class="xray">${skeletonSVG(i / 3, { w: 132, h: 165, ink: C.bone, sub: C.boneSub })}</span><span class="t">${name}</span></div>`).join("")}</div>`;
+      return `<div class="m-split"><div class="m-news">${newsPhone(card.options[2])}</div><div class="m-grid2">${card.options.map(o => pick(o, bar(o), lead(o) ? "lead" : "")).join("")}</div></div>`;
+    case "dial": {
+      const poses = POSES.map((name, i) => {
+        const top = r && r.counts[i] === r.max && r.max > 0;
+        return `<div class="m-pose${top ? " lead" : ""}"><span class="xray">${skeletonSVG(i / 3, { w: 132, h: 165, ink: C.bone, sub: C.boneSub })}</span><span class="t">${name}</span>${r ? resBar(r.counts[i], r.n, top) : ""}</div>`;
+      }).join("");
+      const avg = r ? `<div class="m-pose avg"><span class="xray">${skeletonSVG(r.avg, { w: 132, h: 165, ink: "#FFE2B3", sub: "#C9A46A" })}</span><span class="t">Team average</span><span class="n">closest to ${POSES[poseIndex(r.avg)]}</span></div>` : "";
+      return `<div class="m-poses${r ? " shown" : ""}">${poses}${avg}</div>`;
+    }
     case "fuel":
       return `<div class="m-fuel">
-        <div class="m-fuel-col"><div class="fuel-scene coffee"><div class="tower">${cupTower(4)}</div></div><span class="t">Coffee, qahwa, karak</span></div>
-        <div class="m-fuel-col"><div class="fuel-scene water">${waterGlass(2, "hostGlass")}</div><span class="t">Water</span></div>
-        <p class="m-note">Count yesterday’s cups and glasses with the + and − buttons.</p>
+        <div class="m-fuel-col"><div class="fuel-scene coffee"><div class="tower">${cupTower(r ? Math.round(r.coffee) : 4)}</div></div>${r ? `<span class="m-avg-n"><b>${f1(r.coffee)}</b> cups on average</span>` : `<span class="t">Coffee, qahwa, karak</span>`}</div>
+        <div class="m-fuel-col"><div class="fuel-scene water">${waterGlass(r ? r.water : 2, "hostGlass")}</div>${r ? `<span class="m-avg-n"><b>${f1(r.water)}</b> glasses on average</span>` : `<span class="t">Water</span>`}</div>
+        <p class="m-note">${r ? `Team average for yesterday, from ${r.n} answers.` : "Count yesterday’s cups and glasses with the + and − buttons."}</p>
       </div>`;
     case "stare":
       return `<div class="m-stare">
@@ -70,9 +98,17 @@ function cardVisual(card) {
           <circle class="pulse-host" cx="150" cy="150" r="12" style="fill: var(--accent)"/>
           <circle cx="150" cy="150" r="10" style="fill: var(--accent)"/>
         </svg>
-        <ol class="m-steps"><li>Stare at the dot on your phone.</li><li>Tap the moment you blink.</li><li>Then look at something 6 m away for 20 seconds.</li></ol>
+        ${r ? `<div class="m-big-avg"><b>${f1(r.avg)} s</b><span>team average before the first blink</span><span class="n">from ${r.n} answers</span></div>`
+          : `<ol class="m-steps"><li>Stare at the dot on your phone.</li><li>Tap the moment you blink.</li><li>Then look at something 6 m away for 20 seconds.</li></ol>`}
       </div>`;
     case "verdict":
+      if (r) {
+        return `<div class="m-verdict">
+          <div class="m-avg-line"><b>${f1(r.avg)}</b><small>/ 10 · team average</small></div>
+          <div class="m-hist">${r.hist.map((c, i) => `<div class="col${c === r.max && c > 0 ? " lead" : ""}"><small>${c || ""}</small><i style="height: ${r.max ? Math.round(c / r.max * 92) : 0}px"></i><span class="m-num">${i}</span></div>`).join("")}</div>
+          <div class="m-scale-ends"><span>${esc(VERDICT_NOTES[0])}</span><span>${esc(VERDICT_NOTES[10])}</span></div>
+        </div>`;
+      }
       return `<div class="m-scale">${VERDICT_NOTES.map((_, i) => `<span class="m-num">${i}</span>`).join("")}</div>
         <div class="m-scale-ends"><span>${esc(VERDICT_NOTES[0])}</span><span>${esc(VERDICT_NOTES[10])}</span></div>`;
     default:
@@ -80,8 +116,9 @@ function cardVisual(card) {
   }
 }
 
-export function questionScreen({ index, stats, players, feed, status }) {
+export function questionScreen({ index, stats, players, feed, status, shown }) {
   const card = CARDS[index];
+  const r = shown ? results(card, stats) : null;
   const total = CARDS.length;
   const joined = stats.joined;
   const n = stats.answered[card.key] || 0;
@@ -103,7 +140,7 @@ export function questionScreen({ index, stats, players, feed, status }) {
       <div class="q-main">
         <h2 class="h" style="font-size: ${card.title.length > 26 ? 64 : 76}px">${esc(card.title)}</h2>
         <p class="q-sub">${esc(card.sub)}</p>
-        <div class="q-visual">${cardVisual(card)}</div>
+        <div class="q-visual">${r && r.wait ? `<span class="wait">Answers show at ${config.minGroup}. ${r.n} so far.</span>` : ""}${cardVisual(card, r && !r.wait ? r : null)}</div>
       </div>
       <div class="q-side">
         <div class="q-count${all ? " all" : ""}">
@@ -113,7 +150,7 @@ export function questionScreen({ index, stats, players, feed, status }) {
           </svg>
           <span class="q-num"><b>${n}</b><small>of ${joined}</small></span>
         </div>
-        <span class="q-label">${all ? "Everyone has answered" : "answered on their phones"}</span>
+        <span class="q-label">${all ? "Everyone has answered" : "answered on their phones"}${shown ? "<br>Only totals are shown" : ""}</span>
         ${rooms ? `<div class="rooms">${rooms}</div>` : ""}
       </div>
     </div>

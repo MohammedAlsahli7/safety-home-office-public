@@ -105,10 +105,10 @@ export const CARDS = [
   },
   {
     key: "news", kind: "options", layout: "news",
-    title: "News alerts during work hours",
+    title: "News alerts, these days",
     sub: "These days, how does your phone handle them?",
     options: [
-      { v: "off", label: "Off during work", note: "the quiet phone", alerts: 0, pts: {} },
+      { v: "off", label: "Muted. I check when I choose", note: "the quiet phone", alerts: 0, pts: {} },
       { v: "few", label: "Just a few", note: "the important ones", alerts: 2, pts: { mind: 1 } },
       { v: "all", label: "All of them", note: "every single one", alerts: 5, pts: { mind: 3 } },
       { v: "refresh", label: "I refresh before they arrive", note: "faster than the news", alerts: 4, pts: { mind: 3, eyes: 1 } }
@@ -116,7 +116,7 @@ export const CARDS = [
   },
   {
     key: "logoff", kind: "options", layout: "tiles",
-    title: "4:30 pm. Your laptop is…",
+    title: "5:00 pm. Your laptop is…",
     sub: "On a typical day this month.",
     options: [
       { v: "packed", label: "Packed away", note: "out of sight", pts: {} },
@@ -149,7 +149,7 @@ export const PRESCRIPTIONS = {
   eyesDark: "Turn on a lamp so the screen isn’t the brightest thing in the room.",
   eyes: "20-20-20: every 20 minutes, look about 6 m away for 20 seconds.",
   balance: "Close the laptop at 4 and put it somewhere you can’t see it.",
-  mind: "Alerts off from 7 to 4. Check the news at set times."
+  mind: "Mute news alerts. Check the news at a few times you choose."
 };
 
 /* During the talk: one tap each, anonymous */
@@ -158,7 +158,7 @@ export const CONFESSIONS = {
   c2: "My laptop has slept in my bed.",
   c3: "I’ve worked a whole day from bed, in pyjamas."
 };
-export const HABITS = ["Raise your screen to eye level", "Alerts off from 7 to 4", "Stand up when a call ends"];
+export const HABITS = ["Raise your screen to eye level", "Mute the news alerts", "Stand up when a call ends"];
 
 /* Report wording: one word per area for each strain level (1 low … 5 high) */
 export const AREA_WORDS = {

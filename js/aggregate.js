@@ -58,7 +58,7 @@ export function teamStats({ players = {}, taps = {}, votes = {} }) {
     answered: Object.fromEntries(CARDS.map(c => [c.key, count(answers, a => a[c.key] !== undefined && a[c.key] !== null)])),
     progress: all.map(p => ({ nick: p.nick, light: p.answers?.light, card: p.card || 0, done: !!p.done })),
     light: { n: light.length, dark: count(light, a => a.light < 34), levels: [17, 34, 50, 67, 84, 101].map((max, i, arr) => count(light, a => a.light < max && a.light >= (i ? arr[i - 1] : 0))) },
-    posture: { n: posture.length, counts: poseCounts, top: topPose, topCount: poseCounts[topPose] },
+    posture: { n: posture.length, counts: poseCounts, top: topPose, topCount: poseCounts[topPose], avg: posture.length ? posture.reduce((s, a) => s + a.posture, 0) / posture.length : null },
     laptop: tally("laptop"),
     morning: tally("morning"),
     stand: tally("stand"),

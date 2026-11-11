@@ -26,7 +26,7 @@ function pickGroup(el, selector, card, value, onPick) {
 }
 const pressed = (o, value) => `aria-pressed="${o.v === value}"`;
 
-/* ---------- Picture tiles, 2 × 2 (laptop, coworker, lunch, 4:30 pm) ---------- */
+/* ---------- Picture tiles, 2 × 2 (laptop, coworker, lunch, 5:00 pm) ---------- */
 function tiles(el, card, value, set) {
   el.innerHTML = `
     <div class="grid2" role="group" aria-label="${esc(card.title)}">

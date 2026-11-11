@@ -1,5 +1,6 @@
 /* Runtime settings. URL overrides:
-   ?s=<session code>   ?relay=<ntfy base URL, e.g. a self-hosted ntfy>   ?demo (simulated players, no network) */
+   ?s=<session code>   ?k=<presenter public key, in the QR link>   ?relay=<ntfy base URL, e.g. a self-hosted ntfy>
+   ?demo (simulated players, no network) */
 const params = new URLSearchParams(location.search);
 const customRelay = (params.get("relay") || "").trim().replace(/\/+$/, "");
 
@@ -8,6 +9,8 @@ export const config = Object.freeze({
   relay: customRelay || "https://ntfy.sh",
   customRelay,
   session: (params.get("s") || "").trim().toLowerCase(),
+  /* The presenter's public key (phones only follow stages signed by the matching private key) */
+  hostKey: (params.get("k") || "").trim(),
   topicPrefix: "hoc-",
   /* A chart or number stays hidden until at least this many people have answered it. */
   minGroup: 5,

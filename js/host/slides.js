@@ -223,7 +223,7 @@ function attention(n, total, s) {
   <div class="slide">
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 48px">
       <div style="display: flex; flex-direction: column; gap: 24px; min-width: 0">
-        <h2 class="h">Every alert pulls you out of your work</h2>
+        <h2 class="h">Every alert puts you back on edge</h2>
         <div class="panel" style="display: flex; flex-direction: column; gap: 14px; margin-top: auto">
           <span class="chart-label">Stress, out of 10</span>
           <div style="display: grid; grid-template-columns: 250px minmax(0, 1fr) 46px; gap: 14px; align-items: center">
@@ -239,10 +239,10 @@ function attention(n, total, s) {
       </div>
       <div style="display: flex; flex-direction: column; gap: 18px; justify-content: space-between; min-width: 0">
         ${confess(CONFESSIONS.c1, s.confess.c1)}
-        ${share(s.news.always, s.news.n, "get every news alert during work")}
+        ${share(s.news.always, s.news.n, "get every news alert")}
       </div>
     </div>
-    <div class="fix">Alerts off from 7 to 4. News at set times.</div>
+    <div class="fix">Mute the alerts. Check the news when you choose.</div>
     ${num(n, total)}
   </div>`;
 }
@@ -278,7 +278,7 @@ function hours(n, total, s) {
       </svg>
       <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
         ${share(s.morning.counts.pillow, s.morning.n, "check email from the pillow", "big-c")}
-        ${share(s.logoff.open, s.logoff.n, "laptops still open at 4:30", "big-c")}
+        ${share(s.logoff.open, s.logoff.n, "laptops still open at 5:00", "big-c")}
       </div>
       <div class="fix" style="margin-top: auto">Close the laptop at 4. Out of sight.</div>
     </div>

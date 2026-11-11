@@ -3,7 +3,9 @@
    private report when the game ends → confessions and the vote pop up during the talk.
    The phone never moves on by itself. Answers are sent as the player taps, and can be changed
    until the presenter moves to the next card. Progress is saved per session, so a reload or a
-   locked phone comes back to the same place. */
+   locked phone comes back to the same place.
+   Stages count only when signed by the presenter's key from the QR link (?k=) and newer than the
+   last one, so nobody else can move the phones. */
 import { config, isSessionCode } from "../config.js";
 import { store, randomCode } from "../store.js";
 import { createRelay } from "../relay.js";
@@ -11,6 +13,7 @@ import { CARDS, NICKNAMES, AREAS, AREA_LABEL, AREA_WORDS, SEVERITY, PRESCRIPTION
 import { report } from "../scoring.js";
 import { applyTheme, roomBg } from "./theme.js";
 import { renderCard } from "./cards.js";
+import { canSign, verifier, stageText } from "../sign.js";
 
 const app = document.getElementById("app");
 const sheet = document.getElementById("sheet");
@@ -22,7 +25,7 @@ const session = config.demo ? (config.session || "demo") : config.session;
 /* Which view a presenter stage asks for: "lobby", "q1".."q11", then anything else is after the game */
 const cardIndexOf = s => (typeof s === "string" && /^q([1-9]|1[01])$/.test(s) ? Number(s.slice(1)) - 1 : -1);
 
-if (!isSessionCode(session)) {
+if (!isSessionCode(session) || (!config.demo && !config.hostKey)) {
   applyTheme(20);
   app.innerHTML = `<div class="center-msg"><h1>Home office check-up</h1><p class="sub">Scan the QR code on the shared screen to join the game.</p></div>`;
 } else {
@@ -39,11 +42,29 @@ function start() {
   let stage = null, view = null, cleanup = () => {}, thanksTimer = null;
   const pending = {};
 
+  /* Only the presenter moves the phones: check each stage's signature, and drop anything older */
+  let lastAt = 0, chain = Promise.resolve();
+  const checking = config.demo ? null : canSign() ? verifier(config.hostKey).catch(() => null) : null;
+  async function acceptStage(m) {
+    if (!Number.isFinite(m.at) || m.at <= lastAt) return;
+    if (!config.demo) {
+      if (canSign()) {
+        const verify = await checking;
+        if (!verify || !(await verify(stageText(session, m.s, m.at), m.sig))) return;
+      } else {
+        console.warn("Insecure page (plain http): presenter signatures can't be checked here.");
+      }
+    }
+    lastAt = m.at;
+    stage = m.s;
+    update();
+  }
+
   const save = () => store.set(KEY, state);
   const relay = createRelay({
     session,
     onMessage: m => {
-      if (m && m.t === "stage" && typeof m.s === "string") { stage = m.s; update(); }
+      if (m && m.t === "stage" && typeof m.s === "string") chain = chain.then(() => acceptStage(m)).catch(() => {});
     }
   });
   relay.connect();
@@ -285,7 +306,7 @@ function start() {
     const LOGOFF = { packed: "laptop packed away", closed: "laptop closed, in sight", open: "laptop still open", meeting: "still in a meeting" };
     const facts = [
       a.fuel ? `Coffee to water · ${a.fuel.coffee} : ${a.fuel.water}` : "",
-      a.logoff ? `4:30 pm · ${LOGOFF[a.logoff]}` : ""
+      a.logoff ? `5:00 pm · ${LOGOFF[a.logoff]}` : ""
     ].filter(Boolean);
     const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
     app.innerHTML = `

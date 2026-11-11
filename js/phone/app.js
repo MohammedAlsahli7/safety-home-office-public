@@ -363,7 +363,7 @@ function start() {
         <p class="fine">Not even the presenter sees who tapped what.</p>
       </div>` : `
       <div class="sheet-in" role="dialog" aria-modal="true" aria-label="Pick one habit">
-        <p class="q">Which one will you actually do this week?</p>
+        <p class="q">Which one will you start with this week?</p>
         <div class="habits">${HABITS.map((h, i) => `<button type="button" class="route" data-h="${i}"><span class="t">${esc(h)}</span></button>`).join("")}</div>
         <p class="fine">Anonymous. The screen shows totals only.</p>
       </div>`;

@@ -221,10 +221,10 @@ function title(n, total, s) {
 function attention(n, total, s) {
   return `
   <div class="slide">
-    <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 48px">
-      <div style="display: flex; flex-direction: column; gap: 24px; min-width: 0">
-        <h2 class="h">Every alert puts you back on edge</h2>
-        <div class="panel" style="display: flex; flex-direction: column; gap: 14px; margin-top: auto">
+    <div class="s-body" style="gap: 48px; justify-content: center">
+      <div class="lead-fix"><h2 class="h">Mute the news alerts. Check the news when you choose.</h2><p class="why">Every alert puts you back on edge.</p></div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 40px; align-items: end">
+        <div class="panel" style="display: flex; flex-direction: column; gap: 14px">
           <span class="chart-label">Stress, out of 10</span>
           <div style="display: grid; grid-template-columns: 250px minmax(0, 1fr) 46px; gap: 14px; align-items: center">
             <span style="font-size: 18px">Constantly check email, texts and social media</span>
@@ -236,13 +236,12 @@ function attention(n, total, s) {
           </div>
           <span class="src">American Psychological Association, Stress in America, 2017</span>
         </div>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 18px; justify-content: space-between; min-width: 0">
-        ${confess(CONFESSIONS.c1, s.confess.c1)}
-        ${share(s.news.always, s.news.n, "get every news alert")}
+        <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+          ${confess(CONFESSIONS.c1, s.confess.c1)}
+          ${share(s.news.always, s.news.n, "get every news alert")}
+        </div>
       </div>
     </div>
-    <div class="fix">Mute the alerts. Check the news when you choose.</div>
     ${num(n, total)}
   </div>`;
 }
@@ -258,11 +257,8 @@ function hours(n, total, s) {
   }
   return `
   <div class="slide">
-    <div class="s-body" style="gap: 20px">
-      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 40px; align-items: start">
-        <h2 class="h">The workday leaks at both ends</h2>
-        ${confess(CONFESSIONS.c2, s.confess.c2)}
-      </div>
+    <div class="s-body" style="gap: 34px; justify-content: center">
+      <div class="lead-fix"><h2 class="h">Close the laptop at 4. Put it out of sight.</h2><p class="why">At home, the office has no door, so the workday leaks at both ends.</p></div>
       <svg viewBox="0 0 1152 178" width="1152" height="178" role="img" aria-label="A day from 5am to 8pm. The workday runs 7am to 4pm, with leaks in the hour before and the hour after.">
         <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="${C.tint}"/><rect width="4" height="10" fill="${C.acc}"/></pattern></defs>
         <rect x="${f1(X(5))}" y="96" width="${f1(X(20) - X(5))}" height="42" rx="8" fill="${C.line2}"/>
@@ -276,11 +272,11 @@ function hours(n, total, s) {
         <text x="${f1(X(16.5))}" y="60" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px">After 4:00</text>
         ${ticks}
       </svg>
-      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
-        ${share(s.morning.counts.pillow, s.morning.n, "check email from the pillow", "big-c")}
-        ${share(s.logoff.open, s.logoff.n, "laptops still open at 5:00", "big-c")}
+      <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 20px; align-items: stretch">
+        ${confess(CONFESSIONS.c2, s.confess.c2)}
+        ${share(s.morning.counts.pillow, s.morning.n, "check email from the pillow", "stack")}
+        ${share(s.logoff.open, s.logoff.n, "laptops still open at 5:00", "stack")}
       </div>
-      <div class="fix" style="margin-top: auto">Close the laptop at 4. Out of sight.</div>
     </div>
     ${num(n, total)}
   </div>`;
@@ -307,8 +303,9 @@ function body(n, total, s) {
       <div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; min-height: 0">
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
           ${head("Neck")}
-          <div style="display: flex; align-items: center; gap: 16px; height: 150px">
-            <div style="flex: none; border-radius: 12px; color: ${C.bone}; background: radial-gradient(70% 60% at 50% 45%, ${C.film1}, ${C.film2})">${skeletonSVG(0.62, { w: 118, h: 148, ink: C.bone, sub: C.boneSub })}</div>
+          <span class="pfix">Raise the screen to eye level. Two books will do.</span>
+          <div style="display: flex; align-items: center; gap: 16px; height: 128px">
+            <div style="flex: none; border-radius: 12px; color: ${C.bone}; background: radial-gradient(70% 60% at 50% 45%, ${C.film1}, ${C.film2})">${skeletonSVG(0.62, { w: 100, h: 125, ink: C.bone, sub: C.boneSub })}</div>
             <div style="display: flex; flex-direction: column; gap: 5px">
               <span style="font-family: var(--mono); font-size: 30px; font-weight: 500; line-height: 1">5 kg</span>
               <span style="font-size: 15px; color: ${C.sub}">head, upright</span>
@@ -321,8 +318,9 @@ function body(n, total, s) {
         </div>
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
           ${head("Eyes")}
-          <div style="display: flex; align-items: center; gap: 18px; height: 150px">
-            <svg width="132" height="132" viewBox="0 0 128 128" aria-hidden="true" style="flex: none">
+          <span class="pfix">Lamp on. Look 6 m away every 20 minutes.</span>
+          <div style="display: flex; align-items: center; gap: 18px; height: 128px">
+            <svg width="118" height="118" viewBox="0 0 128 128" aria-hidden="true" style="flex: none">
               <circle cx="64" cy="64" r="54" fill="none" stroke="${C.line2}" stroke-width="10"/>
               <circle cx="64" cy="64" r="54" fill="none" stroke="${C.acc}" stroke-width="10" stroke-linecap="round" stroke-dasharray="254 340" transform="rotate(-90 64 64)"/>
               <text x="64" y="72" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 500">20 s</text>
@@ -334,8 +332,9 @@ function body(n, total, s) {
         </div>
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
           ${head("Fuel")}
-          <div style="display: flex; align-items: center; height: 150px">
-            ${enough(s.fuel.n) ? `<svg width="266" height="150" viewBox="0 0 284 ${Math.max(160, rowsC * 21 + 12 + Math.ceil(nw / 13) * 21)}" role="img" aria-label="${s.fuel.coffee} coffees and ${s.fuel.water} glasses of water"><path d="${cups}" fill="${C.acc}"/><path d="${glasses}" fill="${C.water}"/></svg>` : ""}
+          <span class="pfix">One glass of water with every coffee.</span>
+          <div style="display: flex; align-items: center; height: 128px">
+            ${enough(s.fuel.n) ? `<svg width="236" height="128" viewBox="0 0 284 ${Math.max(160, rowsC * 21 + 12 + Math.ceil(nw / 13) * 21)}" role="img" aria-label="${s.fuel.coffee} coffees and ${s.fuel.water} glasses of water"><path d="${cups}" fill="${C.acc}"/><path d="${glasses}" fill="${C.water}"/></svg>` : ""}
           </div>
           <span style="font-size: 15px; line-height: 1.35; color: ${C.sub}"><span style="color: ${C.acc}">■</span> coffee, qahwa, karak &nbsp; <span style="color: ${C.water}">■</span> water${perIcon > 1 ? ` · each icon = ${perIcon}` : ""}</span>
           <div style="margin-top: auto">${enough(s.fuel.n) ? callout(`${s.fuel.coffee} : ${s.fuel.water}`, "coffees to waters, yesterday", "stack") : share(0, s.fuel.n, "coffee vs water", "stack")}</div>
@@ -385,7 +384,7 @@ function habits(n, total, s) {
     <div class="s-body" style="gap: 22px">
       <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
         <h2 class="h">Three things for this week</h2>
-        <span style="display: flex; align-items: center; gap: 10px; padding-bottom: 8px; font-size: 22px; color: ${C.sub}">${PHONE}${v.n ? `${v.n} voted` : "Tap the one you’ll actually do"}</span>
+        <span style="display: flex; align-items: center; gap: 10px; padding-bottom: 8px; font-size: 22px; color: ${C.sub}">${PHONE}${v.n ? `${v.n} voted` : "Tap the one you’ll start with"}</span>
       </div>
       <div style="flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0">
         ${HABITS.map((t, i) => {

@@ -29,7 +29,7 @@ function shuffled(list) {
   return a;
 }
 
-export function startDemo(send) {
+export function startDemo(send, { instant = false } = {}) {
   const cols = Object.fromEntries(Object.entries(SAMPLE).map(([k, v]) => [k, shuffled(v)]));
   const fuelOrder = shuffled([...Array(14).keys()]);
   const players = Array.from({ length: 14 }, (_, i) => ({ p: "demo" + i, n: NICKNAMES[i] }));
@@ -38,10 +38,14 @@ export function startDemo(send) {
   const value = (key, i) => (key === "fuel" ? { coffee: SAMPLE.coffee[fuelOrder[i]], water: SAMPLE.water[fuelOrder[i]] } : cols[key][i]);
 
   /* Everyone scans the QR code in the first few seconds */
-  players.forEach((pl, i) => later(500 + i * 380 + Math.random() * 500, () => send({ t: "join", p: pl.p, n: pl.n, L: cols.light[i] })));
+  players.forEach((pl, i) => later(instant ? 0 : 500 + i * 380 + Math.random() * 500, () => send({ t: "join", p: pl.p, n: pl.n, L: cols.light[i] })));
 
   const handled = new Set();
+  let now = false;
+  const at = ms => (now ? 0 : ms);
   return {
+    /* After a reload: answer every screen already shown, straight away */
+    catchUp(stages) { now = true; stages.forEach(s => this.onStage(s)); now = false; },
     onStage(stage) {
       if (!stage || handled.has(stage)) return;
       const q = /^q(\d+)$/.exec(stage);
@@ -49,13 +53,13 @@ export function startDemo(send) {
         handled.add(stage);
         const key = CARDS[Number(q[1]) - 1].key;
         const slow = key === "stare" ? 6000 : key === "fuel" || key === "posture" ? 3000 : 1200;
-        shuffled([...Array(14).keys()]).forEach((i, k) => later(slow + k * 350 + Math.random() * 1500, () => send({ t: "ans", p: players[i].p, k: key, v: value(key, i) })));
+        shuffled([...Array(14).keys()]).forEach((i, k) => later(at(slow + k * 350 + Math.random() * 1500), () => send({ t: "ans", p: players[i].p, k: key, v: value(key, i) })));
       } else if (stage === "end") {
         handled.add(stage);
-        players.forEach((pl, i) => later(300 + i * 120, () => send({ t: "done", p: pl.p })));
+        players.forEach((pl, i) => later(at(300 + i * 120), () => send({ t: "done", p: pl.p })));
       } else if (stage in GUILTY || stage === "vote") {
         handled.add(stage);
-        shuffled([...Array(14).keys()]).forEach((i, k) => later(800 + k * 350 + Math.random() * 400, () => {
+        shuffled([...Array(14).keys()]).forEach((i, k) => later(at(800 + k * 350 + Math.random() * 400), () => {
           if (stage === "vote") send({ t: "vote", p: players[i].p, v: VOTES[k] });
           else send({ t: "tap", p: players[i].p, q: stage, v: k < GUILTY[stage] ? 1 : 0 });
         }));

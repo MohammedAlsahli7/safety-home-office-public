@@ -103,6 +103,7 @@ function start() {
 
   /* ---------- View routing ---------- */
   function wanted() {
+    if (stage === "closed") return "closed";
     if (!state.joined) return "landing";
     const i = cardIndexOf(stage);
     if (i >= 0) return "q" + i;
@@ -123,6 +124,7 @@ function start() {
       else if (v === "lobby" || v === "connecting") lobby();
       else if (v[0] === "q") cleanup = card(Number(v.slice(1))) || cleanup;
       else if (v === "report") reportScreen();
+      else if (v === "closed") closedScreen();
       else lateScreen();
       window.scrollTo(0, 0);
       /* Each new card slides in; other views rise (not when the same view just redraws) */
@@ -409,6 +411,17 @@ function start() {
       </div>
       <p class="fine mono-fine">For fun, not a medical diagnosis. This report stays on your phone. The team’s results come up in the safety presentation.</p>
       <div class="waiting-box">Keep this page open. Three quick confessions and a vote pop up here during the talk. One tap each, anonymous.</div>`;
+  }
+
+  function closedScreen() {
+    applyTheme(state.L);
+    app.onclick = null;
+    app.innerHTML = `
+      ${topbar(state.joined ? undefined : " ")}
+      <div class="center-msg">
+        <h1>This game has ended</h1>
+        <p class="sub">The presenter started a new one. Scan the new QR code on the shared screen to join it.</p>
+      </div>`;
   }
 
   function lateScreen() {

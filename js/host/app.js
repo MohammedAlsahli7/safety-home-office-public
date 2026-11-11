@@ -37,12 +37,13 @@ const FIRST_SLIDE = SCREENS.findIndex(s => s.slide);
 let session = null, hostKey = null, sign = null, verifyOwn = null;
 const keyFor = s => { const k = store.get("host.key." + s); return k && k.priv && k.pub ? k : null; };
 
-async function freshSession(keep = true) {
+/* The meeting's session is saved as host.session; a demo's as host.demo, so neither replaces the other */
+const SAVED = config.demo ? "host.demo" : "host.session";
+async function freshSession() {
   hostKey = await newHostKey();
   session = await fingerprint(hostKey.pub);   /* the session code is the key's fingerprint */
-  if (!keep) return;                          /* a demo session lives only in this tab */
   store.set("host.key." + session, hostKey);
-  store.set("host.session", session);
+  store.set(SAVED, session);
   store.set("host.screen." + session, 0);
 }
 
@@ -59,21 +60,17 @@ function importKeyFromHash() {
 /* Returns true when this browser may present this session */
 async function claimSession() {
   if (!canSign()) return false;
-  if (config.demo) {
-    /* Demo: a real, signed session (so real phones can join), kept apart from the meeting's session */
-    await freshSession(false);
+  /* A demo is a real, signed session too (so real phones can join), saved apart from the meeting's */
+  const matches = async s => { const k = keyFor(s); return k && (await fingerprint(k.pub)) === s ? k : null; };
+  if (isSessionCode(config.session) && !config.demo) {
+    session = config.session;
+    hostKey = await matches(session);
+    if (!hostKey) return false;
   } else {
-    const matches = async s => { const k = keyFor(s); return k && (await fingerprint(k.pub)) === s ? k : null; };
-    if (isSessionCode(config.session)) {
-      session = config.session;
-      hostKey = await matches(session);
-      if (!hostKey) return false;
-    } else {
-      const saved = store.get("host.session");
-      const k = isSessionCode(saved) ? await matches(saved) : null;
-      if (k) { session = saved; hostKey = k; }
-      else await freshSession();   /* also replaces sessions from before the short links */
-    }
+    const saved = store.get(SAVED);
+    const k = isSessionCode(saved) ? await matches(saved) : null;
+    if (k) { session = saved; hostKey = k; }
+    else await freshSession();   /* also replaces sessions from before the short links */
   }
   sign = await signer(hostKey.priv);
   verifyOwn = await verifier(hostKey.pub);
@@ -137,7 +134,7 @@ function boot() {
   lastStage = null;
   lastAt = 0;
   revealed = new Set();
-  screen = config.demo ? 0 : Math.min(store.get("host.screen." + session, 0), SCREENS.length - 1);
+  screen = Math.min(store.get("host.screen." + session, 0), SCREENS.length - 1);
   if (relay) relay.close();
   if (demo) demo.stop();
   relay = createRelay({
@@ -146,8 +143,14 @@ function boot() {
     onStatus: s => { status = s; scheduleRender(); renderTools(); }
   });
   relay.connect();
-  /* Simulated players play on this laptop only. Their joins also go out, so real phones skip their names. */
-  if (config.demo) demo = startDemo(m => { onMessage(m); if (m.t === "join") relay.send(m); });
+  /* Simulated players play on this laptop only. Their joins go out once per session, so real phones
+     skip their names. After a reload they catch up at once on every screen already shown. */
+  if (config.demo) {
+    const announce = !store.get("host.demoJoined." + session);
+    store.set("host.demoJoined." + session, true);
+    demo = startDemo(m => { onMessage(m); if (m.t === "join" && announce) relay.send(m); }, { instant: screen > 0 });
+    demo.catchUp(SCREENS.slice(0, screen).map(s => s.stage));
+  }
   show();
 }
 
@@ -290,8 +293,19 @@ function go(i) {
   const to = Math.max(0, Math.min(SCREENS.length - 1, i));
   if (to === screen) return;
   screen = to;
-  if (!config.demo) store.set("host.screen." + session, screen);
+  store.set("host.screen." + session, screen);
   show();
+}
+
+/* Tells phones on this session that it's over, so they ask for the new QR code instead of waiting */
+function closeSession() {
+  sendChain = sendChain.then(async () => {
+    const at = lastAt = Math.max(Date.now(), lastAt + 1);
+    const msg = { t: "stage", p: "host", s: "closed", at };
+    if (sign) { msg.pk = hostKey.pub; msg.sig = await sign(stageText(session, "closed", at)); }
+    relay.send(msg);
+  }).catch(() => {});
+  return sendChain;
 }
 
 function publishStage() {
@@ -348,7 +362,7 @@ function renderTools() {
     <button type="button" data-a="copy">Copy join link</button>
     <button type="button" data-a="notes">Open speaker notes (N): a separate window only you see</button>
     <button type="button" data-a="talk">Skip to the talk (KPI slides)</button>
-    ${config.demo ? "" : `<button type="button" data-a="new">Start a new session (clears rehearsal answers)</button>`}
+    <button type="button" data-a="new">${config.demo ? "Start a new demo (new QR code)" : "Start a new session (clears rehearsal answers)"}</button>
     <button type="button" data-a="demo">${config.demo ? "Leave demo mode" : "Demo: add 14 simulated players (real phones can join too)"}</button>
     <form id="kpiform" style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #DDD3C2">
       <b>KPI slide figures</b>
@@ -390,7 +404,8 @@ toolsEl.addEventListener("click", async e => {
   } else if (a === "talk") {
     toolsEl.hidden = true;
     go(FIRST_SLIDE);
-  } else if (a === "new" && confirm("Start a new session? Phones on the old QR code won't count.")) {
+  } else if (a === "new" && confirm("Start a new session? Phones on the old QR code will be told to scan the new one.")) {
+    await closeSession();
     await freshSession();
     sign = await signer(hostKey.priv);
     verifyOwn = await verifier(hostKey.pub);

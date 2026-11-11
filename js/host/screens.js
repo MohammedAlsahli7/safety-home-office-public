@@ -10,6 +10,28 @@ import { C, esc, lamp, qrSVG, roomColours } from "./parts.js";
 
 export const statusChip = status => `<span class="status" data-s="${status}"><i></i>${{ live: "Live", connecting: "Connecting", reconnecting: "Reconnecting", offline: "Offline", idle: "Starting" }[status] || status}</span>`;
 
+/* ---------- Introduction: who's presenting (from the private slide data, never from the code) ---------- */
+export function introScreen(intro) {
+  if (!intro.name) {
+    return `<div class="slide game"><div class="s-body" style="justify-content: center"><span class="wait" style="font-size: 24px">Add your introduction in the presenter tools (P): name, role, home and assignment organization.</span></div></div>`;
+  }
+  return `
+  <div class="slide game">
+    ${lamp("lin", 210, 40)}
+    <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <h1 class="intro-name">${esc(intro.name)}</h1>
+        ${intro.role ? `<p class="intro-role">${esc(intro.role)}</p>` : ""}
+      </div>
+      ${intro.home || intro.assignment ? `<div class="intro-orgs">
+        ${intro.home ? `<div class="panel"><span class="lbl">Home organization</span><b>${esc(intro.home)}</b></div>` : ""}
+        ${intro.assignment ? `<div class="panel"><span class="lbl">On assignment with</span><b>${esc(intro.assignment)}</b>${intro.assignmentNote ? `<span class="note">${esc(intro.assignmentNote)}</span>` : ""}</div>` : ""}
+      </div>` : ""}
+      ${intro.background.length ? `<ul class="intro-bg">${intro.background.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    </div>
+  </div>`;
+}
+
 /* ---------- Join ---------- */
 export function joinScreen({ url, players, status, newest }) {
   const list = Object.values(players);

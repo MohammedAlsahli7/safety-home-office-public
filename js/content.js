@@ -164,7 +164,7 @@ export const PRESCRIPTIONS = {
 export const CONFESSIONS = {
   c1: "I’ve refreshed the news more times today than I’ve stood up.",
   c2: "My laptop has slept in my bed.",
-  c3: "I’ve worked a whole day from bed, in pyjamas."
+  c3: "I’ve worked a whole day from bed."
 };
 export const HABITS = ["Raise your screen to eye level", "Mute the news alerts", "Stand up when a call ends"];
 

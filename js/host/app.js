@@ -12,10 +12,10 @@ import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
 import { CARDS, POSES, poseIndex, lightName } from "../content.js";
 import { SLIDES } from "./slides.js";
-import { joinScreen, questionScreen, wrapScreen } from "./screens.js";
+import { introScreen, joinScreen, questionScreen, wrapScreen } from "./screens.js";
 import { startDemo } from "./demo.js";
 import { esc } from "./parts.js";
-import { rawKpis, saveKpis, encodeKpis, importKpisFromHash } from "../kpis.js";
+import { rawKpis, saveKpis, encodeKpis, importKpisFromHash, loadKpis } from "../kpis.js";
 import { canSign, newHostKey, signer, verifier, stageText, fingerprint, b64url, fromB64url } from "../sign.js";
 
 const stageEl = document.getElementById("stage");
@@ -26,6 +26,7 @@ const screenEl = document.getElementById("screen");
 const controlsEl = document.getElementById("controls");
 
 const SCREENS = [
+  { id: "intro", stage: "lobby" },
   { id: "join", stage: "lobby" },
   ...CARDS.map((c, i) => ({ id: "q" + (i + 1), card: i, stage: "q" + (i + 1) })),
   { id: "wrap", stage: "end" },
@@ -117,14 +118,21 @@ if (notesChannel) notesChannel.onmessage = e => {
   else if (d.type === "go") { if (d.dir > 0) advance(); else go(screen - 1); }
 };
 
+/* Animations play on the presenter page even when the laptop asks for reduced motion (it's a
+   presentation); P → Animations turns them off. */
+const motionOn = () => store.get("host.motion", true) !== false;
+const applyMotion = () => document.documentElement.classList.toggle("calm", !motionOn());
+applyMotion();
+
 /* Plays an animation class on the screen container; live updates wait until it ends */
 function animate(cls) {
   screenEl.classList.remove("enter", "reveal");
   void screenEl.offsetWidth;
   screenEl.classList.add(cls);
-  animUntil = Date.now() + 950;
+  const ms = motionOn() ? 1300 : 0;
+  animUntil = Date.now() + ms;
   clearTimeout(animTimer);
-  animTimer = setTimeout(() => screenEl.classList.remove(cls), 950);
+  animTimer = setTimeout(() => screenEl.classList.remove(cls), ms);
 }
 
 function boot() {
@@ -211,7 +219,8 @@ function render() {
   /* Results appear by themselves once everyone has answered, or when the presenter asks */
   const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card);
   if (autoReveal) revealed.add(sc.card);
-  if (sc.id === "join") { screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest }); fitNames(); }
+  if (sc.id === "intro") screenEl.innerHTML = introScreen(loadKpis().intro);
+  else if (sc.id === "join") { screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest }); fitNames(); }
   else if (sc.card !== undefined) screenEl.innerHTML = questionScreen({ index: sc.card, stats, players: state.players, feed, status, shown: revealed.has(sc.card) });
   else if (sc.id === "wrap") screenEl.innerHTML = wrapScreen({ stats, feed, status });
   else screenEl.innerHTML = sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats);
@@ -248,8 +257,10 @@ function renderControls() {
     return;
   }
   controlsEl.className = "controls";
-  if (sc.id === "join") {
-    controlsEl.innerHTML = `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
+  if (sc.id === "intro") {
+    controlsEl.innerHTML = `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Show the QR code →</button>`;
+  } else if (sc.id === "join") {
+    controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
   } else if (sc.card !== undefined) {
     const last = sc.card === CARDS.length - 1;
     controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">${last ? "Finish and send reports →" : "Next card →"}</button>`;
@@ -362,13 +373,14 @@ function renderTools() {
     <button type="button" data-a="copy">Copy join link</button>
     <button type="button" data-a="notes">Open speaker notes (N): a separate window only you see</button>
     <button type="button" data-a="talk">Skip to the talk (KPI slides)</button>
+    <button type="button" data-a="motion">Animations: ${motionOn() ? "on" : "off"}</button>
     <button type="button" data-a="new">${config.demo ? "Start a new demo (new QR code)" : "Start a new session (clears rehearsal answers)"}</button>
     <button type="button" data-a="demo">${config.demo ? "Leave demo mode" : "Demo: add 14 simulated players (real phones can join too)"}</button>
     <form id="kpiform" style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #DDD3C2">
-      <b>KPI slide figures</b>
-      <span style="color: #5F6A6B; font-size: 12px">Paste the KPI JSON. It stays in this browser only and is never published.</span>
+      <b>Private slide data: your introduction and the KPIs</b>
+      <span style="color: #5F6A6B; font-size: 12px">Paste the JSON from docs/kpis.json. It stays in this browser only and is never published.</span>
       <textarea name="kpi" rows="9" spellcheck="false">${esc(JSON.stringify(rawKpis(), null, 2))}</textarea>
-      <button type="submit">Save KPIs</button>
+      <button type="submit">Save</button>
       <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
     </form>
     <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>F: full screen</li><li>N: speaker notes</li><li>P or Esc: close this panel</li></ul>`;
@@ -401,6 +413,10 @@ toolsEl.addEventListener("click", async e => {
     try { await navigator.clipboard.writeText(joinUrl()); e.target.textContent = "Copied"; } catch (_) { e.target.textContent = "Copy failed. Select the link above."; }
   } else if (a === "notes") {
     openNotes();
+  } else if (a === "motion") {
+    store.set("host.motion", !motionOn());
+    applyMotion();
+    e.target.textContent = `Animations: ${motionOn() ? "on" : "off"}`;
   } else if (a === "talk") {
     toolsEl.hidden = true;
     go(FIRST_SLIDE);

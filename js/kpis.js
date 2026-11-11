@@ -1,9 +1,15 @@
-/* KPI figures for the three KPI slides. The code holds labels only; no real figure is ever published.
+/* Private slide data: the presenter's introduction and the figures for the three KPI slides.
+   The code holds labels only; no real name or figure is ever published.
    The presenter pastes the figures as JSON in the presenter tools (key P), or opens a private link
    whose #kpi=… hash carries them. Either way they are kept in that browser only.
 
-   JSON shape (every part optional; all numbers below are made up):
+   JSON shape (every part optional; everything below is made up):
    {
+     "intro": {                                             // the first screen, before the QR code
+       "name": "Sam", "role": "Engineer",
+       "home": "Home team", "assignment": "Team on assignment", "assignmentNote": "what I do there",
+       "background": ["Studied …", "Worked at …"]           // up to 4 short lines
+     },
      "period": "",
      "coursesTitle": "Safety courses", "safetyTitle": "Safety KPIs",   // slide headlines
      "safety": [0, 0, 0, 0, 0, 0],                         // same order as SAFETY_LABELS
@@ -39,7 +45,13 @@ const rows = (list, max = 10) => (Array.isArray(list) ? list : []).filter(x => A
 export function cleanKpis(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
   const ph = r.phishing && typeof r.phishing === "object" ? r.phishing : {};
+  const intro = r.intro && typeof r.intro === "object" ? r.intro : {};
   return {
+    intro: {
+      name: text(intro.name, 40), role: text(intro.role, 80),
+      home: text(intro.home, 70), assignment: text(intro.assignment, 70), assignmentNote: text(intro.assignmentNote, 80),
+      background: (Array.isArray(intro.background) ? intro.background : []).map(x => text(x, 90)).filter(Boolean).slice(0, 4)
+    },
     period: text(r.period, 40),
     coursesTitle: text(r.coursesTitle, 48),
     safetyTitle: text(r.safetyTitle, 48),

@@ -9,7 +9,7 @@ import { config } from "./config.js";
 
 const CARD_TITLES = Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), `Card ${i + 1} · ${c.title}`]));
 export const TITLES = {
-  join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
+  intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
   courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
   title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body",
   awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so"
@@ -17,6 +17,7 @@ export const TITLES = {
 
 /* Where each talk slide should be, in minutes into the talk */
 export const TARGETS = {
+  intro: "before the game, about 0:20",
   courses: "0:00 to 0:17", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
   attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:30", awards: "4:30 to 4:45",
   habits: "4:45 to 5:20", close: "5:20 to 5:50"
@@ -24,7 +25,7 @@ export const TARGETS = {
 
 const NEXT = "(When most have answered, press Show answers, then Next card.)";
 export const DEFAULTS = {
-  join: `Good morning, everyone. Before the safety moment, a quick game.
+  join: `Before the safety moment, a quick game.
 
 Scan the QR code with your phone camera. Pull the lamp cord to match the light in your room, pick a funny name, and press Join.
 
@@ -98,7 +99,7 @@ This morning, {c2} of us said the laptop has slept in our bed, {pillow} check em
 
 Neck first: **raise the screen to eye level.** Two books under the laptop will do. Upright, your head weighs about 5 kg. Tilt it 60 degrees, like looking down at a laptop, and your neck carries about 27 kg. That’s heavier than a checked-in suitcase.
 
-This morning, {c3} of us have worked a whole day from bed, in pyjamas, and {pose} was our most common pose, at {poseCount}.
+This morning, {c3} of us have worked a whole day from bed, and {pose} was our most common pose, at {poseCount}.
 
 Eyes: **lamp on, and every 20 minutes, look about 6 meters away for 20 seconds.** We normally blink 15 to 20 times a minute, and far fewer at a screen. Let’s do one together. Look at the farthest thing you can see.
 
@@ -130,6 +131,23 @@ Your report stays on your phone. Thank you.`
 const list = items => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`);
 
 export function kpiDefault(id, k) {
+  if (id === "intro") {
+    const i = k.intro;
+    if (!i.name) return "(Add your introduction first: press P on the presenter screen.)";
+    const [job, programme] = i.role.split("·").map(x => x.trim());
+    const role = job ? `, ${/^[aeiou]/i.test(job) ? "an" : "a"} ${job.toLowerCase()}${programme ? ` in the ${programme}` : ""}` : "";
+    const say = x => x.replace(/\s*·\s*/g, ", ");
+    const orgs = [i.home && `My home organization is ${say(i.home)}`, i.assignment && `I’m currently on assignment with ${say(i.assignment)}${i.assignmentNote ? `, working on ${i.assignmentNote}` : ""}`].filter(Boolean);
+    return `Good morning, everyone. I’m ${i.name}${role}.
+
+${orgs.join(", and ")}.${i.background.length ? `
+
+A bit about me: ${i.background.map((x, n) => (n ? x.charAt(0).toLowerCase() + x.slice(1) : x)).join("; ")}.` : ""}
+
+Today I have our safety moment, and it starts with a quick game on your phones.
+
+(Press Show the QR code.)`;
+  }
   if (id === "courses") {
     if (!k.courses.length) return "(Add the KPI figures first: press P on the presenter screen.)";
     const lines = ["Before I begin, allow me to share some safety KPIs for our department, starting with the safety courses."];

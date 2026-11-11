@@ -9,7 +9,7 @@ import { TITLES, TARGETS, DEFAULTS, kpiDefault, tokens, TOKEN_HELP } from "../no
 const root = document.getElementById("notes");
 const channel = (() => { try { return new BroadcastChannel("hoc-notes"); } catch (_) { return null; } })();
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const KPI_IDS = ["courses", "phishing", "incidents"];
+const KPI_IDS = ["intro", "courses", "phishing", "incidents"];
 
 let st = null, editing = false, size = store.get("notes.size", 22), saveTimer = null;
 const edits = () => store.get("notes", {});

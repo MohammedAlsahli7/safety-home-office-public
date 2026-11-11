@@ -84,7 +84,7 @@ function joinUrl() {
 }
 
 /* ---------- State ---------- */
-let state, feed, newest, screen, relay, demo, lastStage, status = "idle", renderTimer = null, clockTimer = null, cardStarted = 0;
+let state, feed, newest, screen, relay, demo, lastStage, status = "idle", renderTimer = null, cardStarted = 0;
 let lastAt = 0, sendChain = Promise.resolve(), revealed = new Set(), lastStats = null;
 let animUntil = 0, animTimer = null, gameStartedAt = 0, talkStartedAt = 0;
 
@@ -218,7 +218,6 @@ function render() {
 /* The control bar is rebuilt only when the screen changes, so a click is never lost to a live update */
 function renderControls() {
   const sc = SCREENS[screen];
-  clearInterval(clockTimer);
   const back = `<button type="button" class="ctl ghost" data-go="back" aria-label="Back">← Back</button>`;
   if (sc.slide) {
     controlsEl.className = "controls quiet";
@@ -227,14 +226,10 @@ function renderControls() {
   }
   controlsEl.className = "controls";
   if (sc.id === "join") {
-    controlsEl.innerHTML = `<span class="ctl-note">Phones wait on a lobby screen until you start.</span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
+    controlsEl.innerHTML = `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
   } else if (sc.card !== undefined) {
     const last = sc.card === CARDS.length - 1;
-    controlsEl.innerHTML = `${back}<span class="ctl-note" id="clock"></span><button type="button" class="ctl primary" data-go="next">${last ? "Finish and send reports →" : "Next card →"}</button>`;
-    const clock = document.getElementById("clock");
-    const tick = () => { const s = Math.floor((Date.now() - cardStarted) / 1000); clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} on this card`; };
-    tick();
-    clockTimer = setInterval(tick, 1000);
+    controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">${last ? "Finish and send reports →" : "Next card →"}</button>`;
   } else {
     controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the talk →</button>`;
   }
@@ -410,7 +405,5 @@ if (location.hash) history.replaceState(null, "", location.pathname + location.s
 fit();
 claimSession().then(ok => {
   if (!ok) { locked(); return; }
-  boot();
-  hintEl.classList.add("show");
-  setTimeout(() => hintEl.classList.remove("show"), 5000);
+  boot();   /* the key hints live in the tools panel (P) and the notes window, not on the shared screen */
 });

@@ -86,6 +86,42 @@ function joinUrl() {
 /* ---------- State ---------- */
 let state, feed, newest, screen, relay, demo, lastStage, status = "idle", renderTimer = null, clockTimer = null, cardStarted = 0;
 let lastAt = 0, sendChain = Promise.resolve(), revealed = new Set(), lastStats = null;
+let animUntil = 0, animTimer = null, gameStartedAt = 0, talkStartedAt = 0;
+
+/* Speaker notes: a separate window (notes.html) in this same browser. It follows the screens,
+   shows the script with live numbers, and can press Back and Next. Nothing here is shared on screen. */
+const notesChannel = (() => { try { return new BroadcastChannel("hoc-notes"); } catch (_) { return null; } })();
+let notesWin = null;
+function openNotes() {
+  notesWin = window.open("notes.html", "hoc-notes", "width=560,height=820");
+  if (notesWin) notesWin.focus();
+}
+function postNotes() {
+  if (!notesChannel || !relay) return;
+  const sc = SCREENS[screen], nx = SCREENS[screen + 1];
+  const nextBtn = controlsEl.querySelector('[data-go="next"]');
+  notesChannel.postMessage({
+    type: "state", index: screen, total: SCREENS.length, id: sc.id, nextId: nx ? nx.id : null,
+    nextLabel: sc.slide ? (nx ? "Next slide →" : "Last slide") : nextBtn ? nextBtn.textContent.trim() : "Next →", firstSlide: FIRST_SLIDE,
+    screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats
+  });
+}
+if (notesChannel) notesChannel.onmessage = e => {
+  const d = e.data || {};
+  if (!relay) return;
+  if (d.type === "hello") postNotes();
+  else if (d.type === "go") { if (d.dir > 0) advance(); else go(screen - 1); }
+};
+
+/* Plays an animation class on the screen container; live updates wait until it ends */
+function animate(cls) {
+  screenEl.classList.remove("enter", "reveal");
+  void screenEl.offsetWidth;
+  screenEl.classList.add(cls);
+  animUntil = Date.now() + 950;
+  clearTimeout(animTimer);
+  animTimer = setTimeout(() => screenEl.classList.remove(cls), 950);
+}
 
 function boot() {
   state = { players: {}, taps: {}, votes: {} };
@@ -152,7 +188,7 @@ function moment(t, k, p) {
 /* ---------- Rendering ---------- */
 function scheduleRender() {
   if (renderTimer) return;
-  renderTimer = setTimeout(() => { renderTimer = null; render(); }, 250);
+  renderTimer = setTimeout(() => { renderTimer = null; render(); }, Math.max(250, animUntil - Date.now()));
 }
 
 function render() {
@@ -162,11 +198,14 @@ function render() {
   const answered = card ? stats.answered[card.key] || 0 : 0;
   const everyone = stats.joined > 0 && answered >= stats.joined;
   /* Results appear by themselves once everyone has answered, or when the presenter asks */
-  if (card && everyone && answered >= config.minGroup) revealed.add(sc.card);
+  const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card);
+  if (autoReveal) revealed.add(sc.card);
   if (sc.id === "join") screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest });
   else if (sc.card !== undefined) screenEl.innerHTML = questionScreen({ index: sc.card, stats, players: state.players, feed, status, shown: revealed.has(sc.card) });
   else if (sc.id === "wrap") screenEl.innerHTML = wrapScreen({ stats, feed, status });
   else screenEl.innerHTML = sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats);
+  if (autoReveal) animate("reveal");
+  if (notesChannel && !render.notesTimer) render.notesTimer = setTimeout(() => { render.notesTimer = null; postNotes(); }, 600);
   /* The main button: "Show answers" first, then "Next card". Only its text changes here, never the element */
   const next = controlsEl.querySelector('[data-go="next"]');
   if (next && card) {
@@ -203,9 +242,14 @@ function renderControls() {
 
 function show() {
   cardStarted = Date.now();
+  const sc = SCREENS[screen];
+  if (sc.card !== undefined && !gameStartedAt) gameStartedAt = cardStarted;
+  if (sc.slide && !talkStartedAt) talkStartedAt = cardStarted;
   renderControls();
   render();
+  animate("enter");
   publishStage();
+  postNotes();
 }
 
 function fit() {
@@ -223,7 +267,7 @@ function canReveal() {
 
 /* Next: on a card, show its answers first (like Kahoot's results), then move on */
 function advance() {
-  if (canReveal()) { revealed.add(SCREENS[screen].card); render(); return; }
+  if (canReveal()) { revealed.add(SCREENS[screen].card); render(); animate("reveal"); postNotes(); return; }
   go(screen + 1);
 }
 
@@ -267,6 +311,7 @@ document.addEventListener("keydown", e => {
   else if (k === "Home") go(0);
   else if (k === "f" || k === "F") toggleFullscreen();
   else if (k === "p" || k === "P") { toolsEl.hidden = !toolsEl.hidden; renderTools(); }
+  else if (k === "n" || k === "N") openNotes();
   else if (k === "Escape") toolsEl.hidden = true;
 });
 
@@ -286,6 +331,7 @@ function renderTools() {
     <span>Session <code>${esc(session)}</code> · relay <b>${esc(status)}</b>${config.demo ? " · demo" : ""}</span>
     <span>Join link</span><code>${esc(joinUrl())}</code>
     <button type="button" data-a="copy">Copy join link</button>
+    <button type="button" data-a="notes">Open speaker notes (N): a separate window only you see</button>
     <button type="button" data-a="talk">Skip to the talk (KPI slides)</button>
     ${config.demo ? "" : `<button type="button" data-a="new">Start a new session (clears rehearsal answers)</button>`}
     <button type="button" data-a="demo">${config.demo ? "Leave demo mode" : "Rehearse with 14 simulated players"}</button>
@@ -296,7 +342,7 @@ function renderTools() {
       <button type="submit">Save KPIs</button>
       <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
     </form>
-    <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>F: full screen</li><li>P or Esc: close this panel</li></ul>`;
+    <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>F: full screen</li><li>N: speaker notes</li><li>P or Esc: close this panel</li></ul>`;
 }
 
 toolsEl.addEventListener("submit", e => {
@@ -324,6 +370,8 @@ toolsEl.addEventListener("click", async e => {
   }
   if (a === "copy") {
     try { await navigator.clipboard.writeText(joinUrl()); e.target.textContent = "Copied"; } catch (_) { e.target.textContent = "Copy failed. Select the link above."; }
+  } else if (a === "notes") {
+    openNotes();
   } else if (a === "talk") {
     toolsEl.hidden = true;
     go(FIRST_SLIDE);

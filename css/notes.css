@@ -1,0 +1,55 @@
+/* Speaker notes window: daylight, large readable script, controls within thumb reach. */
+:root {
+  --bg: #F4EFE6; --panel: #FFFFFF; --line: #DDD3C2; --line2: #E9E2D5;
+  --ink: #1B2328; --sub: #4E5A60; --muted: #5F6A6B;
+  --accent: #C4740A; --accent-text: #A15C00; --tint: #FCEBCB; --tint-ink: #6B4200;
+  --display: "Archivo", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--display); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.notes { max-width: 760px; margin: 0 auto; padding: 14px 18px 28px; display: flex; flex-direction: column; gap: 14px; }
+.bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0; background: var(--bg); border-bottom: 1px solid var(--line); }
+.where { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.where span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.where b { font-size: 22px; line-height: 1.1; font-weight: 800; font-stretch: 80%; }
+.clocks { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-family: var(--mono); font-size: 13px; color: var(--sub); white-space: nowrap; }
+.clocks span:first-child { font-size: 18px; color: var(--ink); }
+.drive { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.drive button { min-height: 52px; border-radius: 14px; font-size: 18px; font-weight: 700; }
+.drive .ghost { border: 1.5px solid var(--line); background: var(--panel); color: var(--sub); }
+.drive .primary { border: 0; background: #E8961E; color: #1B1206; }
+.drive .primary:hover { background: #F0A43A; }
+
+.script { padding: 18px 20px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line2); line-height: 1.45; }
+.script.in { animation: fade 0.35s ease-out; }
+.script p { margin: 0 0 0.8em; }
+.script p:last-child { margin-bottom: 0; }
+.script p.dir { font-style: italic; color: var(--muted); font-size: 0.8em; }
+.script b { color: var(--accent-text); }
+mark { padding: 0 4px; border-radius: 4px; background: var(--tint); color: var(--tint-ink); font-family: var(--mono); font-size: 0.92em; font-weight: 500; }
+mark.wait { background: var(--line2); color: var(--muted); font-family: var(--display); font-size: 0.75em; }
+textarea { width: 100%; min-height: 46vh; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--accent); background: var(--panel); color: var(--ink); font: 18px/1.5 var(--display); resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row button { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.row button[disabled] { opacity: 0.45; cursor: default; }
+.row .size { margin-left: auto; display: flex; gap: 6px; }
+.help { padding: 14px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line2); font-size: 14px; line-height: 1.45; }
+.help p { margin: 6px 0 10px; color: var(--sub); }
+.help dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+.help dt code, .help p code { font-family: var(--mono); font-size: 13px; }
+.help dd { margin: 0; color: var(--sub); }
+.up-next { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--sub); font-size: 15px; }
+.up-next span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.up-next b { color: var(--ink); font-size: 17px; }
+.up-next p { margin: 0; }
+.up-next .dir { font-style: italic; }
+.wait-box { margin-top: 30vh; text-align: center; color: var(--sub); font-size: 17px; line-height: 1.5; }
+.wait-box b { color: var(--ink); font-size: 22px; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

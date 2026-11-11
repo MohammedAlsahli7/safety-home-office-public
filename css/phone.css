@@ -226,6 +226,27 @@ h1 { margin: 0; font-size: 42px; line-height: 0.96; font-weight: 800; font-stret
 .habits { display: flex; flex-direction: column; gap: 10px; }
 @keyframes up { from { transform: translateY(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
 
+/* ---------- Motion: a new card slides in from the right, its options rise in turn ---------- */
+.app.enter-card > * { animation: card-in 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.app.enter-card > :nth-child(2) { animation-delay: 0.03s; }
+.app.enter-card > :nth-child(3) { animation-delay: 0.06s; }
+.app.enter-card > :nth-child(4) { animation-delay: 0.09s; }
+.app.enter-card .body :is(.tile, .route, .pick, .fuel-col, .chips4 button) { animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.16s; }
+.app.enter-card .body :is(.tile, .route, .pick, .fuel-col, .chips4 button):nth-child(2) { animation-delay: 0.22s; }
+.app.enter-card .body :is(.tile, .route, .pick, .fuel-col, .chips4 button):nth-child(3) { animation-delay: 0.28s; }
+.app.enter-card .body :is(.tile, .route, .pick, .fuel-col, .chips4 button):nth-child(4) { animation-delay: 0.34s; }
+.app.enter > * { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.app.enter > :nth-child(2) { animation-delay: 0.06s; }
+.app.enter > :nth-child(3) { animation-delay: 0.12s; }
+.app.enter > :nth-child(n+4) { animation-delay: 0.18s; }
+.sent-line.ok { animation: pop-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.slip { transform-origin: 50% 0; }
+.app.enter .slip { animation: slip-in 0.6s 0.1s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes card-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pop-in { from { transform: scale(0.94); } to { transform: none; } }
+@keyframes slip-in { from { opacity: 0; transform: translateY(-16px) rotate(-1.5deg); } to { opacity: 1; transform: none; } }
+
 @media (max-width: 360px) {
   .app { padding: 18px 14px 22px; }
   h1 { font-size: 36px; }

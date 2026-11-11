@@ -205,6 +205,28 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 #hint { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: rgba(27, 35, 40, 0.75); color: #fff; font-size: 13px; opacity: 0; transition: opacity 0.4s; pointer-events: none; }
 #hint.show { opacity: 1; }
 
+/* ---------- Motion: screens glide in, blocks rise in turn, bars grow, results pop ----------
+   #screen keeps the class for under a second, and live updates wait until it's gone,
+   so an animation plays once per screen and never restarts mid-way. */
+#screen.enter > .slide { animation: screen-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+#screen.enter :is(.panel, .callout, .confess, .qr-card, .q-side, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .lead-fix .why, .pfix, .fix, .names-row) { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.1s; }
+#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item):nth-child(2) { animation-delay: 0.17s; }
+#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item):nth-child(3) { animation-delay: 0.24s; }
+#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item):nth-child(4) { animation-delay: 0.31s; }
+#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item):nth-child(n+5) { animation-delay: 0.38s; }
+#screen.enter :is(.track i, .m-bar i) { animation: grow-x 0.9s 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 0 50%; }
+#screen.enter .big-zero span { animation: zero-pop 0.7s 0.25s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+#screen.reveal :is(.m-bar i) { animation: grow-x 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 0 50%; }
+#screen.reveal .m-hist .col i { animation: grow-y 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 50% 100%; }
+#screen.reveal :is(.m-res b, .m-big-avg b, .m-avg-line b, .m-avg-n b, .m-hist small) { animation: pop 0.45s 0.25s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+#screen.reveal :is(.m-pose.avg, .q-wait) { animation: rise 0.5s 0.1s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes grow-x { from { transform: scaleX(0); } }
+@keyframes grow-y { from { transform: scaleY(0); } }
+@keyframes pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes zero-pop { from { opacity: 0; transform: translateY(6px) scale(0.4); } to { opacity: 1; transform: translateY(6px) scale(1); } }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* A fixed recommendation leads each section; the team's numbers sit under it as evidence */

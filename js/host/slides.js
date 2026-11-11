@@ -188,7 +188,7 @@ function kpiIncidents(n, total) {
           ${rows.map(y => tail(COL, y)).join("")}
           ${rows.map(y => tail(GW - COL, y)).join("")}
         </svg>
-        <div style="position: absolute; left: ${cx - R}px; top: ${cy - R}px; width: ${2 * R}px; height: ${2 * R}px; display: grid; place-items: center">
+        <div class="big-zero" style="position: absolute; left: ${cx - R}px; top: ${cy - R}px; width: ${2 * R}px; height: ${2 * R}px; display: grid; place-items: center">
           <span style="font-size: 320px; font-weight: 800; font-stretch: 62%; line-height: 0.8; color: ${zero ? C.good : C.ink}; transform: translateY(6px)">${sum === null ? "—" : sum}</span>
         </div>
       </div>

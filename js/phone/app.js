@@ -113,6 +113,15 @@ function start() {
       else if (v === "report") reportScreen();
       else lateScreen();
       window.scrollTo(0, 0);
+      /* Each new card slides in; other views rise (not when the same view just redraws) */
+      if (v !== update.lastView) {
+        update.lastView = v;
+        app.classList.remove("enter", "enter-card");
+        void app.offsetWidth;
+        app.classList.add(v[0] === "q" ? "enter-card" : "enter");
+        clearTimeout(update.animTimer);
+        update.animTimer = setTimeout(() => app.classList.remove("enter", "enter-card"), 900);
+      }
     }
     if ((view === "report" || view === "late") && !state.done && Object.keys(state.answers).length) {
       state.done = true;

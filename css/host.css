@@ -1,0 +1,82 @@
+/* Presenter view: every screen is a 1280 x 720 stage scaled to fit the window.
+   Daylight palette: the slides practise what the talk preaches. */
+:root {
+  --bg: #F4EFE6; --panel: #FFFFFF; --panel2: #FBF8F2; --line: #DDD3C2; --line2: #E9E2D5;
+  --ink: #1B2328; --sub: #4E5A60; --muted: #5F6A6B; --deco: #A0968A;
+  --accent: #C4740A;       /* fills and marks: 3.2:1 on the page */
+  --accent-text: #A15C00;  /* text: 4.7:1 on the page */
+  --tint: #FCEBCB; --tint-ink: #6B4200; --water: #2A78D6; --grey: #8A9497; --good: #1E7F55;
+  --display: "Archivo", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--display); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+[hidden] { display: none !important; }
+
+#viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+#stage { width: 1280px; height: 720px; position: relative; transform-origin: 50% 50%; flex: none; }
+
+/* ---------- Shared slide frame ---------- */
+.slide { position: absolute; inset: 0; padding: 44px 64px 58px; display: flex; flex-direction: column; gap: 20px; background: var(--bg); overflow: hidden; }
+.s-body { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 20px; }
+.s-num { position: absolute; right: 64px; bottom: 22px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.h { margin: 0; font-size: 80px; line-height: 0.92; font-weight: 800; font-stretch: 64%; text-wrap: balance; }
+.panel { background: var(--panel); border: 1px solid var(--line2); border-radius: 18px; padding: 20px 22px; }
+.chart-label { font-size: 17px; font-weight: 600; }
+.src { font-size: 13px; color: var(--muted); }
+.wait { font-size: 17px; color: var(--muted); }
+
+.callout { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); }
+.callout svg { flex: none; }
+.callout .row { display: flex; align-items: baseline; gap: 12px; }
+.callout .big { font-family: var(--mono); font-size: 34px; font-weight: 500; line-height: 1; color: var(--accent-text); white-space: nowrap; }
+.callout .txt { font-size: 19px; line-height: 1.3; }
+.callout.stack .row { flex-direction: column; align-items: flex-start; gap: 4px; }
+.callout.stack .big { font-size: 30px; }
+.callout.stack .txt { font-size: 17px; }
+.callout.big-c { padding: 18px 22px; }
+.callout.big-c .big { font-size: 46px; }
+.callout.big-c .txt { font-size: 24px; }
+
+.confess { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); }
+.confess .q { font-size: 26px; line-height: 1.15; font-weight: 700; font-stretch: 85%; }
+.confess .big { font-family: var(--mono); font-size: 28px; font-weight: 500; line-height: 1; color: var(--accent-text); }
+.confess .g { font-size: 17px; color: var(--sub); }
+
+.fix { padding: 16px 24px; border-radius: 16px; background: var(--tint); border: 1.5px solid var(--accent); font-size: 26px; line-height: 1.2; font-weight: 700; font-stretch: 85%; }
+.track { display: block; height: 14px; border-radius: 4px; background: var(--line2); overflow: hidden; }
+.track i { display: block; height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+/* ---------- Join and live screens ---------- */
+.qr-card { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 26px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(27, 35, 40, 0.08); }
+.qr-card svg { display: block; }
+.names-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.name-chip { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-size: 15px; }
+.name-chip.new { border-color: var(--accent); background: var(--tint); }
+.status { position: absolute; right: 64px; top: 20px; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: var(--grey); }
+.status[data-s="live"] i { background: var(--good); }
+.status[data-s="offline"] i { background: #C0392B; }
+.window { position: relative; display: block; height: 70px; border-radius: 4px; border: 3px solid #B9AE9C; }
+.window::before, .window::after { content: ""; position: absolute; background: #B9AE9C; }
+.window::before { left: 50%; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; }
+.window::after { top: 50%; left: 0; right: 0; height: 3px; margin-top: -1.5px; }
+.feed-item { display: flex; flex-direction: column; gap: 3px; padding: 10px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line2); }
+.feed-item:first-child { border-color: var(--accent); background: var(--tint); }
+
+/* ---------- Presenter tools (P) ---------- */
+#tools { position: fixed; right: 16px; top: 16px; z-index: 20; width: 340px; padding: 18px; border-radius: 16px; background: #fff; border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18); display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+#tools h2 { margin: 0; font-size: 18px; }
+#tools code { font-family: var(--mono); font-size: 13px; word-break: break-all; }
+#tools button { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); text-align: left; }
+#tools .keys { margin: 0; padding-left: 18px; color: var(--sub); line-height: 1.6; }
+#tools { max-height: calc(100vh - 32px); overflow-y: auto; }
+#tools label { display: grid; grid-template-columns: 1fr 140px; gap: 8px; align-items: center; font-size: 13px; }
+#tools input, #tools textarea { width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); font: 12px/1.4 var(--mono); }
+#hint { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: rgba(27, 35, 40, 0.75); color: #fff; font-size: 13px; opacity: 0; transition: opacity 0.4s; pointer-events: none; }
+#hint.show { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

@@ -62,7 +62,8 @@ h1 { margin: 0; font-size: 42px; line-height: 0.96; font-weight: 800; font-stret
 .sq { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--panel); color: var(--accentText); }
 .sq:first-of-type { margin-left: auto; }
 .sq.wide { width: auto; padding: 0 12px; color: var(--ink); font-size: 14px; font-weight: 600; }
-.names { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.names { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-height: 300px; overflow-y: auto; padding: 2px; border-radius: 12px; }
+.names button[disabled] { opacity: 0.35; text-decoration: line-through; cursor: default; }
 .names button { min-height: 44px; padding: 0 6px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--panel); font-size: 13.5px; font-weight: 600; font-stretch: 88%; }
 .names button[aria-pressed="true"] { border-color: var(--accent); background: var(--tint); color: var(--tintInk); }
 .how { display: flex; flex-direction: column; gap: 12px; padding-top: 22px; border-top: 1px dashed var(--line); }

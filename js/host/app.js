@@ -200,7 +200,7 @@ function render() {
   /* Results appear by themselves once everyone has answered, or when the presenter asks */
   const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card);
   if (autoReveal) revealed.add(sc.card);
-  if (sc.id === "join") screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest });
+  if (sc.id === "join") { screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest }); fitNames(); }
   else if (sc.card !== undefined) screenEl.innerHTML = questionScreen({ index: sc.card, stats, players: state.players, feed, status, shown: revealed.has(sc.card) });
   else if (sc.id === "wrap") screenEl.innerHTML = wrapScreen({ stats, feed, status });
   else screenEl.innerHTML = sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats);
@@ -212,6 +212,18 @@ function render() {
     const label = canReveal() ? "Show answers" : sc.card === CARDS.length - 1 ? "Finish and send reports →" : "Next card →";
     if (next.textContent !== label) next.textContent = label;
     next.classList.toggle("ready", everyone);
+  }
+}
+
+/* Every name that joined stays on the join screen: the name tags shrink until they all fit */
+function fitNames() {
+  const box = document.getElementById("names");
+  if (!box) return;
+  let size = 17;
+  box.style.setProperty("--chip", size + "px");
+  while (box.scrollHeight > box.clientHeight + 1 && size > 9) {
+    size -= 1;
+    box.style.setProperty("--chip", size + "px");
   }
 }
 

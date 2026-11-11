@@ -36,7 +36,7 @@ function start() {
   const KEY = "play." + session;
   const state = Object.assign({
     pid: randomCode(10),
-    nick: NICKNAMES[Math.floor(Math.random() * NICKNAMES.length)],
+    nick: NICKNAMES[Math.floor(Math.random() * NICKNAMES.length)], nickChosen: false,
     L: 30, joined: false, answers: {}, sent: {}, done: false, taps: {}, vote: null, choosing: false
   }, store.get(KEY) || {});
   let stage = null, view = null, cleanup = () => {}, thanksTimer = null;
@@ -65,6 +65,7 @@ function start() {
     session,
     onMessage: m => {
       if (m && m.t === "stage" && typeof m.s === "string") chain = chain.then(() => acceptStage(m)).catch(() => {});
+      else if (m && m.t === "join" && typeof m.p === "string" && m.p !== state.pid && typeof m.n === "string") nameTaken(m.p, m.n);
     }
   });
   relay.connect();
@@ -151,8 +152,8 @@ function start() {
         <button type="button" class="sq" data-a="shuffle" aria-label="Shuffle name"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></button>
         <button type="button" class="sq wide" data-a="choose" aria-expanded="${state.choosing}">${state.choosing ? "Close" : "Choose"}</button>
       </div>
-      <div class="names" ${state.choosing ? "" : "hidden"}>${NICKNAMES.map(n => `<button type="button" data-n="${esc(n)}" aria-pressed="${n === state.nick}">${esc(n)}</button>`).join("")}</div>
-      <button type="button" class="btn" data-a="join">Join as ${esc(state.nick)}</button>
+      <div class="names" ${state.choosing ? "" : "hidden"}>${NICKNAMES.map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+      <button type="button" class="btn" data-a="join">Join as <span data-nick>${esc(state.nick)}</span></button>
       <div class="how">
         ${mono("How it works")}
         <div class="steps">
@@ -175,17 +176,15 @@ function start() {
           <span class="k">revealed at the end</span>
         </div>
       </div>
-      <button type="button" class="btn" data-a="join">Join as ${esc(state.nick)}</button>`;
+      <button type="button" class="btn" data-a="join">Join as <span data-nick>${esc(state.nick)}</span></button>`;
     drawLamp();
+    showNick();
     app.onclick = e => {
       const a = e.target.closest("[data-a]")?.dataset.a;
       const n = e.target.closest("[data-n]")?.dataset.n;
-      if (a === "shuffle") {
-        let next = state.nick;
-        while (next === state.nick) next = NICKNAMES[Math.floor(Math.random() * NICKNAMES.length)];
-        state.nick = next; save(); view = null; update();
-      } else if (a === "choose") { state.choosing = !state.choosing; save(); view = null; update(); }
-      else if (n) { state.nick = n; state.choosing = false; save(); view = null; update(); }
+      if (a === "shuffle") { state.nick = freeName(state.nick); state.nickChosen = false; save(); showNick(); }
+      else if (a === "choose") { state.choosing = !state.choosing; save(); showNick(); }
+      else if (n && !e.target.closest("[data-n]").disabled) { state.nick = n; state.nickChosen = true; state.choosing = false; save(); showNick(); }
       else if (a === "join") {
         state.joined = true;
         state.choosing = false;
@@ -194,6 +193,41 @@ function start() {
         update();
       }
     };
+  }
+
+  /* ---------- Nicknames: skip the ones other phones in this session already use ---------- */
+  const others = new Map();
+  const takenNames = () => new Set(others.values());
+  function freeName(not) {
+    const taken = takenNames();
+    const free = NICKNAMES.filter(x => !taken.has(x) && x !== not);
+    const pool = free.length ? free : NICKNAMES.filter(x => x !== not);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function nameTaken(pid, nick) {
+    others.set(pid, nick);
+    /* A random name someone else just took is swapped quietly; a name picked from the list is kept */
+    if (!state.joined && !state.nickChosen && nick === state.nick) { state.nick = freeName(state.nick); save(); }
+    if (view === "landing") showNick();
+  }
+  /* Updates the name in place, so a cord pull in progress is never interrupted */
+  function showNick() {
+    const taken = takenNames();
+    const el = document.getElementById("nick");
+    if (!el) return;
+    el.textContent = state.nick;
+    app.querySelectorAll("[data-nick]").forEach(x => { x.textContent = state.nick; });
+    const list = app.querySelector(".names");
+    list.hidden = !state.choosing;
+    const choose = app.querySelector('[data-a="choose"]');
+    choose.textContent = state.choosing ? "Close" : "Choose";
+    choose.setAttribute("aria-expanded", String(state.choosing));
+    list.querySelectorAll("[data-n]").forEach(b => {
+      const n = b.dataset.n, isTaken = taken.has(n) && n !== state.nick;
+      b.setAttribute("aria-pressed", String(n === state.nick));
+      b.disabled = isTaken;
+      b.title = isTaken ? "Taken" : "";
+    });
   }
 
   function lampSVG(L) {

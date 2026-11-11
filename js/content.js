@@ -16,10 +16,18 @@ export const LIGHT_LEVELS = [
 export const lightName = L => LIGHT_LEVELS.find(l => L < l.max).name;
 export const lightBucket = L => (L < 34 ? "night" : L < 67 ? "dusk" : "day");
 
+/* 60 call-and-home-office nicknames (15 characters at most). Phones skip names already taken. */
 export const NICKNAMES = [
   "Frozen Frame", "Echo Mic", "Buffering", "Reply All", "Low Battery", "Weak Wi-Fi", "Away 5 min",
   "Lag", "Hold Music", "Dial Tone", "Screen Share", "Static", "Mute Button", "Raised Hand",
-  "Spinning Wheel", "Reconnecting", "Typing…", "Unread", "Ping", "Dropped Call"
+  "Spinning Wheel", "Reconnecting", "Typing…", "Unread", "Ping", "Dropped Call",
+  "Out of Office", "Do Not Disturb", "Auto Reply", "Sticky Note", "Coffee Ring", "Desk Plant",
+  "Night Mode", "Dark Mode", "Pop-up", "Loading…", "404", "Ctrl+Z", "Copy Paste", "Caps Lock",
+  "Tab Hoarder", "Inbox Zero", "Snooze Button", "Paper Jam", "Blue Screen", "Update Pending",
+  "Restart Later", "Low Signal", "Hotspot", "Bluetooth", "Headset Hair", "Extension Cord",
+  "Long Cable", "Sofa Desk", "Kitchen Office", "Two Books", "Lamp On", "Karak Break",
+  "Qahwa Refill", "Water Glass", "Doorbell", "Group Chat", "Can You Hear Me", "Airplane Mode",
+  "Spam Folder", "Voice Note"
 ];
 
 export const POSES = ["Upright", "Leaning in", "The Shrimp", "Sofa Sink"];

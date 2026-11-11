@@ -13,20 +13,20 @@ export const statusChip = status => `<span class="status" data-s="${status}"><i>
 /* ---------- Join ---------- */
 export function joinScreen({ url, players, status, newest }) {
   const list = Object.values(players);
-  const names = list.slice(-24).map(p => `<span class="name-chip${p === newest ? " new" : ""}">${esc(p.nick)}</span>`).join("");
+  const names = list.slice(-80).map(p => `<span class="name-chip${p === newest ? " new" : ""}">${esc(p.nick)}</span>`).join("");
   return `
   <div class="slide game">
     ${statusChip(status)}
     ${lamp("lj", 210, 330)}
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px">
       <div style="display: flex; flex-direction: column; justify-content: center; gap: 22px">
-        <h1 style="margin: 0; font-size: 104px; line-height: 0.84; font-weight: 800; font-stretch: 62%; text-transform: uppercase">Home office<br>check-up</h1>
+        <h1 style="margin: 0; font-size: 96px; line-height: 0.84; font-weight: 800; font-stretch: 62%; text-transform: uppercase">Home office<br>check-up</h1>
         <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Scan, pull the lamp cord, and wait for the first card. Eleven quick ones, on your phone, anonymous.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
           <span style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1">${list.length}</span>
           <span style="font-size: 22px; color: ${C.sub}">joined</span>
         </div>
-        <div class="names-row" style="max-height: 92px; overflow: hidden">${names}</div>
+        <div class="names-row" id="names">${names}</div>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: center">
         <div class="qr-card" data-join="${esc(url)}">

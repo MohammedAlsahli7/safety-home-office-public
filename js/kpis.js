@@ -1,11 +1,12 @@
-/* Private slide data: the presenter's introduction and the figures for the three KPI slides.
+/* Private slide data: the presenter's introduction, the figures for the three KPI slides, and the
+   closing slide's board link and support line.
    The code holds labels only; no real name or figure is ever published.
    The presenter pastes the figures as JSON in the presenter tools (key P), or opens a private link
    whose #kpi=… hash carries them. Either way they are kept in that browser only.
 
    JSON shape (every part optional; everything below is made up):
    {
-     "intro": {                                             // the first screen, before the QR code
+     "intro": {                                             // behind the QR code screen (I)
        "name": "Sam", "role": "Engineer",
        "home": "Home team", "assignment": "Team on assignment", "assignmentNote": "what I do there",
        "background": ["Studied …", "Worked at …"]           // up to 4 short lines
@@ -23,6 +24,10 @@
        "period": "March",                                    // month of the department figures
        "team": "Team A",
        "departments": [["Team A", 90], ["Team B", 85]]       // positive response %
+     },
+     "close": {                                              // the last slide
+       "board": { "url": "https://example.org/board", "title": "Share your experience", "where": "our team board", "question": "What helps you most?" },
+       "support": { "name": "Support programme", "text": "To speak with a counselor, call", "phone": "800 000 0000", "note": "toll-free" }
      }
    } */
 import { store } from "./store.js";
@@ -46,6 +51,9 @@ export function cleanKpis(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
   const ph = r.phishing && typeof r.phishing === "object" ? r.phishing : {};
   const intro = r.intro && typeof r.intro === "object" ? r.intro : {};
+  const close = r.close && typeof r.close === "object" ? r.close : {};
+  const board = close.board && typeof close.board === "object" ? close.board : {};
+  const support = close.support && typeof close.support === "object" ? close.support : {};
   return {
     intro: {
       name: text(intro.name, 40), role: text(intro.role, 80),
@@ -68,6 +76,10 @@ export function cleanKpis(raw) {
       period: text(ph.period, 40),
       team: text(ph.team, 32),
       departments: rows(ph.departments).map(([name, value]) => [text(name, 32), pct(value)])
+    },
+    close: {
+      board: { url: /^https:\/\/[^\s"<>]+$/.test(text(board.url, 300)) ? text(board.url, 300) : "", title: text(board.title, 60), where: text(board.where, 60), question: text(board.question, 90) },
+      support: { name: text(support.name, 60), text: text(support.text, 70), phone: /^[0-9 +()-]{3,24}$/.test(text(support.phone, 24)) ? text(support.phone, 24) : "", note: text(support.note, 40) }
     }
   };
 }

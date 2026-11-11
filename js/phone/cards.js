@@ -8,7 +8,12 @@ import { skeletonSVG } from "../skeleton.js";
 import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass, MAX_CUPS, MAX_GLASSES, MAX_COUNT } from "./art.js";
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* Phones follow their own reduced-motion setting; the presenter page (html.present) has its own switch (html.calm) */
+const reduced = () => {
+  const html = document.documentElement.classList;
+  if (html.contains("present")) return html.contains("calm");
+  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+};
 
 export function renderCard(el, card, value, set) {
   const kind = card.kind === "options" ? card.layout : card.kind;

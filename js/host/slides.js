@@ -3,7 +3,7 @@
 import { loadKpis, SAFETY_LABELS } from "../kpis.js";
 import { CONFESSIONS, HABITS, POSES } from "../content.js";
 import { skeletonSVG } from "../skeleton.js";
-import { C, f1, esc, enough, PHONE, callout, share, confess, lamp } from "./parts.js";
+import { C, f1, esc, enough, PHONE, callout, share, confess, lamp, qrSVG } from "./parts.js";
 
 const COWORKER = { cat: "The cat", kids: "The kids", door: "The doorbell", chat: "The family group chat" };
 const num = (i, total) => `<span class="s-num">${i} / ${total}</span>`;
@@ -418,9 +418,20 @@ function close(n, total, s) {
       <text x="${f1(cx(i))}" y="298" text-anchor="middle" fill="${C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">${i}</text>`;
   }).join("");
   const ready = enough(vd.n);
+  /* Where to say so: the team board's QR code and the support line, from the private slide data */
+  const { board, support } = loadKpis().close;
+  const reach = board.url || support.phone ? `
+        <div class="reach${board.url ? "" : " no-qr"}">
+          ${board.url ? qrSVG(board.url, 176) : ""}
+          <div class="reach-txt">
+            ${board.url ? `<span><b>${esc(board.title || "Share your experience")}</b>${board.where || board.question ? `<span class="sub">${board.where ? `On ${esc(board.where)}${board.question ? ": " : ""}` : ""}${board.question ? `“${esc(board.question)}”` : ""}</span>` : ""}</span>` : ""}
+            ${board.url && support.phone ? `<hr>` : ""}
+            ${support.phone ? `<span>${support.name ? `<b>${esc(support.name)}</b>` : ""}<span class="sub">${esc(support.text || "To speak with a counselor, call")} <b class="tel">${esc(support.phone)}</b>${support.note ? ` (${esc(support.note)})` : ""}</span></span>` : ""}
+          </div>
+        </div>` : "";
   return `
   <div class="slide">
-    ${lamp("l8", 210, 40)}
+    ${lamp("l8", 210, reach ? -60 : 40)}
     <div class="s-body" style="display: grid; grid-template-columns: 520px minmax(0, 1fr); gap: 56px; align-items: stretch">
       <div class="panel" style="display: flex; flex-direction: column; gap: 14px">
         <span style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 24px; font-weight: 700; font-stretch: 85%">Working from home so far</span>${PHONE}</span>
@@ -435,9 +446,9 @@ function close(n, total, s) {
         <span style="margin-top: auto; display: flex; align-items: center; gap: 10px; font-size: 18px; color: ${C.sub}"><span style="width: 14px; height: 14px; border-radius: 3px; background: ${C.grey}"></span><span><b style="font-family: var(--mono); font-weight: 500; color: ${C.ink}">${vd.low}</b> of us said 5 or below</span></span>`
         : `<span class="wait">Shows at 5 answers (${vd.n} so far)</span>`}
       </div>
-      <div style="position: relative; display: flex; flex-direction: column; gap: 24px; justify-content: center; padding-top: 120px">
-        <h2 style="margin: 0; font-size: 96px; line-height: 0.88; font-weight: 800; font-stretch: 62%; text-transform: uppercase">If the weeks<br>feel heavy,<br>say so</h2>
-        <p style="margin: 0; font-size: 28px; line-height: 1.35">Unmute. Message a colleague. Talk to your manager.</p>
+      <div style="position: relative; display: flex; flex-direction: column; gap: ${reach ? 18 : 24}px; justify-content: center; padding-top: ${reach ? 0 : 120}px">
+        <h2 style="margin: 0; font-size: ${reach ? 72 : 96}px; line-height: 0.88; font-weight: 800; font-stretch: 62%; text-transform: uppercase">If the weeks<br>feel heavy,<br>say so</h2>
+        <p style="margin: 0; font-size: ${reach ? 23 : 28}px; line-height: 1.35">Unmute. Message a colleague. Talk to your manager.</p>${reach}
         <p style="margin: 0; font-size: 19px; color: ${C.sub}">Your report stays on your phone.</p>
       </div>
     </div>

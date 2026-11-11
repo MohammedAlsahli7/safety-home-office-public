@@ -9,7 +9,7 @@ import { TITLES, TARGETS, DEFAULTS, kpiDefault, tokens, TOKEN_HELP } from "../no
 const root = document.getElementById("notes");
 const channel = (() => { try { return new BroadcastChannel("hoc-notes"); } catch (_) { return null; } })();
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const KPI_IDS = ["intro", "courses", "phishing", "incidents"];
+const KPI_IDS = ["intro", "courses", "phishing", "incidents", "close"];   /* written from the private slide data */
 
 let st = null, editing = false, size = store.get("notes.size", 22), saveTimer = null;
 const edits = () => store.get("notes", {});
@@ -35,6 +35,7 @@ function frame() {
     <nav class="drive">
       <button type="button" class="ghost" data-go="-1">← Back</button>
       <button type="button" class="primary" data-go="1" id="next">Next →</button>
+      <button type="button" class="ghost" id="intro" hidden></button>
     </nav>
     <section class="script" id="script" style="font-size: ${size}px"></section>
     <textarea id="editor" hidden spellcheck="true" aria-label="Script for this screen"></textarea>
@@ -58,6 +59,9 @@ function paint() {
   document.getElementById("pos").textContent = `${st.index + 1} / ${st.total}`;
   document.getElementById("title").textContent = TITLES[st.id] || st.id;
   document.getElementById("next").textContent = st.nextLabel || "Next →";
+  const intro = document.getElementById("intro");
+  intro.hidden = st.id !== "join" && st.id !== "intro";
+  intro.textContent = st.id === "intro" ? "← Back to the QR code" : "Show my introduction (I)";
   document.getElementById("target").textContent = TARGETS[st.id] ? `aim ${TARGETS[st.id]}` : "";
   document.getElementById("next-title").textContent = st.nextId ? TITLES[st.nextId] || st.nextId : "The end";
   const nextText = st.nextId ? scriptFor(st.nextId).split(/\n/)[0] : "";
@@ -118,6 +122,7 @@ root.addEventListener("input", e => {
 root.addEventListener("click", e => {
   const go = e.target.closest("[data-go]");
   if (go) { if (editing) stopEdit(); if (channel) channel.postMessage({ type: "go", dir: Number(go.dataset.go) }); return; }
+  if (e.target.id === "intro") { if (channel) channel.postMessage({ type: "intro" }); return; }
   const sz = e.target.closest("[data-size]");
   if (sz) {
     size = Math.max(14, Math.min(40, size + Number(sz.dataset.size)));
@@ -134,6 +139,7 @@ root.addEventListener("click", e => {
 });
 document.addEventListener("keydown", e => {
   if (editing || e.metaKey || e.ctrlKey || e.altKey || e.target.closest("textarea, button")) return;
+  if ((e.key === "i" || e.key === "I") && channel) { channel.postMessage({ type: "intro" }); return; }
   const dir = { ArrowRight: 1, PageDown: 1, " ": 1, ArrowLeft: -1, PageUp: -1 }[e.key];
   if (dir && channel) { e.preventDefault(); channel.postMessage({ type: "go", dir }); }
 });

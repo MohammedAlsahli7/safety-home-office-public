@@ -67,6 +67,30 @@ export function lamp(id, cx, right, height = 720) {
     </svg>`;
 }
 
+/* The join screen's lamp, with a cord to pull like the one on the phones. 0 is off, 100 is bright.
+   The bead hangs from the shade and moves down as the light goes up. */
+export const CORD = { x: 262, top: 214, run: 170 };   /* in the lamp's 420 × 720 drawing */
+export function pullLamp(L, name) {
+  const k = Math.max(0, Math.min(100, L)) / 100, bead = CORD.top + k * CORD.run, cx = 210;
+  const mix = (a, b) => "#" + [1, 3, 5].map(i => Math.round(parseInt(a.slice(i, i + 2), 16) + (parseInt(b.slice(i, i + 2), 16) - parseInt(a.slice(i, i + 2), 16)) * k).toString(16).padStart(2, "0")).join("");
+  return `
+    <svg viewBox="0 0 420 720" width="420" height="720" aria-hidden="true">
+      <defs>
+        <linearGradient id="plc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB547" stop-opacity="0.5"/><stop offset="1" stop-color="#FFB547" stop-opacity="0"/></linearGradient>
+        <radialGradient id="plh" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFD58A" stop-opacity="0.95"/><stop offset="1" stop-color="#FFD58A" stop-opacity="0"/></radialGradient>
+      </defs>
+      <path d="M${cx - 60} 168 L${cx + 60} 168 L${cx + 200} 700 L${cx - 200} 700 Z" fill="url(#plc)" opacity="${(0.04 + 0.96 * k).toFixed(2)}"/>
+      <circle cx="${cx}" cy="170" r="${(60 + 40 * k).toFixed(0)}" fill="url(#plh)" opacity="${(0.1 + 0.9 * k).toFixed(2)}"/>
+      <line x1="${cx}" y1="0" x2="${cx}" y2="104" stroke="${C.deco}" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+      <path d="M${cx - 32} 104 H${cx + 32} L${cx + 66} 166 H${cx - 66} Z" fill="#2F3A40"/>
+      <path d="M${cx - 66} 166 H${cx + 66}" stroke="${C.acc}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="172" r="13" fill="${mix("#8C8478", "#FFE6B8")}"/>
+      <path d="M${CORD.x} 166 V${bead.toFixed(1)}" stroke="${C.deco}" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.1 6"/>
+      <circle cx="${CORD.x}" cy="${bead.toFixed(1)}" r="13" fill="${C.acc}" stroke="#2F3A40" stroke-width="2"/>
+      <text x="${CORD.x - 24}" y="${(bead + 5).toFixed(1)}" text-anchor="end" style="font-family: var(--mono); font-size: 14px; letter-spacing: 0.1em; fill: ${C.accText}">${k < 0.15 ? "PULL" : esc(name.toUpperCase())}</text>
+    </svg>`;
+}
+
 /* Window colours for each room-light level (live screen) */
 export function roomColours(L) {
   if (typeof L !== "number") return ["#E9E2D5", "rgba(0,0,0,0)"];

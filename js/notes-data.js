@@ -17,7 +17,7 @@ export const TITLES = {
 
 /* Where each talk slide should be, in minutes into the talk */
 export const TARGETS = {
-  intro: "before the game, about 0:20",
+  intro: "while people join, about 0:20",
   courses: "0:00 to 0:17", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
   attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:30", awards: "4:30 to 4:45",
   habits: "4:45 to 5:20", close: "5:20 to 5:50"
@@ -25,11 +25,13 @@ export const TARGETS = {
 
 const NEXT = "(When most have answered, press Show answers, then Next card.)";
 export const DEFAULTS = {
-  join: `Before the safety moment, a quick game.
+  join: `Good morning, everyone. Before the safety moment, a quick game.
 
 Scan the QR code with your phone camera. Pull the lamp cord to match the light in your room, pick a funny name, and press Join.
 
 It’s anonymous: no real names, no camera. Only team totals show up here, and only once at least 5 people have answered.
+
+(While people join, press I or Introduction to introduce yourself. A small QR code stays on that screen.)
 
 (When the joined count stops climbing, press Start the game.)`,
   q1: `Card 1. Turn the dial until the skeleton looks like you right now. Be honest: nobody sees who picked what.
@@ -138,15 +140,23 @@ export function kpiDefault(id, k) {
     const role = job ? `, ${/^[aeiou]/i.test(job) ? "an" : "a"} ${job.toLowerCase()}${programme ? ` in the ${programme}` : ""}` : "";
     const say = x => x.replace(/\s*·\s*/g, ", ");
     const orgs = [i.home && `My home organization is ${say(i.home)}`, i.assignment && `I’m currently on assignment with ${say(i.assignment)}${i.assignmentNote ? `, working on ${i.assignmentNote}` : ""}`].filter(Boolean);
-    return `Good morning, everyone. I’m ${i.name}${role}.
+    return `While you join, a quick introduction. I’m ${i.name}${role}.
 
 ${orgs.join(", and ")}.${i.background.length ? `
 
 A bit about me: ${i.background.map((x, n) => (n ? x.charAt(0).toLowerCase() + x.slice(1) : x)).join("; ")}.` : ""}
 
-Today I have our safety moment, and it starts with a quick game on your phones.
+Today I have our safety moment, and it starts with that game on your phones.
 
-(Press Show the QR code.)`;
+(When the joined count stops climbing, press Start the game. ← or Esc goes back to the big QR code.)`;
+  }
+  if (id === "close") {
+    const { board, support } = k.close;
+    const extra = [
+      board.url && `The QR code on screen opens ${board.where || "our team board"}.${board.question ? ` Its question is “${board.question}”` : ""} Share yours there, and anything else about working from home that helps.`,
+      support.phone && `And if you’d rather talk to someone outside the team${support.name ? `, there’s the ${support.name}` : ""}. ${support.text || "To speak with a counselor, call"} ${support.phone}${support.note ? `, ${support.note}` : ""}.`
+    ].filter(Boolean).join("\n\n");
+    return extra ? DEFAULTS.close.replace("Your report stays on your phone.", `${extra}\n\nYour report stays on your phone.`) : DEFAULTS.close;
   }
   if (id === "courses") {
     if (!k.courses.length) return "(Add the KPI figures first: press P on the presenter screen.)";

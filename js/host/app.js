@@ -1,20 +1,25 @@
 /* Presenter, Kahoot style: join (QR) → one screen per card → wrap-up → 10 talk slides.
+   The introduction sits behind the join screen: the Introduction button, or the I key.
    The presenter drives the pace: every screen change is published as a `stage`, and phones
    show exactly that card (or the lobby, the report, a confession, the vote). Phones never move on
    by themselves. Share this tab in Teams.
+   The presenter can play too: the lamp cord on the join screen and the card on each card screen work
+   like a phone's. The first touch of a card joins the presenter as one more player, "Presenter".
    Only the browser that started the session can move the phones: every stage is signed with a key
    that never leaves it (see ../sign.js). Anyone else who opens host.html with the session code gets a
    locked page, and phones ignore unsigned or replayed stages.
-   Buttons on screen, or keys: → Space PageDown next · ← PageUp back · F full screen · P presenter tools */
+   Buttons on screen, or keys: → Space PageDown next · ← PageUp back · I introduction · F full screen ·
+   N speaker notes · P presenter tools */
 import { config, isSessionCode } from "../config.js";
-import { store } from "../store.js";
+import { store, randomCode } from "../store.js";
 import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
 import { CARDS, POSES, poseIndex, lightName } from "../content.js";
 import { SLIDES } from "./slides.js";
-import { introScreen, joinScreen, questionScreen, wrapScreen } from "./screens.js";
+import { introFrame, joinFrame, joinNames, questionFrame, questionResults, questionSide, questionMoment, wrapScreen, statusChip } from "./screens.js";
+import { renderCard } from "../phone/cards.js";
 import { startDemo } from "./demo.js";
-import { esc } from "./parts.js";
+import { esc, pullLamp, CORD } from "./parts.js";
 import { rawKpis, saveKpis, encodeKpis, importKpisFromHash, loadKpis } from "../kpis.js";
 import { canSign, newHostKey, signer, verifier, stageText, fingerprint, b64url, fromB64url } from "../sign.js";
 
@@ -26,7 +31,6 @@ const screenEl = document.getElementById("screen");
 const controlsEl = document.getElementById("controls");
 
 const SCREENS = [
-  { id: "intro", stage: "lobby" },
   { id: "join", stage: "lobby" },
   ...CARDS.map((c, i) => ({ id: "q" + (i + 1), card: i, stage: "q" + (i + 1) })),
   { id: "wrap", stage: "end" },
@@ -45,7 +49,7 @@ async function freshSession() {
   session = await fingerprint(hostKey.pub);   /* the session code is the key's fingerprint */
   store.set("host.key." + session, hostKey);
   store.set(SAVED, session);
-  store.set("host.screen." + session, 0);
+  store.set("host.at." + session, SCREENS[0].id);
 }
 
 /* The private presenter link carries the key in its #hash: host.html?s=…#key=… */
@@ -91,7 +95,54 @@ function joinUrl() {
 /* ---------- State ---------- */
 let state, feed, newest, screen, relay, demo, lastStage, status = "idle", renderTimer = null, cardStarted = 0;
 let lastAt = 0, sendChain = Promise.resolve(), revealed = new Set(), lastStats = null;
-let animUntil = 0, animTimer = null, gameStartedAt = 0, talkStartedAt = 0;
+let animUntil = 0, animTimer = null, gameStartedAt = 0, talkStartedAt = 0, introOn = false;
+
+/* ---------- The presenter plays too ----------
+   Saved per session in this browser. Nothing is sent until the presenter first touches a card; from
+   then on they're one more player, named "Presenter", and their answers count like anyone's.
+   The lamp cord on the join screen sets their room light. They don't get a report on screen. */
+const ME_NAME = "Presenter";
+let me = null, mePending = {}, lightTimer = null;
+function loadMe() {
+  Object.values(mePending).forEach(clearTimeout);
+  mePending = {};
+  me = Object.assign({ pid: "pr-" + randomCode(10), L: 60, joined: false, answers: {}, done: false }, store.get("host.me." + session) || {});
+}
+const saveMe = () => store.set("host.me." + session, me);
+/* Applied here straight away, then sent; the relay's echo changes nothing */
+function meSend(m) {
+  const msg = { ...m, p: me.pid };
+  onMessage(msg);
+  relay.send(msg);
+}
+function meJoin() {
+  if (me.joined) return;
+  me.joined = true;
+  saveMe();
+  meSend({ t: "join", n: ME_NAME, L: me.L });
+}
+function meFlush(key) {
+  clearTimeout(mePending[key]);
+  delete mePending[key];
+  if (me.answers[key] !== undefined) meSend({ t: "ans", k: key, v: me.answers[key] });
+}
+const meFlushAll = () => Object.keys(mePending).forEach(meFlush);
+/* Like a phone: a tap is sent at once, a drag or a counter after a short pause */
+function meAnswer(key, v, now) {
+  meJoin();
+  me.answers[key] = v;
+  saveMe();
+  clearTimeout(mePending[key]);
+  if (now) meFlush(key);
+  else mePending[key] = setTimeout(() => meFlush(key), 700);
+}
+function meLight(L) {
+  me.L = Math.max(0, Math.min(100, Math.round(L)));
+  saveMe();
+  if (!me.joined) return;
+  clearTimeout(lightTimer);
+  lightTimer = setTimeout(() => meSend({ t: "join", n: ME_NAME, L: me.L }), 700);
+}
 
 /* Speaker notes: a separate window (notes.html) in this same browser. It follows the screens,
    shows the script with live numbers, and can press Back and Next. Nothing here is shared on screen. */
@@ -106,7 +157,7 @@ function postNotes() {
   const sc = SCREENS[screen], nx = SCREENS[screen + 1];
   const nextBtn = controlsEl.querySelector('[data-go="next"]');
   notesChannel.postMessage({
-    type: "state", index: screen, total: SCREENS.length, id: sc.id, nextId: nx ? nx.id : null,
+    type: "state", index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: nx ? nx.id : null,
     nextLabel: sc.slide ? (nx ? "Next slide →" : "Last slide") : nextBtn ? nextBtn.textContent.trim() : "Next →", firstSlide: FIRST_SLIDE,
     screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats
   });
@@ -115,7 +166,8 @@ if (notesChannel) notesChannel.onmessage = e => {
   const d = e.data || {};
   if (!relay) return;
   if (d.type === "hello") postNotes();
-  else if (d.type === "go") { if (d.dir > 0) advance(); else go(screen - 1); }
+  else if (d.type === "intro") toggleIntro();
+  else if (d.type === "go") { if (d.dir > 0) advance(); else back(); }
 };
 
 /* Animations play on the presenter page even when the laptop asks for reduced motion (it's a
@@ -142,7 +194,10 @@ function boot() {
   lastStage = null;
   lastAt = 0;
   revealed = new Set();
-  screen = Math.min(store.get("host.screen." + session, 0), SCREENS.length - 1);
+  introOn = false;
+  frameKey = null;
+  screen = Math.max(0, SCREENS.findIndex(s => s.id === store.get("host.at." + session)));
+  loadMe();
   if (relay) relay.close();
   if (demo) demo.stop();
   relay = createRelay({
@@ -210,6 +265,28 @@ function scheduleRender() {
   renderTimer = setTimeout(() => { renderTimer = null; render(); }, Math.max(250, animUntil - Date.now()));
 }
 
+/* The join, introduction and card screens keep a fixed frame while their live parts ([data-live])
+   update, so the lamp cord and the card on screen can be played without being redrawn mid-drag.
+   The other screens redraw whole. */
+let frameKey = null, unmount = () => {}, liveHtml = {};
+function setFrame(key, html) {
+  if (key && key === frameKey) return false;
+  unmount();
+  unmount = () => {};
+  screenEl.innerHTML = html;
+  frameKey = key;
+  liveHtml = {};
+  return true;
+}
+function live(name, html) {
+  if (liveHtml[name] === html) return false;
+  const el = screenEl.querySelector(`[data-live="${name}"]`);
+  if (!el) return false;
+  el.innerHTML = html;
+  liveHtml[name] = html;
+  return true;
+}
+
 function render() {
   const sc = SCREENS[screen];
   const stats = lastStats = teamStats(state);
@@ -219,11 +296,25 @@ function render() {
   /* Results appear by themselves once everyone has answered, or when the presenter asks */
   const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card);
   if (autoReveal) revealed.add(sc.card);
-  if (sc.id === "intro") screenEl.innerHTML = introScreen(loadKpis().intro);
-  else if (sc.id === "join") { screenEl.innerHTML = joinScreen({ url: joinUrl(), players: state.players, status, newest }); fitNames(); }
-  else if (sc.card !== undefined) screenEl.innerHTML = questionScreen({ index: sc.card, stats, players: state.players, feed, status, shown: revealed.has(sc.card) });
-  else if (sc.id === "wrap") screenEl.innerHTML = wrapScreen({ stats, feed, status });
-  else screenEl.innerHTML = sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats);
+  if (sc.id === "join" && introOn) {
+    setFrame("intro", introFrame(loadKpis().intro, joinUrl()));
+    live("count", String(stats.joined));
+  } else if (sc.id === "join") {
+    if (setFrame("join", joinFrame(joinUrl()))) mountLamp();
+    live("count", String(stats.joined));
+    if (live("names", joinNames(state.players, newest))) fitNames();
+  } else if (card) {
+    const shown = revealed.has(sc.card);
+    if (setFrame(`${sc.id}:${shown ? "results" : "play"}`, questionFrame(sc.card, shown)) && !shown) mountPlay(card);
+    live("side", questionSide(sc.card, stats, state.players, shown));
+    live("moment", questionMoment(feed));
+    if (shown) live("results", questionResults(sc.card, stats));
+  } else if (sc.id === "wrap") {
+    setFrame(null, wrapScreen({ reports: stats.done - (state.players[me.pid]?.done ? 1 : 0), feed, status }));
+  } else {
+    setFrame(null, sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats));
+  }
+  live("status", statusChip(status));
   if (autoReveal) animate("reveal");
   if (notesChannel && !render.notesTimer) render.notesTimer = setTimeout(() => { render.notesTimer = null; postNotes(); }, 600);
   /* The main button: "Show answers" first, then "Next card". Only its text changes here, never the element */
@@ -247,25 +338,64 @@ function fitNames() {
   }
 }
 
+/* The card on screen, playable like a phone's (same renderers). The first touch joins the presenter,
+   so the results also wait for the presenter's answer, and a staring contest isn't cut short. */
+function mountPlay(card) {
+  const el = document.getElementById("play");
+  if (!el) return;
+  const stop = renderCard(el, card, me.answers[card.key], (v, now) => meAnswer(card.key, v, now));
+  el.addEventListener("pointerdown", meJoin);
+  /* A picked button lets go of the focus, so Space and Enter still move the presentation on.
+     The staring contest's button keeps it: Space is a handy "I blinked". */
+  el.addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.matches("[data-act]")) b.blur(); });
+  unmount = stop;
+}
+
+/* The join screen's lamp: pull the cord (or focus it and press ↑ ↓) to set the presenter's room light */
+function mountLamp() {
+  const box = document.getElementById("pull-lamp"), cord = document.getElementById("cord");
+  if (!box || !cord) return;
+  const draw = () => {
+    box.innerHTML = pullLamp(me.L, lightName(me.L));
+    cord.setAttribute("aria-valuenow", String(me.L));
+    cord.setAttribute("aria-valuetext", lightName(me.L));
+  };
+  const toY = y => { meLight((y - CORD.top) / CORD.run * 100); draw(); };
+  let pulling = false;
+  const fromPointer = e => { const r = box.getBoundingClientRect(); toY((e.clientY - r.top) / r.height * 720); };
+  cord.addEventListener("pointerdown", e => { pulling = true; try { cord.setPointerCapture(e.pointerId); } catch (_) { /* older browsers */ } fromPointer(e); });
+  cord.addEventListener("pointermove", e => { if (pulling) fromPointer(e); });
+  ["pointerup", "pointercancel"].forEach(ev => cord.addEventListener(ev, () => { pulling = false; cord.blur(); }));
+  cord.addEventListener("keydown", e => {
+    const d = { ArrowDown: 5, ArrowUp: -5 }[e.key];
+    if (d === undefined) return;
+    e.preventDefault();
+    meLight(me.L + d);
+    draw();
+  });
+  draw();
+}
+
 /* The control bar is rebuilt only when the screen changes, so a click is never lost to a live update */
 function renderControls() {
   const sc = SCREENS[screen];
-  const back = `<button type="button" class="ctl ghost" data-go="back" aria-label="Back">← Back</button>`;
+  const backBtn = `<button type="button" class="ctl ghost" data-go="back" aria-label="Back">← Back</button>`;
   if (sc.slide) {
     controlsEl.className = "controls quiet";
     controlsEl.innerHTML = `<button type="button" class="ctl round" data-go="back" aria-label="Previous slide">‹</button><button type="button" class="ctl round" data-go="next" aria-label="Next slide" ${screen === SCREENS.length - 1 ? "disabled" : ""}>›</button>`;
     return;
   }
   controlsEl.className = "controls";
-  if (sc.id === "intro") {
-    controlsEl.innerHTML = `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Show the QR code →</button>`;
-  } else if (sc.id === "join") {
-    controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
+  if (sc.id === "join") {
+    const intro = introOn
+      ? `<button type="button" class="ctl ghost" data-go="intro">← QR code</button>`
+      : `<button type="button" class="ctl ghost small" data-go="intro">Introduction</button>`;
+    controlsEl.innerHTML = `${intro}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
   } else if (sc.card !== undefined) {
     const last = sc.card === CARDS.length - 1;
-    controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">${last ? "Finish and send reports →" : "Next card →"}</button>`;
+    controlsEl.innerHTML = `${backBtn}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">${last ? "Finish and send reports →" : "Next card →"}</button>`;
   } else {
-    controlsEl.innerHTML = `${back}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the talk →</button>`;
+    controlsEl.innerHTML = `${backBtn}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the talk →</button>`;
   }
 }
 
@@ -303,9 +433,24 @@ function advance() {
 function go(i) {
   const to = Math.max(0, Math.min(SCREENS.length - 1, i));
   if (to === screen) return;
+  meFlushAll();
   screen = to;
-  store.set("host.screen." + session, screen);
+  introOn = false;
+  store.set("host.at." + session, SCREENS[screen].id);
   show();
+}
+
+/* Back closes the introduction first */
+const back = () => (introOn ? toggleIntro(false) : go(screen - 1));
+
+/* The introduction: shown over the join screen (Introduction button, or I), phones stay in the lobby */
+function toggleIntro(on = !introOn) {
+  if (SCREENS[screen].id !== "join" || on === introOn) return;
+  introOn = on;
+  renderControls();
+  render();
+  animate("enter");
+  postNotes();
 }
 
 /* Tells phones on this session that it's over, so they ask for the new QR code instead of waiting */
@@ -324,6 +469,8 @@ function publishStage() {
   if (s === lastStage) return;
   lastStage = s;
   if (demo) demo.onStage(s);
+  /* The presenter played: counted as finished, like a phone whose report just arrived */
+  if (s === "end" && me.joined && !me.done) { me.done = true; saveMe(); meSend({ t: "done" }); }
   /* Signed and sent in order; `at` only ever grows, so phones can drop replays */
   sendChain = sendChain.then(async () => {
     const at = lastAt = Math.max(Date.now(), lastAt + 1);
@@ -336,23 +483,25 @@ function publishStage() {
 controlsEl.addEventListener("click", e => {
   const b = e.target.closest("[data-go]");
   if (!b) return;
-  if (b.dataset.go === "next") advance(); else go(screen - 1);
+  const g = b.dataset.go;
   b.blur();
+  if (g === "next") advance(); else if (g === "intro") toggleIntro(); else back();
 });
 
 document.addEventListener("keydown", e => {
-  if (!relay || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!relay || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;   /* the dial and the lamp cord use the arrows */
   const t = e.target.closest ? e.target : null;
   if (t && t.closest("input, textarea") && e.key !== "Escape") return;
   if (t && t.closest("button") && (e.key === " " || e.key === "Enter")) return;   /* the button handles it */
   const k = e.key;
   if (k === "ArrowRight" || k === " " || k === "PageDown" || k === "Enter") { e.preventDefault(); advance(); }
-  else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(screen - 1); }
+  else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); back(); }
   else if (k === "Home") go(0);
+  else if (k === "i" || k === "I") toggleIntro();
   else if (k === "f" || k === "F") toggleFullscreen();
   else if (k === "p" || k === "P") { toolsEl.hidden = !toolsEl.hidden; renderTools(); }
   else if (k === "n" || k === "N") openNotes();
-  else if (k === "Escape") toolsEl.hidden = true;
+  else if (k === "Escape") { if (!toolsEl.hidden) toolsEl.hidden = true; else toggleIntro(false); }
 });
 
 function toggleFullscreen() {
@@ -383,7 +532,8 @@ function renderTools() {
       <button type="submit">Save</button>
       <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
     </form>
-    <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>F: full screen</li><li>N: speaker notes</li><li>P or Esc: close this panel</li></ul>`;
+    <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>I: your introduction (on the QR code screen)</li><li>F: full screen</li><li>N: speaker notes</li><li>P or Esc: close this panel</li></ul>
+    <span style="color: #5F6A6B; font-size: 12px">You can play on the shared screen: pull the lamp cord on the QR code screen, and answer each card there. Your first answer adds you as one more player, “Presenter”.</span>`;
 }
 
 toolsEl.addEventListener("submit", e => {
@@ -392,6 +542,7 @@ toolsEl.addEventListener("submit", e => {
   try {
     saveKpis(JSON.parse(e.target.elements.kpi.value));
     btn.textContent = "Saved";
+    frameKey = null;   /* redraw the introduction with the new details */
     render();
   } catch (_) {
     btn.textContent = "That isn't valid JSON. Check commas and quotes.";

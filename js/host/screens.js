@@ -1,22 +1,32 @@
-/* Presenter screens for the game: join (QR), one screen per card while phones answer it (then,
-   on the presenter's click, how many picked each answer, or the team average), and the wrap-up
-   when reports land on the phones. The buttons live in a separate control
-   bar (app.js), so live updates here never swallow a click. */
+/* Presenter screens for the game: join (QR), the presenter's introduction, one screen per card
+   while phones answer it (then, on the presenter's click, how many picked each answer, or the team
+   average), and the wrap-up when reports land on the phones.
+   The join and card screens are a fixed frame plus live parts ([data-live] slots, filled by app.js),
+   so the lamp cord and the card on screen can be played without being redrawn mid-drag. The buttons
+   live in a separate control bar (app.js), so live updates here never swallow a click either. */
 import { CARDS, POSES, VERDICT_NOTES, poseIndex } from "../content.js";
 import { config } from "../config.js";
 import { skeletonSVG } from "../skeleton.js";
 import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass } from "../phone/art.js";
-import { C, esc, lamp, qrSVG, roomColours } from "./parts.js";
+import { C, CORD, esc, lamp, qrSVG, roomColours } from "./parts.js";
 
 export const statusChip = status => `<span class="status" data-s="${status}"><i></i>${{ live: "Live", connecting: "Connecting", reconnecting: "Reconnecting", offline: "Offline", idle: "Starting" }[status] || status}</span>`;
+const slot = (name, tag = "span", attrs = "") => `<${tag} data-live="${name}" ${attrs}></${tag}>`;
 
-/* ---------- Introduction: who's presenting (from the private slide data, never from the code) ---------- */
-export function introScreen(intro) {
+/* ---------- Introduction: who's presenting (from the private slide data, never from the code).
+   A small QR code stays in the corner, so people can keep joining while the presenter talks. ---------- */
+export function introFrame(intro, url) {
+  const join = `
+    <div class="intro-join">
+      ${qrSVG(url, 132)}
+      <span><b>Scan to play</b><span class="ij-n">${slot("count", "b")} joined</span></span>
+    </div>`;
   if (!intro.name) {
-    return `<div class="slide game"><div class="s-body" style="justify-content: center"><span class="wait" style="font-size: 24px">Add your introduction in the presenter tools (P): name, role, home and assignment organization.</span></div></div>`;
+    return `<div class="slide game">${slot("status")}<div class="s-body" style="justify-content: center"><span class="wait" style="font-size: 24px">Add your introduction in the presenter tools (P): name, role, home and assignment organization.</span></div>${join}</div>`;
   }
   return `
   <div class="slide game">
+    ${slot("status")}
     ${lamp("lin", 210, 40)}
     <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
       <div style="display: flex; flex-direction: column; gap: 14px">
@@ -29,26 +39,25 @@ export function introScreen(intro) {
       </div>` : ""}
       ${intro.background.length ? `<ul class="intro-bg">${intro.background.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
     </div>
+    ${join}
   </div>`;
 }
 
-/* ---------- Join ---------- */
-export function joinScreen({ url, players, status, newest }) {
-  const list = Object.values(players);
-  const names = list.slice(-80).map(p => `<span class="name-chip${p === newest ? " new" : ""}">${esc(p.nick)}</span>`).join("");
+/* ---------- Join: the first screen. The lamp's cord can be pulled, like on the phones. ---------- */
+export function joinFrame(url) {
   return `
   <div class="slide game">
-    ${statusChip(status)}
-    ${lamp("lj", 210, 330)}
+    ${slot("status")}
+    <div class="pull-lamp" id="pull-lamp"></div>
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px">
       <div style="display: flex; flex-direction: column; justify-content: center; gap: 22px">
         <h1 style="margin: 0; font-size: 96px; line-height: 0.84; font-weight: 800; font-stretch: 62%; text-transform: uppercase">Home office<br>check-up</h1>
         <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Scan, pull the lamp cord, and wait for the first card. Eleven quick ones, on your phone, anonymous.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
-          <span style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1">${list.length}</span>
+          ${slot("count", "span", `style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1"`)}
           <span style="font-size: 22px; color: ${C.sub}">joined</span>
         </div>
-        <div class="names-row" id="names">${names}</div>
+        <div class="names-row" id="names" data-live="names"></div>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: center">
         <div class="qr-card" data-join="${esc(url)}">
@@ -58,8 +67,11 @@ export function joinScreen({ url, players, status, newest }) {
         </div>
       </div>
     </div>
+    <div class="cord-hit" id="cord" role="slider" tabindex="0" aria-label="Room light" aria-valuemin="0" aria-valuemax="100" style="left: ${530 + CORD.x - 30}px; top: 150px; height: ${CORD.top + CORD.run - 150 + 30}px"></div>
   </div>`;
 }
+
+export const joinNames = (players, newest) => Object.values(players).slice(-80).map(p => `<span class="name-chip${p === newest ? " new" : ""}">${esc(p.nick)}</span>`).join("");
 
 /* ---------- One card while phones answer it, then its results ---------- */
 const pick = (o, extra = "", cls = "") => `<div class="m-pick ${cls}"><span class="t">${esc(o.label)}</span><span class="n">${esc(o.note)}</span>${extra}</div>`;
@@ -138,10 +150,39 @@ function cardVisual(card, r) {
   }
 }
 
-export function questionScreen({ index, stats, players, feed, status, shown }) {
+/* The card screen's frame. Before the answers are shown, the card itself sits in #play and works
+   like a phone's (app.js mounts it), so the presenter can play along on the shared screen. */
+export function questionFrame(index, shown) {
   const card = CARDS[index];
-  const r = shown ? results(card, stats) : null;
-  const total = CARDS.length;
+  const kind = card.kind === "options" ? card.layout : card.kind;
+  return `
+  <div class="slide game mirror">
+    ${slot("status")}
+    <div class="q-top">
+      <span class="mono-cap">Card ${String(index + 1).padStart(2, "0")} / ${CARDS.length}</span>
+      <span class="q-segs">${CARDS.map((_, j) => `<i class="${j < index ? "done" : j === index ? "now" : ""}"></i>`).join("")}</span>
+    </div>
+    <div class="q-grid">
+      <div class="q-main">
+        <h2 class="h" style="font-size: ${card.title.length > 26 ? 64 : 76}px">${esc(card.title)}</h2>
+        <p class="q-sub">${esc(card.sub)}</p>
+        ${shown ? slot("results", "div", `class="q-visual"`) : `<div class="q-visual"><div class="play k-${kind}" id="play"></div></div>`}
+      </div>
+      ${slot("side", "div", `class="q-side"`)}
+    </div>
+    ${slot("moment", "div", `class="q-moment"`)}
+  </div>`;
+}
+
+/* Live: the results, once shown (never below the minimum group) */
+export function questionResults(index, stats) {
+  const card = CARDS[index], r = results(card, stats);
+  return `${r.wait ? `<span class="q-wait">Counts appear once ${config.minGroup} people have answered, to keep answers anonymous. ${r.n} so far.</span>` : ""}${cardVisual(card, r.wait ? null : r)}`;
+}
+
+/* Live: how many have answered, and a window per player that lights up when they have */
+export function questionSide(index, stats, players, shown) {
+  const card = CARDS[index];
   const joined = stats.joined;
   const n = stats.answered[card.key] || 0;
   const all = joined > 0 && n >= joined;
@@ -152,36 +193,21 @@ export function questionScreen({ index, stats, players, feed, status, shown }) {
     return `<span class="room${done ? " in" : ""}" style="background: ${fill}; box-shadow: inset 0 0 14px ${glow}"></span>`;
   }).join("");
   return `
-  <div class="slide game mirror">
-    ${statusChip(status)}
-    <div class="q-top">
-      <span class="mono-cap">Card ${String(index + 1).padStart(2, "0")} / ${total}</span>
-      <span class="q-segs">${CARDS.map((_, j) => `<i class="${j < index ? "done" : j === index ? "now" : ""}"></i>`).join("")}</span>
+    <div class="q-count${all ? " all" : ""}">
+      <svg viewBox="0 0 170 170" width="170" height="170" aria-hidden="true">
+        <circle cx="85" cy="85" r="${R}" fill="none" stroke="${C.line2}" stroke-width="12"/>
+        <circle cx="85" cy="85" r="${R}" fill="none" stroke="${all ? C.good : C.acc}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${(CIRC * (1 - share)).toFixed(1)}" transform="rotate(-90 85 85)" style="transition: stroke-dashoffset 0.4s ease"/>
+      </svg>
+      <span class="q-num"><b>${n}</b><small>of ${joined}</small></span>
     </div>
-    <div class="q-grid">
-      <div class="q-main">
-        <h2 class="h" style="font-size: ${card.title.length > 26 ? 64 : 76}px">${esc(card.title)}</h2>
-        <p class="q-sub">${esc(card.sub)}</p>
-        <div class="q-visual">${r && r.wait ? `<span class="q-wait">Counts appear once ${config.minGroup} people have answered, to keep answers anonymous. ${r.n} so far.</span>` : ""}${cardVisual(card, r && !r.wait ? r : null)}</div>
-      </div>
-      <div class="q-side">
-        <div class="q-count${all ? " all" : ""}">
-          <svg viewBox="0 0 170 170" width="170" height="170" aria-hidden="true">
-            <circle cx="85" cy="85" r="${R}" fill="none" stroke="${C.line2}" stroke-width="12"/>
-            <circle cx="85" cy="85" r="${R}" fill="none" stroke="${all ? C.good : C.acc}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${(CIRC * (1 - share)).toFixed(1)}" transform="rotate(-90 85 85)" style="transition: stroke-dashoffset 0.4s ease"/>
-          </svg>
-          <span class="q-num"><b>${n}</b><small>of ${joined}</small></span>
-        </div>
-        <span class="q-label">${all ? "Everyone has answered" : "answered on their phones"}${shown ? "<br>Only totals are shown" : ""}</span>
-        ${rooms ? `<div class="rooms">${rooms}</div>` : ""}
-      </div>
-    </div>
-    <div class="q-moment">${feed[0] ? `<span class="mono-cap">From the check-up</span><span>${esc(feed[0])}</span>` : ""}</div>
-  </div>`;
+    <span class="q-label">${all ? "Everyone has answered" : "answered"}${shown ? "<br>Only totals are shown" : ""}</span>
+    ${rooms ? `<div class="rooms">${rooms}</div>` : ""}`;
 }
 
+export const questionMoment = feed => (feed[0] ? `<span class="mono-cap">From the check-up</span><span>${esc(feed[0])}</span>` : "");
+
 /* ---------- Wrap-up: reports are on the phones ---------- */
-export function wrapScreen({ stats, feed, status }) {
+export function wrapScreen({ reports, feed, status }) {
   const moments = feed.slice(0, 6);
   return `
   <div class="slide game">
@@ -191,7 +217,7 @@ export function wrapScreen({ stats, feed, status }) {
         <h2 class="h" style="font-size: 96px">Your report is on your phone</h2>
         <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Only you can see yours. The team’s totals come up in the next few slides.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
-          <span style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1">${stats.done}</span>
+          <span style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1">${reports}</span>
           <span style="font-size: 22px; color: ${C.sub}">reports sent</span>
         </div>
       </div>

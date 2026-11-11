@@ -113,7 +113,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 /* ---------- Card previews on the shared screen (the phone's art, in daylight) ---------- */
 .mirror {
   --panelOn: #FFF7E8; --done: #A89D8B; --film1: #FBF8F1; --film2: #E4DCCC; --glow: rgba(0, 0, 0, 0);
-  --accentText: #A15C00; --tintInk: #6B4200;
+  --accentText: #A15C00; --tintInk: #6B4200; --accentInk: #1B1206; --ring: rgba(232, 150, 30, 0.22);
 }
 .mirror .t { font-size: 22px; font-weight: 700; font-stretch: 82%; }
 .mirror .n { font-family: var(--mono); font-size: 13px; color: var(--muted); }
@@ -136,14 +136,9 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .m-fuel { display: grid; grid-template-columns: 250px 250px minmax(0, 1fr); gap: 20px; align-items: center; }
 .m-fuel-col { display: flex; flex-direction: column; gap: 10px; padding: 8px 8px 14px; border-radius: 18px; background: var(--panel); border: 1.5px solid var(--line); text-align: center; }
 .m-note { margin: 0; font-size: 22px; line-height: 1.35; color: var(--sub); }
-.mirror .fuel-scene { position: relative; height: 210px; border-radius: 12px; overflow: hidden; }
-.mirror .fuel-scene.coffee { background: radial-gradient(80% 60% at 50% 55%, var(--tint), var(--film2)); }
-.mirror .fuel-scene.water { display: grid; place-items: center; background: radial-gradient(80% 60% at 50% 55%, var(--film1), var(--film2)); }
-.mirror .cup { position: absolute; left: 50%; width: 64px; height: 34px; margin-left: -32px; }
 .m-stare { display: flex; align-items: center; gap: 44px; }
 .m-stare svg { flex: none; }
 .pulse-host { transform-origin: 150px 150px; animation: pulse 1.6s ease-out infinite; }
-@keyframes pulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(3.4); opacity: 0; } }
 .m-steps { margin: 0; padding-left: 28px; display: flex; flex-direction: column; gap: 14px; font-size: 26px; line-height: 1.25; font-weight: 600; font-stretch: 88%; }
 .m-steps li::marker { font-family: var(--mono); color: var(--accent-text); }
 .m-scale { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 10px; }
@@ -183,15 +178,64 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .m-hist .col.lead i { background: var(--accent); }
 .m-hist .col.lead small { color: var(--accent-text); font-weight: 600; }
 .m-hist .m-num { height: 48px; font-size: 19px; }
-.news-phone { position: relative; width: 196px; height: 228px; border: 2.4px solid currentColor; border-radius: 28px; background: var(--panel); overflow: hidden; }
-.news-phone .notch { position: absolute; top: 8px; left: 50%; width: 52px; height: 6px; margin-left: -26px; border-radius: 3px; background: var(--line); }
-.news-phone .feed { position: absolute; top: 24px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; }
-.news-phone .alert { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 8px; border-radius: 10px; background: var(--panel2); }
-.news-phone .alert > i { width: 18px; height: 18px; border-radius: 5px; background: var(--line); }
-.news-phone .alert > span { display: flex; flex-direction: column; gap: 4px; }
-.news-phone .alert b { display: block; height: 5px; border-radius: 3px; background: var(--muted); }
-.news-phone .alert b + b { background: var(--line); }
-.news-phone .alert small { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+/* ---------- The card itself, playable on the shared screen ----------
+   Same renderers and base styles as the phones (cards.css), laid out for the 1280 × 720 stage. */
+.play { min-height: 0; }
+.play .t { font-size: 22px; line-height: 1.15; }
+.play .n { font-size: 13px; }
+.play.k-tiles .grid2 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.play .tile { gap: 8px; padding: 8px 8px 16px; border-radius: 18px; }
+.play .tile .pic { height: 158px; border-radius: 12px; }
+.play .tile .pic svg { width: 190px; height: 142px; }
+.play .routes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.play .route { min-height: 96px; padding: 14px 20px; border-radius: 18px; }
+.play .route .icons { transform: scale(1.3); transform-origin: 100% 50%; }
+.play .route .chev { font-size: 14px; }
+.play.k-stand, .play.k-news { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 30px; align-items: center; }
+.play.k-stand .grid2, .play.k-news .grid2 { gap: 14px; }
+.play .stand-ring svg { width: 210px; height: 210px; }
+.play .elapsed { font-size: 16px; }
+.play .pick, .play .pick.short { min-height: 92px; padding: 12px 18px; border-radius: 18px; }
+.play .news-wrap { display: grid; place-items: center; }
+.play.k-dial { display: grid; grid-template-columns: 330px minmax(0, 1fr); grid-template-rows: 1fr auto; column-gap: 44px; row-gap: 18px; align-items: center; }
+.play .dial { grid-row: 1 / span 2; width: 330px; }
+.play .pose-row { flex-direction: column; align-items: flex-start; gap: 8px; align-self: end; }
+.play .pose-name { font-size: 64px; }
+.play .chips4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-self: start; }
+.play .chips4 button { min-height: 60px; border-radius: 14px; font-size: 20px; }
+.play .grid2.fuel { grid-template-columns: repeat(2, 260px); gap: 20px; }
+.play .fuel-col { border-radius: 18px; }
+.play .fuel-col .t { font-size: 22px; }
+.play .step { width: 56px; height: 56px; font-size: 28px; }
+.play .val b { font-size: 40px; }
+.play .val small { font-size: 12px; }
+.play.k-stare { display: grid; grid-template-columns: 330px minmax(0, 1fr); grid-template-rows: 1fr auto; column-gap: 48px; row-gap: 22px; align-items: center; }
+.play .target { grid-column: 1; grid-row: 1 / span 2; width: 330px; }
+.play .stare-say { grid-column: 2; grid-row: 1; align-self: end; min-height: 0; margin: 0; font-size: 28px; line-height: 1.3; font-weight: 600; font-stretch: 88%; color: var(--ink); text-wrap: balance; }
+.play .act { grid-column: 2; grid-row: 2; align-self: start; justify-self: start; min-height: 66px; padding: 0 34px; border-radius: 16px; font-size: 23px; }
+.play .readout .big { font-size: 40px; }
+.play.k-verdict { display: grid; grid-template-columns: 500px minmax(0, 1fr); gap: 36px; align-items: center; }
+.play .gauge { width: 500px; margin-top: 22px; }
+.play .gauge button { width: 52px; height: 52px; font-size: 19px; }
+.play .verdict-read { align-items: flex-start; text-align: left; }
+.play .score b { font-size: 120px; }
+.play .score small { font-size: 18px; }
+.play .verdict-read .note { font-size: 28px; min-height: 0; }
+
+/* ---------- Join screen lamp: the presenter pulls the cord like the phones do ---------- */
+.pull-lamp { position: absolute; right: 330px; top: 0; width: 420px; height: 720px; pointer-events: none; }
+.pull-lamp svg { display: block; }
+.cord-hit { position: absolute; z-index: 3; width: 60px; border-radius: 30px; cursor: ns-resize; touch-action: none; }
+.cord-hit:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.ctl.small { min-height: 46px; padding: 0 18px; border-radius: 12px; font-size: 17px; }
+
+/* ---------- Introduction: a small QR code stays up so people can keep joining ---------- */
+.intro-join { position: absolute; right: 64px; bottom: 122px; display: flex; align-items: center; gap: 14px; padding: 12px 18px 12px 12px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(27, 35, 40, 0.08); }
+.intro-join svg { display: block; }
+.intro-join > span { display: flex; flex-direction: column; gap: 6px; }
+.intro-join b { font-size: 22px; font-weight: 800; font-stretch: 80%; }
+.ij-n { font-size: 17px; color: var(--sub); }
+.ij-n b { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--accent-text); }
 
 /* ---------- Presenter tools (P) ---------- */
 #tools { position: fixed; right: 16px; top: 16px; z-index: 20; width: 340px; padding: 18px; border-radius: 16px; background: #fff; border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18); display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
@@ -209,7 +253,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
    #screen keeps the class for about a second, and live updates wait until it's gone, so an
    animation plays once per screen and never restarts mid-way. Strong enough to survive Teams. */
 #screen.enter > .slide { animation: screen-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-#screen.enter :is(.panel, .callout, .confess, .qr-card, .q-side, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .lead-fix .why, .pfix, .fix, .names-row, .intro-role, .intro-bg li) { animation: rise 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.15s; }
+#screen.enter :is(.panel, .callout, .confess, .qr-card, .intro-join, .reach, .q-side, .play .tile, .play .route, .play .pick, .play .fuel-col, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .lead-fix .why, .pfix, .fix, .names-row, .intro-role, .intro-bg li) { animation: rise 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.15s; }
 #screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .intro-bg li):nth-child(2) { animation-delay: 0.27s; }
 #screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .intro-bg li):nth-child(3) { animation-delay: 0.39s; }
 #screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .intro-bg li):nth-child(4) { animation-delay: 0.51s; }
@@ -250,3 +294,14 @@ html.calm * { transition: none !important; animation: none !important; }
 .lead-fix .h { font-size: 72px; max-width: 1100px; }
 .lead-fix .why { margin: 8px 0 0; font-size: 26px; line-height: 1.3; color: var(--sub); }
 .pfix { padding: 9px 14px; border-radius: 12px; background: var(--tint); border: 1.5px solid var(--accent); font-size: 20px; line-height: 1.2; font-weight: 700; font-stretch: 85%; }
+
+/* Closing slide: where to say so. The team board's QR code and the support line (private slide data) */
+.reach { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; padding: 14px 20px 14px 14px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); }
+.reach.no-qr { grid-template-columns: minmax(0, 1fr); padding-left: 20px; }
+.reach svg { display: block; }
+.reach-txt { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.reach-txt > span { display: flex; flex-direction: column; gap: 4px; }
+.reach-txt b { font-size: 21px; line-height: 1.15; font-weight: 700; font-stretch: 85%; }
+.reach-txt .sub { font-size: 17px; line-height: 1.35; color: var(--sub); }
+.reach-txt hr { width: 100%; margin: 0; border: 0; border-top: 1.5px dashed var(--line); }
+.reach-txt .tel { font-family: var(--mono); font-size: 19px; font-weight: 500; font-stretch: 100%; color: var(--accent-text); white-space: nowrap; }

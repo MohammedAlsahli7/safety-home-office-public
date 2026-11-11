@@ -16,7 +16,7 @@ import { joinScreen, questionScreen, wrapScreen } from "./screens.js";
 import { startDemo } from "./demo.js";
 import { esc } from "./parts.js";
 import { rawKpis, saveKpis, encodeKpis, importKpisFromHash } from "../kpis.js";
-import { canSign, newHostKey, signer, verifier, stageText, b64url, fromB64url } from "../sign.js";
+import { canSign, newHostKey, signer, verifier, stageText, fingerprint, b64url, fromB64url } from "../sign.js";
 
 const stageEl = document.getElementById("stage");
 const toolsEl = document.getElementById("tools");
@@ -38,8 +38,8 @@ let session = null, hostKey = null, sign = null, verifyOwn = null;
 const keyFor = s => { const k = store.get("host.key." + s); return k && k.priv && k.pub ? k : null; };
 
 async function freshSession() {
-  session = randomCode(10);
   hostKey = await newHostKey();
+  session = await fingerprint(hostKey.pub);   /* the session code is the key's fingerprint */
   store.set("host.key." + session, hostKey);
   store.set("host.session", session);
   store.set("host.screen." + session, 0);
@@ -59,25 +59,28 @@ function importKeyFromHash() {
 async function claimSession() {
   if (config.demo) { session = "demo" + randomCode(4); return true; }
   if (!canSign()) return false;
+  const matches = async s => { const k = keyFor(s); return k && (await fingerprint(k.pub)) === s ? k : null; };
   if (isSessionCode(config.session)) {
     session = config.session;
-    hostKey = keyFor(session);
+    hostKey = await matches(session);
     if (!hostKey) return false;
   } else {
     const saved = store.get("host.session");
-    if (isSessionCode(saved) && keyFor(saved)) { session = saved; hostKey = keyFor(saved); }
-    else await freshSession();
+    const k = isSessionCode(saved) ? await matches(saved) : null;
+    if (k) { session = saved; hostKey = k; }
+    else await freshSession();   /* also replaces sessions from before the short links */
   }
   sign = await signer(hostKey.priv);
   verifyOwn = await verifier(hostKey.pub);
   return true;
 }
 
+/* The attendees' link: the site, then ?s=<16-character code>. It carries no data. */
 function joinUrl() {
-  const u = new URL("index.html", location.href);
+  const u = new URL("./", location.href);
   u.search = "";
+  u.hash = "";
   u.searchParams.set("s", session);
-  if (hostKey) u.searchParams.set("k", hostKey.pub);
   if (config.customRelay) u.searchParams.set("relay", config.customRelay);
   if (config.demo) u.searchParams.set("demo", "");
   return u.toString().replace("demo=", "demo");
@@ -295,7 +298,7 @@ function publishStage() {
   sendChain = sendChain.then(async () => {
     const at = lastAt = Math.max(Date.now(), lastAt + 1);
     const msg = { t: "stage", p: "host", s, at };
-    if (sign) msg.sig = await sign(stageText(session, s, at));
+    if (sign) { msg.pk = hostKey.pub; msg.sig = await sign(stageText(session, s, at)); }
     relay.send(msg);
   }).catch(() => { /* never block later stages */ });
 }

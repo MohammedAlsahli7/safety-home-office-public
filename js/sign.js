@@ -1,9 +1,11 @@
 /* Presenter signatures. Only the presenter's browser can move the phones.
    - "Start a new session" makes an ECDSA P-256 key pair. The private key stays in that browser's
      localStorage (or travels in the private presenter link's #hash, which never reaches a server).
-   - The public key goes into the QR code link (?k=…). Phones accept a `stage` message only if it is
-     signed with the matching private key, and only if it is newer than the last one they accepted,
-     so a copied host.html link, a hand-made POST to the topic, or a replayed old message does nothing. */
+   - The session code in the QR link is a fingerprint of the public key (16 characters of its SHA-256,
+     about 78 bits), so the link stays short. Each stage carries the public key; a phone accepts it only
+     if its fingerprint is the session code, the signature checks out, and it is newer than the last
+     stage it accepted. A copied host.html link, a hand-made or self-signed POST to the topic, or a
+     replayed old message does nothing. */
 
 const ALG = { name: "ECDSA", namedCurve: "P-256" };
 const SIG = { name: "ECDSA", hash: "SHA-256" };
@@ -21,10 +23,17 @@ export function fromB64url(text) {
   return Uint8Array.from(bin, c => c.charCodeAt(0));
 }
 
+/* The session code for a public key: 16 characters from the same alphabet as randomCode */
+const CODE = "abcdefghjkmnpqrstuvwxyz23456789";
+export async function fingerprint(pubB64) {
+  const hash = new Uint8Array(await subtle().digest("SHA-256", fromB64url(pubB64)));
+  return Array.from(hash.slice(0, 16), b => CODE[b % CODE.length]).join("");
+}
+
 /* What gets signed: the session, the stage and its time, so a signature can't be reused elsewhere */
 export const stageText = (session, s, at) => `hoc|${session}|${s}|${at}`;
 
-/* A new presenter key: { priv: JWK (keep private), pub: base64url raw public key (goes in the QR link) } */
+/* A new presenter key: { priv: JWK (keep private), pub: base64url raw public key (sent with each stage) } */
 export async function newHostKey() {
   const pair = await subtle().generateKey(ALG, true, ["sign", "verify"]);
   const priv = await subtle().exportKey("jwk", pair.privateKey);

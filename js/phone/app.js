@@ -13,7 +13,7 @@ import { CARDS, NICKNAMES, AREAS, AREA_LABEL, AREA_WORDS, SEVERITY, PRESCRIPTION
 import { report } from "../scoring.js";
 import { applyTheme, roomBg } from "./theme.js";
 import { renderCard } from "./cards.js";
-import { canSign, verifier, stageText } from "../sign.js";
+import { canSign, verifier, stageText, fingerprint } from "../sign.js";
 
 const app = document.getElementById("app");
 const sheet = document.getElementById("sheet");
@@ -25,7 +25,7 @@ const session = config.demo ? (config.session || "demo") : config.session;
 /* Which view a presenter stage asks for: "lobby", "q1".."q11", then anything else is after the game */
 const cardIndexOf = s => (typeof s === "string" && /^q([1-9]|1[01])$/.test(s) ? Number(s.slice(1)) - 1 : -1);
 
-if (!isSessionCode(session) || (!config.demo && !config.hostKey)) {
+if (!isSessionCode(session)) {
   applyTheme(20);
   app.innerHTML = `<div class="center-msg"><h1>Home office check-up</h1><p class="sub">Scan the QR code on the shared screen to join the game.</p></div>`;
 } else {
@@ -44,13 +44,24 @@ function start() {
 
   /* Only the presenter moves the phones: check each stage's signature, and drop anything older */
   let lastAt = 0, chain = Promise.resolve();
-  const checking = config.demo ? null : canSign() ? verifier(config.hostKey).catch(() => null) : null;
+  let verify = null, verifiedPk = null;
+  /* The presenter's key must be the one whose fingerprint is this session's code */
+  async function verifierFor(pk) {
+    if (verify && pk === verifiedPk) return verify;
+    if (typeof pk !== "string" || pk.length > 200) return null;
+    try {
+      if ((await fingerprint(pk)) !== session) return null;
+      verify = await verifier(pk);
+      verifiedPk = pk;
+      return verify;
+    } catch (_) { return null; }
+  }
   async function acceptStage(m) {
     if (!Number.isFinite(m.at) || m.at <= lastAt) return;
     if (!config.demo) {
       if (canSign()) {
-        const verify = await checking;
-        if (!verify || !(await verify(stageText(session, m.s, m.at), m.sig))) return;
+        const v = await verifierFor(m.pk);
+        if (!v || !(await v(stageText(session, m.s, m.at), m.sig))) return;
       } else {
         console.warn("Insecure page (plain http): presenter signatures can't be checked here.");
       }

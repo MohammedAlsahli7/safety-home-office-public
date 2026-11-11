@@ -55,6 +55,7 @@ export function teamStats({ players = {}, taps = {}, votes = {} }) {
   return {
     joined: all.length,
     done: done.length,
+    answered: Object.fromEntries(CARDS.map(c => [c.key, count(answers, a => a[c.key] !== undefined && a[c.key] !== null)])),
     progress: all.map(p => ({ nick: p.nick, light: p.answers?.light, card: p.card || 0, done: !!p.done })),
     light: { n: light.length, dark: count(light, a => a.light < 34), levels: [17, 34, 50, 67, 84, 101].map((max, i, arr) => count(light, a => a.light < max && a.light >= (i ? arr[i - 1] : 0))) },
     posture: { n: posture.length, counts: poseCounts, top: topPose, topCount: poseCounts[topPose] },
@@ -119,7 +120,7 @@ export function validAnswer(key, v) {
   if (!card) return false;
   switch (card.kind) {
     case "dial": return typeof v === "number" && v >= 0 && v <= 1;
-    case "fuel": return v && Number.isInteger(v.coffee) && Number.isInteger(v.water) && v.coffee >= 0 && v.coffee <= 9 && v.water >= 0 && v.water <= 8;
+    case "fuel": return v && Number.isInteger(v.coffee) && Number.isInteger(v.water) && v.coffee >= 0 && v.coffee <= 20 && v.water >= 0 && v.water <= 20;
     case "stare": return typeof v === "number" && v >= 0 && v <= 600;
     case "verdict": return Number.isInteger(v) && v >= 0 && v <= 10;
     case "options": return card.options.some(o => o.v === v);

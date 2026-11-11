@@ -39,63 +39,63 @@ export const CARDS = [
     sub: "Turn the dial until the skeleton looks like you."
   },
   {
-    key: "laptop", kind: "options", art: "laptop",
+    key: "laptop", kind: "options", layout: "tiles",
     title: "Where does your laptop live?",
-    sub: "Most days, not on your best day.",
+    sub: "Most of the workday, not the ideal day.",
     options: [
-      { v: "stand", label: "On a stand", pts: {} },
-      { v: "desk", label: "Flat on the desk", pts: { posture: 2 } },
-      { v: "lap", label: "On my lap", pts: { posture: 3 } },
-      { v: "bed", label: "In bed with me", pts: { posture: 3, balance: 1 } }
+      { v: "stand", label: "Raised up", note: "a stand, or a pile of books", pts: {} },
+      { v: "desk", label: "Flat on a table", note: "desk, dining table, wherever", pts: { posture: 2 } },
+      { v: "lap", label: "On my lap", note: "the sofa office", pts: { posture: 3 } },
+      { v: "bed", label: "In bed with me", note: "maximum comfort", pts: { posture: 3, balance: 1 } }
     ]
   },
   {
-    key: "morning", kind: "options", art: "alarm",
+    key: "morning", kind: "options", layout: "routes",
     title: "Between the alarm and 7:00",
-    sub: "What usually happens first?",
+    sub: "Which route is closest to your mornings?",
     options: [
-      { v: "pillow", label: "Emails from the pillow", pts: { balance: 3, mind: 1 } },
-      { v: "coffee", label: "Coffee, then laptop", pts: { balance: 1, energy: 1 } },
-      { v: "straight", label: "Straight to the desk", pts: { balance: 2 } },
-      { v: "routine", label: "The full routine", pts: {} }
+      { v: "pillow", label: "Emails from the pillow", note: "work arrives before you do", pts: { balance: 3, mind: 1 } },
+      { v: "coffee", label: "Coffee, then laptop", note: "the essentials", pts: { balance: 1, energy: 1 } },
+      { v: "straight", label: "Straight to the laptop", note: "zero commute, zero wait", pts: { balance: 2 } },
+      { v: "routine", label: "The full routine", note: "the long way in", pts: {} }
     ]
   },
   {
     key: "fuel", kind: "fuel",
     title: "Coffee vs. water, yesterday",
-    sub: "Coffee, qahwa and karak all count. Tap to add a cup."
+    sub: "Count every cup of coffee, qahwa or karak. Water counts by the glass."
   },
   {
-    key: "stand", kind: "options", art: "stopwatch",
+    key: "stand", kind: "options", layout: "stand",
     title: "When did you last stand up?",
-    sub: "Be honest. Nobody can see you.",
+    sub: "Before you opened this, that is.",
     options: [
-      { v: "30m", label: "In the last 30 minutes", pts: {} },
-      { v: "1h", label: "About an hour ago", pts: { energy: 1, posture: 1 } },
-      { v: "2h", label: "Two hours or more", pts: { energy: 2, posture: 2 } },
-      { v: "fridge", label: "Does walking to the fridge count?", pts: { energy: 1 } }
+      { v: "30m", label: "In the last 30 minutes", note: "recently stretched", fill: 0.15, elapsed: "under 30 min", pts: {} },
+      { v: "1h", label: "About an hour ago", note: "somewhere in between", fill: 0.5, elapsed: "about 1 hr", pts: { energy: 1, posture: 1 } },
+      { v: "2h", label: "Two hours or more", note: "deep focus mode", fill: 1, elapsed: "2 hrs or more", pts: { energy: 2, posture: 2 } },
+      { v: "fridge", label: "Does walking to the fridge count?", note: "asking for a friend", fill: 0.3, elapsed: "fridge run", pts: { energy: 1 } }
     ]
   },
   {
-    key: "coworker", kind: "options", art: "cat",
+    key: "coworker", kind: "options", layout: "tiles",
     title: "Your most frequent coworker",
-    sub: "Who interrupts you the most?",
+    sub: "Who interrupts your workday the most?",
     options: [
-      { v: "cat", label: "The cat", pts: { energy: -1 } },
-      { v: "kids", label: "The kids", pts: { energy: -1 } },
-      { v: "door", label: "The doorbell", pts: { energy: -1 } },
-      { v: "chat", label: "The family group chat", pts: { mind: 2 } }
+      { v: "cat", label: "The cat", note: "sat on the keyboard", pts: { energy: -1 } },
+      { v: "kids", label: "The kids", note: "paper planes incoming", pts: { energy: -1 } },
+      { v: "door", label: "The doorbell", note: "deliveries, visitors", pts: { energy: -1 } },
+      { v: "chat", label: "The family group chat", note: "always unread", pts: { mind: 2 } }
     ]
   },
   {
-    key: "lunch", kind: "options", art: "plate",
+    key: "lunch", kind: "options", layout: "tiles",
     title: "Lunch yesterday happened…",
-    sub: "Pick the closest.",
+    sub: "Pick the closest one.",
     options: [
-      { v: "table", label: "At the table", pts: {} },
-      { v: "keyboard", label: "At the keyboard", pts: { balance: 2, eyes: 1 } },
-      { v: "meeting", label: "In a meeting, on mute", pts: { balance: 2 } },
-      { v: "none", label: "Lunch? What lunch?", pts: { energy: 3, balance: 1 } }
+      { v: "table", label: "At the table", note: "plates and all", pts: {} },
+      { v: "keyboard", label: "At the keyboard", note: "crumb collection", pts: { balance: 2, eyes: 1 } },
+      { v: "meeting", label: "In a meeting, on mute", note: "multitasking", pts: { balance: 2 } },
+      { v: "none", label: "Lunch? What lunch?", note: "the day just went", pts: { energy: 3, balance: 1 } }
     ]
   },
   {
@@ -104,31 +104,31 @@ export const CARDS = [
     sub: "Stare at the dot. Tap the moment you blink."
   },
   {
-    key: "news", kind: "options", art: "alerts",
+    key: "news", kind: "options", layout: "news",
     title: "News alerts during work hours",
-    sub: "How many reach you between 7 and 4?",
+    sub: "These days, how does your phone handle them?",
     options: [
-      { v: "off", label: "Off during work", pts: {} },
-      { v: "few", label: "Just a few", pts: { mind: 1 } },
-      { v: "all", label: "All of them", pts: { mind: 3 } },
-      { v: "refresh", label: "I refresh before they arrive", pts: { mind: 3, eyes: 1 } }
+      { v: "off", label: "Off during work", note: "the quiet phone", alerts: 0, pts: {} },
+      { v: "few", label: "Just a few", note: "the important ones", alerts: 2, pts: { mind: 1 } },
+      { v: "all", label: "All of them", note: "every single one", alerts: 5, pts: { mind: 3 } },
+      { v: "refresh", label: "I refresh before they arrive", note: "faster than the news", alerts: 4, pts: { mind: 3, eyes: 1 } }
     ]
   },
   {
-    key: "logoff", kind: "options", art: "clock",
+    key: "logoff", kind: "options", layout: "tiles",
     title: "4:30 pm. Your laptop is…",
-    sub: "On a normal day.",
+    sub: "On a typical day this month.",
     options: [
-      { v: "packed", label: "Packed away", pts: {} },
-      { v: "closed", label: "Closed on the desk", pts: { balance: 1 } },
-      { v: "open", label: "Open, just in case", pts: { balance: 2, mind: 1 } },
-      { v: "meeting", label: "Still in a meeting", pts: { balance: 3 } }
+      { v: "packed", label: "Packed away", note: "out of sight", pts: {} },
+      { v: "closed", label: "Closed, still in sight", note: "on the table or the sofa", pts: { balance: 1 } },
+      { v: "open", label: "Open, just in case", note: "on standby", pts: { balance: 2, mind: 1 } },
+      { v: "meeting", label: "Still in a meeting", note: "running long", pts: { balance: 3 } }
     ]
   },
   {
     key: "verdict", kind: "verdict",
     title: "Working from home so far?",
-    sub: "0 is “send me back”, 10 is “never sending me back”."
+    sub: "0 means “send me back to the office.” 10 means “never sending me back.”"
   }
 ];
 
@@ -144,11 +144,11 @@ export const FINDINGS = {
 };
 export const ALL_CLEAR = "All clear";
 export const PRESCRIPTIONS = {
-  posture: "Raise your screen to eye level. Two books will do.",
+  posture: "Raise your screen to eye level. Two books under the laptop will do.",
   energy: "One glass of water with every coffee, and stand up when a call ends.",
   eyesDark: "Turn on a lamp so the screen isn’t the brightest thing in the room.",
   eyes: "20-20-20: every 20 minutes, look about 6 m away for 20 seconds.",
-  balance: "Close the laptop at 4 and put it out of sight.",
+  balance: "Close the laptop at 4 and put it somewhere you can’t see it.",
   mind: "Alerts off from 7 to 4. Check the news at set times."
 };
 
@@ -159,3 +159,13 @@ export const CONFESSIONS = {
   c3: "I’ve worked a whole day from bed, in pyjamas."
 };
 export const HABITS = ["Raise your screen to eye level", "Alerts off from 7 to 4", "Stand up when a call ends"];
+
+/* Report wording: one word per area for each strain level (1 low … 5 high) */
+export const AREA_WORDS = {
+  posture: ["Upright", "Upright", "Slouching", "Strained", "Strained"],
+  energy: ["Steady", "Steady", "Dipping", "Running on coffee", "Running on empty"],
+  eyes: ["Rested", "Rested", "Overfocused", "Overfocused", "Overfocused"],
+  balance: ["Balanced", "Balanced", "Tilting to work", "Tilting to work", "Work everywhere"],
+  mind: ["Calm", "Mostly okay", "Busy", "Overloaded", "Overloaded"]
+};
+export const SEVERITY = ["mild", "mild", "mild", "moderate", "high", "high"];

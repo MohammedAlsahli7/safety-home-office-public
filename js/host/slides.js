@@ -401,6 +401,7 @@ function habits(n, total, s) {
           </div>`;
         }).join("")}
       </div>
+      <span style="font-size: 21px; color: ${C.sub}">Nothing to buy. Each one works at a dining table.</span>
     </div>
     ${num(n, total)}
   </div>`;

@@ -17,3 +17,15 @@ export function applyTheme(L) {
   if (meta) meta.setAttribute("content", t.bg);
   return t;
 }
+
+/* The landing page's background brightens smoothly with the cord, within each palette */
+export function roomBg(L) {
+  const k = Math.max(0, Math.min(100, L)) / 100;
+  const mix = (a, b, u) => "#" + [1, 3, 5].map(i => {
+    const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16);
+    return Math.round(x + (y - x) * Math.max(0, Math.min(1, u))).toString(16).padStart(2, "0");
+  }).join("");
+  return k < 0.34 ? mix("#05090D", "#0B1620", k / 0.34)
+    : k < 0.67 ? mix("#231D18", "#30271E", (k - 0.34) / 0.33)
+    : mix("#E4DDCF", "#F6F2E9", (k - 0.67) / 0.33);
+}

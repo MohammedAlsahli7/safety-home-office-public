@@ -1,6 +1,7 @@
 /* Demo mode (host.html?demo): 14 simulated players with the sample answers used in the
-   proposal PDF, so the whole flow can be rehearsed or shown without phones. */
-import { NICKNAMES } from "../content.js";
+   proposal PDF. They follow the presenter like real phones: join in the lobby, answer the card
+   on screen a few seconds after it appears, tap the confessions and vote during the talk. */
+import { NICKNAMES, CARDS } from "../content.js";
 
 const SAMPLE = {
   light: [8, 12, 15, 20, 25, 28, 32, 40, 44, 48, 55, 62, 75, 92],
@@ -19,7 +20,6 @@ const SAMPLE = {
 };
 const GUILTY = { c1: 11, c2: 5, c3: 4 };
 const VOTES = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2];
-const KEYS = ["posture", "laptop", "morning", "fuel", "stand", "coworker", "lunch", "stare", "news", "logoff", "verdict"];
 
 /* Shuffle each column independently so no simulated player is "the rough one" */
 function shuffled(list) {
@@ -34,28 +34,31 @@ export function startDemo(send) {
   const players = Array.from({ length: 14 }, (_, i) => ({ p: "demo" + i, n: NICKNAMES[i] }));
   const timers = [];
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+  const value = (key, i) => (key === "fuel" ? { coffee: SAMPLE.coffee[fuelOrder[i]], water: SAMPLE.water[fuelOrder[i]] } : cols[key][i]);
 
-  players.forEach((pl, i) => {
-    const t0 = 600 + i * 450 + Math.random() * 600;
-    later(t0, () => send({ t: "join", p: pl.p, n: pl.n, L: cols.light[i] }));
-    KEYS.forEach((k, j) => {
-      const v = k === "fuel" ? { coffee: SAMPLE.coffee[fuelOrder[i]], water: SAMPLE.water[fuelOrder[i]] } : cols[k][i];
-      later(t0 + 1500 + j * (900 + Math.random() * 900), () => send({ t: "ans", p: pl.p, k, v }));
-    });
-    later(t0 + 1500 + 11 * 1900, () => send({ t: "done", p: pl.p }));
-  });
+  /* Everyone scans the QR code in the first few seconds */
+  players.forEach((pl, i) => later(500 + i * 380 + Math.random() * 500, () => send({ t: "join", p: pl.p, n: pl.n, L: cols.light[i] })));
 
-  /* Simulated taps when the presenter reaches a confession or the vote */
-  const tapped = new Set();
+  const handled = new Set();
   return {
     onStage(stage) {
-      if (!stage || tapped.has(stage)) return;
-      tapped.add(stage);
-      const order = shuffled([...Array(14).keys()]);
-      order.forEach((i, k) => later(800 + k * 350 + Math.random() * 400, () => {
-        if (stage === "vote") send({ t: "vote", p: players[i].p, v: VOTES[k] });
-        else send({ t: "tap", p: players[i].p, q: stage, v: k < GUILTY[stage] ? 1 : 0 });
-      }));
+      if (!stage || handled.has(stage)) return;
+      const q = /^q(\d+)$/.exec(stage);
+      if (q) {
+        handled.add(stage);
+        const key = CARDS[Number(q[1]) - 1].key;
+        const slow = key === "stare" ? 6000 : key === "fuel" || key === "posture" ? 3000 : 1200;
+        shuffled([...Array(14).keys()]).forEach((i, k) => later(slow + k * 350 + Math.random() * 1500, () => send({ t: "ans", p: players[i].p, k: key, v: value(key, i) })));
+      } else if (stage === "end") {
+        handled.add(stage);
+        players.forEach((pl, i) => later(300 + i * 120, () => send({ t: "done", p: pl.p })));
+      } else if (stage in GUILTY || stage === "vote") {
+        handled.add(stage);
+        shuffled([...Array(14).keys()]).forEach((i, k) => later(800 + k * 350 + Math.random() * 400, () => {
+          if (stage === "vote") send({ t: "vote", p: players[i].p, v: VOTES[k] });
+          else send({ t: "tap", p: players[i].p, q: stage, v: k < GUILTY[stage] ? 1 : 0 });
+        }));
+      }
     },
     stop() { timers.forEach(clearTimeout); }
   };

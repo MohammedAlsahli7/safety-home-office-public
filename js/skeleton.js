@@ -1,5 +1,5 @@
 /* The posture skeleton: four keyframe poses morphed along t (0 Upright, 1/3 Leaning in,
-   2/3 The Shrimp, 1 Sofa Sink). Returns an SVG string; colours come from the caller. */
+   2/3 The Shrimp, 1 Sofa Sink). Returns an SVG string; colours come from the caller (hex or var(), applied as styles). */
 const KEYS = [
   { H: [52, 35], S3: [51, 48], C2: [52, 64], C1: [49, 88], P: [50, 103], K: [74, 106], A: [75, 138], T: [85, 139], Sh: [52, 57], E: [57, 80], W: [80, 89], L0: [86, 75], L1: [104, 75], L2: [108, 50] },
   { H: [61, 40], S3: [56, 51], C2: [54, 66], C1: [47, 88], P: [49, 104], K: [73, 106], A: [74, 138], T: [84, 139], Sh: [55, 60], E: [60, 81], W: [83, 89], L0: [84, 84], L1: [103, 84], L2: [106, 61] },
@@ -34,14 +34,14 @@ export function skeletonSVG(t, { w = 120, h = 150, ink = "currentColor", sub = "
   const eye = rot(4, -1);
   const pelvis = `M${pt([p.P[0] + 6 * pp0[0] + t0[0], p.P[1] + 6 * pp0[1] + t0[1]])} Q${pt([p.P[0] - 5 * t0[0], p.P[1] - 5 * t0[1]])} ${pt([p.P[0] - 6 * pp0[0] + t0[0], p.P[1] - 6 * pp0[1] + t0[1]])}`;
   return `<svg viewBox="0 0 120 150" width="${w}" height="${h}" aria-hidden="true">
-    <path d="M${pt(p.L0)} L${pt(p.L1)} L${pt(p.L2)}" stroke="${sub}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <g stroke="${ink}" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M${pt(p.L0)} L${pt(p.L1)} L${pt(p.L2)}" style="stroke: ${sub}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <g style="stroke: ${ink}" stroke-linecap="round" stroke-linejoin="round" fill="none">
       <path d="M${pt(p.P)} C${pt(p.C1)} ${pt(p.C2)} ${pt(p.S3)} L${pt(neck)}" stroke-width="4.4" stroke-dasharray="0.1 5.2"/>
       <g stroke-width="2.4"><circle cx="${f1(p.H[0])}" cy="${f1(p.H[1])}" r="9"/><path d="M${pt(rot(-5, 8))} Q${pt(rot(1, 12))} ${pt(rot(6, 7))}"/><path d="${ribs}"/><path d="${pelvis}"/></g>
       <g stroke-width="3"><path d="M${pt(p.P)} L${pt(p.K)} L${pt(p.A)} L${pt(p.T)}"/><path d="M${pt(p.Sh)} L${pt(p.E)} L${pt(p.W)}"/></g>
     </g>
-    <circle cx="${f1(eye[0])}" cy="${f1(eye[1])}" r="2.2" fill="${ink}"/>
-    <circle cx="${f1(p.K[0])}" cy="${f1(p.K[1])}" r="2.5" fill="${ink}"/>
-    <circle cx="${f1(p.E[0])}" cy="${f1(p.E[1])}" r="2.3" fill="${ink}"/>
+    <circle cx="${f1(eye[0])}" cy="${f1(eye[1])}" r="2.2" style="fill: ${ink}"/>
+    <circle cx="${f1(p.K[0])}" cy="${f1(p.K[1])}" r="2.5" style="fill: ${ink}"/>
+    <circle cx="${f1(p.E[0])}" cy="${f1(p.E[1])}" r="2.3" style="fill: ${ink}"/>
   </svg>`;
 }

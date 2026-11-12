@@ -50,6 +50,23 @@ textarea { width: 100%; min-height: 46vh; padding: 14px 16px; border-radius: 14p
 .up-next b { color: var(--ink); font-size: 17px; }
 .up-next p { margin: 0; }
 .up-next .dir { font-style: italic; }
+/* Presenter tools (P): the same as the presenter page's panel, out of the shared window */
+.relay { font-size: 12px; color: #1E7F55; }
+.relay.warn { color: #B4261A; font-weight: 700; }
+.tools { padding: 12px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line2); font-size: 14px; }
+.tools summary { cursor: pointer; font-weight: 800; font-size: 16px; }
+.tools summary span { font-family: var(--mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+.tools[open] summary { margin-bottom: 10px; }
+.tools .row { margin: 8px 0; }
+.t-line { margin: 4px 0; color: var(--sub); overflow-wrap: anywhere; }
+.t-line code, .tools code { font-family: var(--mono); font-size: 12px; }
+.t-line b.ok { color: #1E7F55; }
+.t-line b.warn { color: #B4261A; }
+.t-fine { color: var(--muted); font-size: 12px; }
+.t-saved { font-size: 12px; font-weight: 700; color: #1E7F55; }
+.t-saved.old { color: var(--accent-text); }
+.kpi { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.kpi textarea { min-height: 150px; font: 12px/1.4 var(--mono); border: 1px solid var(--line); }
 .wait-box { margin-top: 30vh; text-align: center; color: var(--sub); font-size: 17px; line-height: 1.5; }
 .wait-box b { color: var(--ink); font-size: 22px; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

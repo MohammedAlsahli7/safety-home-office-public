@@ -123,7 +123,8 @@ function meLight(L) {
 }
 
 /* Speaker notes: a separate window (notes.html) in this same browser. It follows the screens,
-   shows the script with live numbers, and can press Back and Next. Nothing here is shared on screen. */
+   shows the script with live numbers, can press Back and Next, and has the presenter tools, so the
+   P panel never has to open over the shared screen. Nothing here is shared on screen. */
 const notesChannel = (() => { try { return new BroadcastChannel("hoc-notes"); } catch (_) { return null; } })();
 let notesWin = null;
 function openNotes() {
@@ -137,15 +138,18 @@ function postNotes() {
   notesChannel.postMessage({
     type: "state", index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: nx ? nx.id : null,
     nextLabel: sc.slide ? (nx ? "Next slide →" : "Last slide") : nextBtn ? nextBtn.textContent.trim() : "Next →", firstSlide: FIRST_SLIDE,
-    screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats
+    screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats,
+    tools: { session, status, demo: !!config.demo, join: joinUrl(), motion: motionOn() }
   });
 }
-if (notesChannel) notesChannel.onmessage = e => {
+if (notesChannel) notesChannel.onmessage = async e => {
   const d = e.data || {};
   if (!relay) return;
   if (d.type === "hello") postNotes();
   else if (d.type === "intro") toggleIntro();
   else if (d.type === "go") { if (d.dir > 0) advance(); else back(); }
+  else if (d.type === "tool" && d.a === "kpilink") notesChannel.postMessage({ type: "kpilink", url: privateLink() });
+  else if (d.type === "tool" && TOOLS.includes(d.a)) await runTool(d.a);
 };
 
 /* Animations play on the presenter page even when the laptop asks for reduced motion (it's a
@@ -533,6 +537,7 @@ function renderTools() {
   if (toolsEl.contains(document.activeElement) && ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
   toolsEl.innerHTML = `
     <h2>Presenter tools</h2>
+    <span style="color: #5F6A6B; font-size: 12px">The same tools are in the speaker notes window (N), so during the meeting you never need to open this panel on the shared screen.</span>
     <span>Session <code>${esc(session)}</code> · relay <b>${esc(status)}</b>${config.demo ? " · demo" : ""}</span>
     <span>Join link</span><code>${esc(joinUrl())}</code>
     <button type="button" data-a="copy">Copy join link</button>
@@ -553,53 +558,72 @@ function renderTools() {
     <span style="color: #5F6A6B; font-size: 12px">You can play along on the shared screen: pull the lamp cord on the QR code screen, or do the staring contest with everyone. It’s show-only: nothing you do there is sent or counted.</span>`;
 }
 
-toolsEl.addEventListener("submit", e => {
+toolsEl.addEventListener("submit", async e => {
   e.preventDefault();
   const btn = e.target.querySelector('[type="submit"]');
   try {
     saveKpis(JSON.parse(e.target.elements.kpi.value));
-    btn.textContent = "Saved";
-    frameKey = null; whole = { id: null, html: null };   /* redraw the introduction and slides with the new details */
-    render();
   } catch (_) {
     btn.textContent = "That isn't valid JSON. Check commas and quotes.";
-  }
-});
-
-toolsEl.addEventListener("click", async e => {
-  const a = e.target.closest("[data-a]")?.dataset.a;
-  if (a === "kpilink") {
-    const u = new URL("host.html", location.href);
-    u.search = "";
-    if (!config.demo) u.searchParams.set("s", session);
-    if (config.customRelay) u.searchParams.set("relay", config.customRelay);
-    u.hash = "kpi=" + encodeKpis(rawKpis()) + (hostKey ? "&key=" + b64url(new TextEncoder().encode(JSON.stringify(hostKey))) : "");
-    try { await navigator.clipboard.writeText(u.toString()); e.target.textContent = "Copied. Share it privately only."; } catch (_) { e.target.textContent = "Copy failed"; }
     return;
   }
-  if (a === "copy") {
-    try { await navigator.clipboard.writeText(joinUrl()); e.target.textContent = "Copied"; } catch (_) { e.target.textContent = "Copy failed. Select the link above."; }
-  } else if (a === "notes") {
-    openNotes();
-  } else if (a === "motion") {
+  await runTool("kpis");   /* redraw the introduction and slides with the new details */
+  const again = toolsEl.querySelector('#kpiform [type="submit"]');
+  if (again) again.textContent = "Saved";
+});
+
+/* The private presenter link: this session, its key and the saved slide data, in the #hash */
+function privateLink() {
+  const u = new URL("host.html", location.href);
+  u.search = "";
+  if (!config.demo) u.searchParams.set("s", session);
+  if (config.customRelay) u.searchParams.set("relay", config.customRelay);
+  u.hash = "kpi=" + encodeKpis(rawKpis()) + (hostKey ? "&key=" + b64url(new TextEncoder().encode(JSON.stringify(hostKey))) : "");
+  return u.toString();
+}
+
+/* The tools' actions, shared by this panel and the speaker notes window (which asks first where a
+   question is needed, so these don't) */
+const TOOLS = ["talk", "motion", "new", "demo", "kpis"];
+async function runTool(a) {
+  if (a === "motion") {
     store.set("host.motion", !motionOn());
     applyMotion();
-    e.target.textContent = `Animations: ${motionOn() ? "on" : "off"}`;
   } else if (a === "talk") {
     toolsEl.hidden = true;
     go(FIRST_SLIDE);
-  } else if (a === "new" && confirm("Start a new session? Phones on the old QR code will be told to scan the new one.")) {
+  } else if (a === "new") {
     await closeSession();
     await freshSession();
     sign = await signer(hostKey.priv);
     verifyOwn = await verifier(hostKey.pub);
     const u = new URL(location.href); u.searchParams.delete("s"); history.replaceState(null, "", u);
     boot();
-    renderTools();
   } else if (a === "demo") {
     const u = new URL(location.href);
     if (config.demo) u.searchParams.delete("demo"); else u.searchParams.set("demo", "");
     location.href = u.toString().replace("demo=", "demo");
+    return;
+  } else if (a === "kpis") {   /* the slide data was saved in this browser: redraw what uses it */
+    frameKey = null; whole = { id: null, html: null };
+    render();
+  }
+  renderTools();
+  postNotes();
+}
+
+toolsEl.addEventListener("click", async e => {
+  const a = e.target.closest("[data-a]")?.dataset.a;
+  if (a === "kpilink") {
+    try { await navigator.clipboard.writeText(privateLink()); e.target.textContent = "Copied. Share it privately only."; } catch (_) { e.target.textContent = "Copy failed"; }
+  } else if (a === "copy") {
+    try { await navigator.clipboard.writeText(joinUrl()); e.target.textContent = "Copied"; } catch (_) { e.target.textContent = "Copy failed. Select the link above."; }
+  } else if (a === "notes") {
+    openNotes();
+  } else if (a === "new") {
+    if (confirm("Start a new session? Phones on the old QR code will be told to scan the new one.")) await runTool("new");
+  } else if (TOOLS.includes(a)) {
+    await runTool(a);
   }
 });
 

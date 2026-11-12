@@ -261,7 +261,7 @@ function hours(n, total, s) {
   return `
   <div class="slide">
     <div class="s-body" style="gap: 34px; justify-content: center">
-      <div class="lead-fix"><h2 class="h">Close the laptop at 4. Put it out of sight.</h2><p class="why">At home, the office has no door, so the workday leaks at both ends.</p></div>
+      <div class="lead-fix"><h2 class="h">Close the laptop after work.<br>Put it out of sight.</h2><p class="why">At home, the office has no door, so the workday leaks at both ends.</p></div>
       <svg viewBox="0 0 1152 178" width="1152" height="178" role="img" aria-label="A day from 5am to 8pm. The workday runs 7am to 4pm, with leaks in the hour before and the hour after.">
         <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="${C.tint}"/><rect width="4" height="10" fill="${C.acc}"/></pattern></defs>
         <rect x="${f1(X(5))}" y="96" width="${f1(X(20) - X(5))}" height="42" rx="8" fill="${C.line2}"/>
@@ -384,7 +384,7 @@ function awards(n, total, s) {
 }
 
 /* ---------- 7 · Three things + one-tap vote ---------- */
-const HABIT_REFS = { "Raise your screen to eye level": 5, "Mute the news alerts": 1, "Stand up when a call ends": 11, "Close the laptop at 4, out of sight": 4 };
+const HABIT_REFS = { "Raise your screen to eye level": 5, "Mute the news alerts": 1, "Stand up when a call ends": 11, "Close the laptop after work, out of sight": 4 };
 function habits(n, total, s) {
   const v = s.vote, max = Math.max(...v.counts);
   return `

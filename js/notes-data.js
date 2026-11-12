@@ -94,7 +94,7 @@ This morning, {c1} of us have refreshed the news more times today than we’ve s
 (If the numbers come out low: “Then most of us already do this. Keep it that way.”)`,
   hours: `Second, our hours. Confession two is on your phone.
 
-The habit: **close the laptop at 4, and put it somewhere you can’t see it.** At home, the office has no door, so the workday leaks at both ends. The work will still be there at 7:00.
+The habit: **close the laptop after work, and put it somewhere you can’t see it.** At home, the office has no door, so the workday leaks at both ends. The work will still be there at 7:00.
 
 This morning, {c2} of us said the laptop has slept in our bed, {pillow} check email from the pillow before 7:00, and at 5:00, {open} laptops were still open.
 

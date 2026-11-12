@@ -156,7 +156,7 @@ export const PRESCRIPTIONS = {
   energy: "One glass of water with every coffee, and stand up when a call ends.",
   eyesDark: "Turn on a lamp so the screen isn’t the brightest thing in the room.",
   eyes: "20-20-20: every 20 minutes, look about 6 m away for 20 seconds.",
-  balance: "Close the laptop at 4 and put it somewhere you can’t see it.",
+  balance: "Close the laptop after work and put it somewhere you can’t see it.",
   mind: "Mute news alerts. Check the news at a few times you choose."
 };
 

@@ -319,8 +319,8 @@ html.calm * { transition: none !important; animation: none !important; }
 .src-group { break-inside: avoid; display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; }
 .src-group b { font-size: 14px; font-weight: 700; color: var(--accent-text); }
 .src-group span { font-size: 13px; line-height: 1.4; color: var(--sub); }
-/* The footnote on a slide: one quiet line beside the slide number, short names only (full list on slide 11) */
-.s-foot { position: absolute; right: 120px; bottom: 23px; max-width: 900px; font-size: 12px; color: var(--muted); opacity: 0.7; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The footnote on a slide: one quiet centred line at the bottom, short names only (full list on slide 11) */
+.s-foot { position: absolute; left: 50%; bottom: 23px; transform: translateX(-50%); max-width: 860px; font-size: 12px; color: var(--muted); opacity: 0.7; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Introduction: the presenter's path, studied → home → on assignment (the current one outlined) */
 .intro-path { display: grid; align-items: stretch; gap: 0; }

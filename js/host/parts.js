@@ -35,9 +35,9 @@ export function confess(q, stat) {
     </div>`;
 }
 
-export function lamp(id, cx, right, height = 720) {
+export function lamp(id, cx, right, height = 720, top = 0) {
   return `
-    <svg viewBox="0 0 420 ${height}" width="420" height="${height}" aria-hidden="true" style="position: absolute; right: ${right}px; top: 0">
+    <svg viewBox="0 0 420 ${height}" width="420" height="${height}" aria-hidden="true" style="position: absolute; right: ${right}px; top: ${top}px">
       <defs>
         <linearGradient id="${id}c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB547" stop-opacity="0.34"/><stop offset="1" stop-color="#FFB547" stop-opacity="0"/></linearGradient>
         <radialGradient id="${id}h" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFD58A" stop-opacity="0.8"/><stop offset="1" stop-color="#FFD58A" stop-opacity="0"/></radialGradient>

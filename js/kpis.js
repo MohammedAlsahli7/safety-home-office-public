@@ -10,7 +10,9 @@
      "intro": {                                             // behind the QR code screen (I)
        "name": "Sam", "role": "Engineer",
        "home": "Home team", "assignment": "Team on assignment", "assignmentNote": "what I do there",
-       "education": { "school": "…", "field": "…", "focus": "…" },   // drawn as the first step of the path
+       "education": { "school": "…", "field": "…", "focus": "…", "when": "2020" },   // the first step of the path
+       "work": [{ "org": "Company", "what": "Engineer", "when": "2020–2022" }],     // earlier jobs, between studies and home
+       "homeWhen": "2022 – Mar 2024", "assignmentWhen": "Since Mar 2024",         // dates on the home and assignment steps
        "background": ["Worked at …"]                        // for the speaker notes only, up to 4 lines
      },
      "period": "",
@@ -62,7 +64,10 @@ export function cleanKpis(raw) {
       name: text(intro.name, 40), role: text(intro.role, 80),
       home: text(intro.home, 70), assignment: text(intro.assignment, 70), assignmentNote: text(intro.assignmentNote, 80),
       background: (Array.isArray(intro.background) ? intro.background : []).map(x => text(x, 140)).filter(Boolean).slice(0, 4),
-      education: (e => ({ school: text(e.school, 40), field: text(e.field, 50), focus: text(e.focus, 60) }))(intro.education && typeof intro.education === "object" ? intro.education : {})
+      education: (e => ({ school: text(e.school, 40), field: text(e.field, 50), focus: text(e.focus, 60), when: text(e.when, 24) }))(intro.education && typeof intro.education === "object" ? intro.education : {}),
+      work: (Array.isArray(intro.work) ? intro.work : []).filter(w => w && typeof w === "object" && text(w.org)).slice(0, 2)
+        .map(w => ({ org: text(w.org, 50), what: text(w.what, 60), when: text(w.when, 24) })),
+      homeWhen: text(intro.homeWhen, 24), assignmentWhen: text(intro.assignmentWhen, 24)
     },
     period: text(r.period, 40),
     coursesTitle: text(r.coursesTitle, 48),

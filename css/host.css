@@ -247,7 +247,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .slide.lamplit .qr-card { background: #fff; color: #1B2328; border-color: #E9E2D5; }
 
 /* ---------- Introduction: a small QR code stays up so people can keep joining ---------- */
-.intro-join { position: absolute; right: 64px; bottom: 122px; display: flex; align-items: center; gap: 14px; padding: 12px 18px 12px 12px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(27, 35, 40, 0.08); }
+.intro-join { position: absolute; right: 64px; top: 152px; display: flex; align-items: center; gap: 14px; padding: 12px 18px 12px 12px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(27, 35, 40, 0.08); }
 .intro-join svg { display: block; }
 .intro-join > span { display: flex; flex-direction: column; gap: 6px; }
 .intro-join b { font-size: 22px; font-weight: 800; font-stretch: 80%; }
@@ -326,9 +326,12 @@ html.calm * { transition: none !important; animation: none !important; }
 
 /* Introduction: the presenter's path, studied → home → on assignment (the current one outlined) */
 .intro-path { display: grid; align-items: stretch; gap: 0; }
-.ip-step { display: flex; flex-direction: column; gap: 8px; padding: 18px 18px 20px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line2); }
+.ip-step { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 20px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line2); }
+.ip-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ip-when { font-family: var(--mono); font-size: var(--t-tick); font-weight: 500; color: var(--accent-text); white-space: nowrap; }
 .ip-step.now { border: 2px solid var(--accent); }
 .ip-lbl { margin-top: 4px; font-family: var(--mono); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-text); }
 .ip-main { font-size: 25px; line-height: 1.12; font-weight: 700; font-stretch: 85%; }
 .ip-sub { font-size: 17px; line-height: 1.3; color: var(--sub); }
+.ip-sub + .ip-sub { margin-top: -6px; }   /* a second line under the first, like one block */
 .ip-arrow { align-self: center; justify-self: center; }

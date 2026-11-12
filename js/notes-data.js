@@ -147,12 +147,19 @@ export function kpiDefault(id, k) {
     const the = s => (/^the\s/i.test(s) || !/\b(Factory|Cent(er|re)|Department|Division|Group|Lab|Unit|Team|Office|Directorate|Programme?|Organi[sz]ation|Company)$/i.test(s) ? s : `the ${s}`);
     const org = (s, link) => { const p = String(s || "").split(/\s*\/\s*/).filter(Boolean); return p.length ? the(p.at(-1)) + (p.length > 1 ? ` ${link} ${p.slice(0, -1).map(the).join(", ")}` : "") : ""; };
     const home = org(i.home, "in"), away = org(i.assignment, "at");
-    const where = [home && `My home is ${home}`, away && `${home ? "and right now" : "Right now"} I’m on assignment with ${away}${i.assignmentNote ? `, working on ${i.assignmentNote}` : ""}`].filter(Boolean).join(", ");
-    const studied = e.school ? `I studied ${e.field ? `${lower(e.field)} ` : ""}at ${e.school}${e.focus ? `, mostly ${lower(e.focus)}` : ""}.` : "";
+    const assignment = away && `I’m on assignment with ${away}${i.assignmentNote ? `, working on ${i.assignmentNote}` : ""}`;
+    const studied = e.school
+      ? `I ${e.when ? "graduated" : "studied"} ${e.field ? `in ${lower(e.field)} ` : ""}${e.when ? "from" : "at"} ${e.school}${e.focus ? `, mostly ${lower(e.focus)}` : ""}.`
+      : "";
+    /* The screen shows the dates; the script tells the same path in order without reading them out */
+    const jobs = i.work.map(w => w.org + (w.what ? ` as ${/^[aeiou]/i.test(w.what) ? "an" : "a"} ${lower(w.what)}` : ""));
+    const career = jobs.length
+      ? [`I started at ${list(jobs)}${home ? `, then joined ${home}${away ? ", which is still my home" : ""}` : ""}.`, assignment && `Right now ${assignment}.`]
+      : [[home && `My home is ${home}`, assignment && `${home ? "and right now" : "Right now"} ${assignment}`].filter(Boolean).join(", ") + "."];
     const why = /data/i.test(i.role)
       ? "So you can guess how a data scientist runs a safety moment: data first. Anonymous data, from your phones, in a quick game."
       : "Today I have our safety moment, and it starts with a quick game on your phones.";
-    return `${[`While you join: I’m ${i.name}${role}.`, where && `${where}.`, studied].filter(Boolean).join(" ")}${i.background.length ? `
+    return `${[`While you join: I’m ${i.name}${role}.`, ...(jobs.length ? [studied, ...career] : [...career, studied])].filter(x => x && x !== ".").join(" ")}${i.background.length ? `
 
 A bit about me: ${i.background.map((x, n) => (n ? x.charAt(0).toLowerCase() + x.slice(1) : x)).join("; ")}.` : ""}
 

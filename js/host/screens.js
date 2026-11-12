@@ -27,9 +27,9 @@ export function introFrame(intro, url) {
   return `
   <div class="slide game">
     ${slot("status")}
-    ${lamp("lin", 210, 40)}
-    <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
-      <div style="display: flex; flex-direction: column; gap: 10px">
+    ${lamp("lin", 210, 40, 720, -48)}
+    <div class="s-body" style="justify-content: center; gap: 40px">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 820px">
         <span class="intro-label">Introduction</span>
         <h2 class="h intro-name">${esc(intro.name)}</h2>
         ${intro.role ? `<p class="intro-role">${esc(intro.role)}</p>` : ""}
@@ -40,30 +40,37 @@ export function introFrame(intro, url) {
   </div>`;
 }
 
-/* The presenter's path as a picture, not sentences: studied → home organization → on assignment.
-   "Group / Unit" shows the last part big and the first part under it. */
+/* The presenter's path as a picture, not sentences, in time order: studies → earlier jobs → home
+   organization → on assignment, each with its dates. "Group / Unit" shows the last part big and the
+   first part under it. */
 const IP_ICONS = {
   cap: `<path d="M3 13 L17 6 L31 13 L17 20 Z"/><path d="M9 16 V23 Q17 28 25 23 V16"/><path d="M31 13 V21"/>`,
+  work: `<rect x="8" y="5" width="18" height="24" rx="2"/><path d="M13 10 H15 M19 10 H21 M13 15 H15 M19 15 H21 M13 20 H15 M19 20 H21"/><path d="M15 29 V24 H19 V29"/>`,
   home: `<path d="M5 16 L17 6 L29 16"/><path d="M8 14 V29 H26 V14"/><path d="M14 29 V21 H20 V29"/>`,
   case: `<rect x="5" y="11" width="24" height="17" rx="3"/><path d="M13 11 V7 H21 V11"/><path d="M5 18 H29"/>`
 };
 function introPath(intro) {
   const split = s => { const p = String(s || "").split(/\s*\/\s*/).filter(Boolean); return p.length > 1 ? [p.at(-1), p.slice(0, -1).join(" · ")] : [p[0] || "", ""]; };
-  const step = (icon, label, main, sub, now) => `
+  const step = ({ icon, label, main, sub, when, now }) => `
     <div class="ip-step${now ? " now" : ""}">
-      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true" fill="none" stroke="${C.accText}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${IP_ICONS[icon]}</svg>
+      <span class="ip-top">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true" fill="none" stroke="${C.accText}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${IP_ICONS[icon]}</svg>
+        ${when ? `<span class="ip-when">${esc(when)}</span>` : ""}
+      </span>
       <span class="ip-lbl">${label}</span>
       <b class="ip-main">${esc(main)}</b>
-      ${sub ? `<span class="ip-sub">${esc(sub)}</span>` : ""}
+      ${[].concat(sub || []).filter(Boolean).map(x => `<span class="ip-sub">${esc(x)}</span>`).join("")}
     </div>`;
-  const arrow = `<svg class="ip-arrow" width="34" height="20" viewBox="0 0 34 20" aria-hidden="true"><path d="M3 10 H29 M22 3 L30 10 L22 17" fill="none" stroke="${C.deco}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const arrow = `<svg class="ip-arrow" width="26" height="20" viewBox="0 0 26 20" aria-hidden="true"><path d="M2 10 H22 M15 3 L23 10 L15 17" fill="none" stroke="${C.deco}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const e = intro.education || {};
+  const [hm, hs] = split(intro.home), [am, as] = split(intro.assignment);
   const steps = [
-    e.school && step("cap", "Studied", e.school, [e.field, e.focus].filter(Boolean).join(" · ")),
-    intro.home && step("home", "Home", ...split(intro.home)),
-    intro.assignment && step("case", "On assignment", ...split(intro.assignment), true)
+    e.school && { icon: "cap", label: e.when ? "Graduated" : "Studied", main: e.school, sub: [e.field, e.focus], when: e.when },
+    ...(intro.work || []).map(w => ({ icon: "work", label: "Worked", main: w.org, sub: w.what, when: w.when })),
+    intro.home && { icon: "home", label: "Home", main: hm, sub: hs, when: intro.homeWhen },
+    intro.assignment && { icon: "case", label: "On assignment", main: am, sub: as, when: intro.assignmentWhen, now: true }
   ].filter(Boolean);
-  return steps.length ? `<div class="intro-path" style="grid-template-columns: ${steps.map(() => "minmax(0, 1fr)").join(" 34px ")}">${steps.join(arrow)}</div>` : "";
+  return steps.length ? `<div class="intro-path" style="grid-template-columns: ${steps.map(() => "minmax(0, 1fr)").join(" 26px ")}">${steps.map(step).join(arrow)}</div>` : "";
 }
 
 /* ---------- Join: the first screen. The lamp's cord can be pulled, like on the phones. ---------- */

@@ -27,9 +27,10 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
 #stage { width: 1280px; height: 720px; position: relative; transform-origin: 50% 50%; flex: none; background: var(--bg); }
-/* Slide text can be selected. Where the presenter drags (the lamp cord's screen, the playable cards,
-   the buttons), selection is off, so a drag never selects text or scrolls the screen. */
-.slide.lamplit, .play, .controls, .cord-hit { user-select: none; -webkit-user-select: none; }
+/* Text on every screen can be selected. Where the presenter drags (the lamp cord, the playable card,
+   the buttons), selection is off, so a drag never selects text or scrolls the screen; the cord also
+   captures the pointer, so a pull that wanders over the text doesn't select it either. */
+.play, .controls, .cord-hit, .pull-lamp { user-select: none; -webkit-user-select: none; }
 
 /* ---------- Shared slide frame ---------- */
 .slide { position: absolute; inset: 0; padding: 44px 64px 58px; display: flex; flex-direction: column; gap: 20px; background: var(--bg); overflow: hidden; text-wrap: pretty; }
@@ -185,6 +186,8 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .m-avg-line { display: flex; align-items: baseline; gap: 12px; }
 .m-avg-line b { font-family: var(--mono); font-size: 64px; font-weight: 500; line-height: 0.9; color: var(--accent-text); }
 .m-avg-line small { font-size: 22px; color: var(--sub); }
+/* The words for the rounded average, the same words a phone shows for that number */
+.m-avg-note { margin-left: 14px; padding: 8px 16px; border-radius: 999px; background: var(--tint); color: var(--tint-ink); font-size: var(--t-head); font-weight: 700; font-stretch: 85%; line-height: 1.15; align-self: center; }
 .m-hist { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 10px; align-items: end; }
 .m-hist .col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .m-hist .col small { font-family: var(--mono); font-size: 18px; color: var(--sub); min-height: 22px; }
@@ -280,7 +283,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 #screen.enter .big-zero span { animation: zero-pop 0.9s 0.3s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
 #screen.reveal .m-bar i { animation: grow-x 1s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 0 50%; }
 #screen.reveal .m-hist .col i { animation: grow-y 1s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 50% 100%; }
-#screen.reveal :is(.m-res b, .m-big-avg b, .m-avg-line b, .m-avg-n b, .m-hist small) { animation: pop 0.55s 0.3s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+#screen.reveal :is(.m-res b, .m-big-avg b, .m-avg-line b, .m-avg-note, .m-avg-n b, .m-hist small) { animation: pop 0.55s 0.3s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
 #screen.reveal :is(.m-pose.avg, .q-wait) { animation: rise 0.6s 0.1s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 #screen.reveal :is(.m-tile.lead, .m-route.lead, .m-pick.lead, .m-pose.lead .xray) { animation: lead-glow 1.2s 0.4s ease-out both; }
 @keyframes screen-in { from { opacity: 0; transform: translateY(26px) scale(0.985); } to { opacity: 1; transform: none; } }

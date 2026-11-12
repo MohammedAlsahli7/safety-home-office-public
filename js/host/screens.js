@@ -168,7 +168,7 @@ function cardVisual(card, r) {
     case "verdict":
       if (r) {
         return `<div class="m-verdict">
-          <div class="m-avg-line"><b>${f1(r.avg)}</b><small>/ 10 · team average</small></div>
+          <div class="m-avg-line"><b>${f1(r.avg)}</b><small>/ 10 · team average</small><span class="m-avg-note">“${esc(VERDICT_NOTES[Math.max(0, Math.min(10, Math.round(r.avg)))])}”</span></div>
           <div class="m-hist">${r.hist.map((c, i) => `<div class="col${c === r.max && c > 0 ? " lead" : ""}"><small>${c || ""}</small><i style="height: ${r.max ? Math.round(c / r.max * 92) : 0}px"></i><span class="m-num">${i}</span></div>`).join("")}</div>
           <div class="m-scale-ends"><span>${esc(VERDICT_NOTES[0])}</span><span>${esc(VERDICT_NOTES[10])}</span></div>
         </div>`;

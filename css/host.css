@@ -26,11 +26,13 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 [hidden] { display: none !important; }
 
 #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
-#stage { width: 1280px; height: 720px; position: relative; transform-origin: 50% 50%; flex: none; user-select: none; -webkit-user-select: none; background: var(--bg); }
-/* Nothing on the stage is for selecting: a drag (the lamp cord, the dial) must never select text or scroll a slide */
+#stage { width: 1280px; height: 720px; position: relative; transform-origin: 50% 50%; flex: none; background: var(--bg); }
+/* Slide text can be selected. Where the presenter drags (the lamp cord's screen, the playable cards,
+   the buttons), selection is off, so a drag never selects text or scrolls the screen. */
+.slide.lamplit, .play, .controls, .cord-hit { user-select: none; -webkit-user-select: none; }
 
 /* ---------- Shared slide frame ---------- */
-.slide { position: absolute; inset: 0; padding: 44px 64px 58px; display: flex; flex-direction: column; gap: 20px; background: var(--bg); overflow: hidden; }
+.slide { position: absolute; inset: 0; padding: 44px 64px 58px; display: flex; flex-direction: column; gap: 20px; background: var(--bg); overflow: hidden; text-wrap: pretty; }
 .s-body { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 20px; }
 .s-num { position: absolute; right: 64px; bottom: 22px; font-family: var(--mono); font-size: 14px; color: var(--muted); }
 .h { margin: 0; font-size: var(--t-title); line-height: 0.92; font-weight: 800; font-stretch: 64%; text-wrap: balance; }

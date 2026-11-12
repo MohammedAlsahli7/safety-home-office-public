@@ -207,7 +207,7 @@ function title(n, total, s) {
   <div class="slide">
     ${lamp("l1", 210, 150)}
     <div class="s-body" style="justify-content: center; max-width: 760px; gap: 28px">
-      <h1 style="margin: 0; font-size: 112px; line-height: 0.86; font-weight: 800; font-stretch: 62%; text-transform: uppercase">Uncertain times show up in the body</h1>
+      <h1 class="h">Uncertain times show up in the body</h1>
       <div style="display: flex; gap: 12px">
         ${["Attention", "Hours", "Body"].map((x, i) => `<span style="display: flex; align-items: center; gap: 10px; padding: 10px 18px 10px 10px; border-radius: 999px; border: 1.5px solid ${C.line}; background: ${C.panel}; font-size: 20px; font-weight: 600"><span style="display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: ${C.acc}; color: #fff; font-family: var(--mono); font-size: 14px; font-weight: 500">${i + 1}</span>${x}</span>`).join("")}
       </div>
@@ -456,7 +456,7 @@ function close(n, total, s) {
         : `<span class="wait">Shows at 5 answers (${vd.n} so far)</span>`}
       </div>
       <div style="position: relative; display: flex; flex-direction: column; gap: ${reach ? 18 : 24}px; justify-content: center; padding-top: ${reach ? 0 : 120}px">
-        <h2 style="margin: 0; font-size: ${reach ? 72 : 96}px; line-height: 0.88; font-weight: 800; font-stretch: 62%; text-transform: uppercase">If the weeks<br>feel heavy,<br>say so</h2>
+        <h2 class="h">If the weeks feel heavy, say so</h2>
         <p style="margin: 0; font-size: ${reach ? "var(--t-body)" : "28px"}; line-height: 1.35">Unmute. Message a colleague. Talk to your manager.</p>${reach}
         <p style="margin: 0; font-size: var(--t-label); color: ${C.sub}">Your report stays on your phone.</p>
       </div>

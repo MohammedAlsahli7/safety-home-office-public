@@ -197,6 +197,7 @@ function boot() {
   revealed = new Set();
   introOn = false;
   frameKey = null;
+  whole = { id: null, html: null };
   screen = Math.max(0, SCREENS.findIndex(s => s.id === store.get("host.at." + session)));
   loadMe();
   if (relay) relay.close();
@@ -280,6 +281,25 @@ function setFrame(key, html) {
   liveHtml = {};
   return true;
 }
+/* The wrap-up and the slides redraw whole, but only when something on them changed. While the
+   presenter has text selected on the same slide, new numbers wait until the selection is cleared,
+   so a highlight isn't wiped by an incoming tap. Moving to another screen always redraws. */
+let whole = { id: null, html: null }, waitingForDeselect = false;
+function setWhole(id, html) {
+  const same = frameKey === null && whole.id === id;
+  if (same && whole.html === html) return;
+  const sel = getSelection();
+  if (same && sel && !sel.isCollapsed && screenEl.contains(sel.anchorNode)) {
+    if (!waitingForDeselect) {
+      waitingForDeselect = true;
+      const check = () => { if (getSelection().isCollapsed) { document.removeEventListener("selectionchange", check); waitingForDeselect = false; scheduleRender(); } };
+      document.addEventListener("selectionchange", check);
+    }
+    return;
+  }
+  setFrame(null, html);
+  whole = { id, html };
+}
 function live(name, html) {
   if (liveHtml[name] === html) return false;
   const el = screenEl.querySelector(`[data-live="${name}"]`);
@@ -312,9 +332,9 @@ function render() {
     live("moment", questionMoment(feed));
     if (shown) live("results", questionResults(sc.card, stats));
   } else if (sc.id === "wrap") {
-    setFrame(null, wrapScreen({ reports: stats.done - (state.players[me.pid]?.done ? 1 : 0), feed, status }));
+    setWhole("wrap", wrapScreen({ reports: stats.done - (state.players[me.pid]?.done ? 1 : 0), feed, status }));
   } else {
-    setFrame(null, sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats));
+    setWhole(sc.id, sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats));
   }
   live("status", statusChip(status));
   if (autoReveal) animate("reveal");
@@ -555,7 +575,7 @@ toolsEl.addEventListener("submit", e => {
   try {
     saveKpis(JSON.parse(e.target.elements.kpi.value));
     btn.textContent = "Saved";
-    frameKey = null;   /* redraw the introduction with the new details */
+    frameKey = null; whole = { id: null, html: null };   /* redraw the introduction and slides with the new details */
     render();
   } catch (_) {
     btn.textContent = "That isn't valid JSON. Check commas and quotes.";
@@ -604,7 +624,7 @@ function locked() {
   screenEl.innerHTML = `
   <div class="slide">
     <div class="s-body" style="justify-content: center; max-width: 900px; gap: 24px">
-      <h1 class="h" style="font-size: 96px">This presenter view is locked</h1>
+      <h1 class="h">This presenter view is locked</h1>
       <p style="margin: 0; font-size: 26px; line-height: 1.4; color: var(--sub)">${canSign()
         ? "The game is run from the presenter’s own browser, and phones only follow that one. Opening this page changes nothing for anyone."
         : "This browser can’t sign the presenter’s moves here. Open the presenter page over https (GitHub Pages) or on localhost."}</p>

@@ -41,7 +41,7 @@ export function introFrame(intro, url) {
 }
 
 /* The presenter's path as a picture, not sentences: studied → home organization → on assignment.
-   "Downstream / Global Optimizer Department" shows the last part big and the first part under it. */
+   "Group / Unit" shows the last part big and the first part under it. */
 const IP_ICONS = {
   cap: `<path d="M3 13 L17 6 L31 13 L17 20 Z"/><path d="M9 16 V23 Q17 28 25 23 V16"/><path d="M31 13 V21"/>`,
   home: `<path d="M5 16 L17 6 L29 16"/><path d="M8 14 V29 H26 V14"/><path d="M14 29 V21 H20 V29"/>`,

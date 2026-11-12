@@ -2,7 +2,7 @@
    host.css (--t-hero … --t-tick). Each slide may name a `stage`,
    which tells every phone to show a confession or the closing vote while it is on screen. */
 import { loadKpis, SAFETY_LABELS } from "../kpis.js";
-import { CONFESSIONS, HABITS, POSES } from "../content.js";
+import { CONFESSIONS, HABITS, POSES, fmtSteps } from "../content.js";
 import { skeletonSVG } from "../skeleton.js";
 import { C, f1, esc, enough, PHONE, callout, share, confess, lamp, qrSVG } from "./parts.js";
 
@@ -348,6 +348,50 @@ function body(n, total, s) {
   </div>`;
 }
 
+/* ---------- Body, part two · steps ----------
+   The habit and the research figure are fixed; the team's office and home averages sit under them as
+   evidence, against the 7,000 line, and only once enough people have answered. */
+const STEP_GOAL = 7000, STEP_AXIS = 12000;
+function move(n, total, s) {
+  const st = s.steps, ready = enough(st.n);
+  /* Drawn at its real size (776 px, the panel's inner width), so no text is scaled below the type scale */
+  const L = 140, W = 520, VX = L + W + 18, x = v => Math.round(Math.min(Math.max(v, 0), STEP_AXIS) / STEP_AXIS * W);
+  const bar = (label, v, colour, y) => `
+    <text x="0" y="${y + 28}" fill="${C.ink}" style="font-family: var(--display); font-size: 22px; font-weight: 700">${label}</text>
+    <rect x="${L}" y="${y}" width="${W}" height="40" rx="9" fill="${C.line2}"/>
+    ${ready ? `<rect class="grow-x" x="${L}" y="${y}" width="${Math.max(10, x(v))}" height="40" rx="9" fill="${colour}"/>
+    <text x="${VX}" y="${y + 29}" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 500">${fmtSteps(v)}</text>` : ""}`;
+  const ticks = [0, 2000, 4000, 6000, 8000, 10000, 12000].map(t => `
+    <path d="M${L + x(t)} 116 v8" stroke="${C.deco}" stroke-width="2"/>
+    <text x="${L + x(t)}" y="146" text-anchor="middle" fill="${C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px">${t ? `${t / 1000}k` : "0"}</text>`).join("");
+  const drop = ready ? Math.max(0, Math.round(st.office - st.home)) : 0;
+  return `
+  <div class="slide">
+    <div class="s-body" style="gap: 30px; justify-content: center">
+      <div class="lead-fix"><h2 class="h">Aim for about 7,000 steps a day.</h2><p class="why">You don’t need 10,000. Stand up when a call ends, and take some calls on your feet.</p></div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: stretch">
+        <div class="panel" style="display: flex; flex-direction: column; gap: 18px; padding: 22px 24px">
+          <svg viewBox="0 -38 776 192" width="776" height="192" role="img" aria-label="${ready ? `Team averages: office days ${fmtSteps(st.office)}, home days ${fmtSteps(st.home)} steps a day, against 7,000` : "Steps a day, against 7,000"}">
+            ${bar("Office days", st.office, "#A89D8B", 0)}
+            ${bar("Home days", st.home, C.acc, 58)}
+            ${ticks}
+            <path d="M${L + x(STEP_GOAL)} -14 V108" stroke="${C.ink}" stroke-width="2.5" stroke-dasharray="6 5"/>
+            <text x="${L + x(STEP_GOAL)}" y="-20" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600">7,000</text>
+          </svg>
+          ${ready ? callout(fmtSteps(drop), `fewer steps a day at home, on average · ${st.fewer} of ${st.n} walk less`) : share(0, st.n, "steps, office vs home")}
+        </div>
+        <div class="panel" style="display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 22px 24px">
+          <span style="font-family: var(--mono); font-size: var(--t-title); font-weight: 500; line-height: 0.95; color: ${C.accText}">7,000<small style="display: block; margin-top: 6px; font-size: var(--t-label); color: ${C.sub}">steps a day</small></span>
+          <span style="font-size: var(--t-body); font-weight: 700; line-height: 1.25">About half the risk of early death, compared with 2,000 a day</span>
+          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}">The gains slow after that, and level off around 8,000 to 10,000 for adults under 60.</span>
+        </div>
+      </div>
+    </div>
+    ${foot(12, 13, 11)}
+    ${num(n, total)}
+  </div>`;
+}
+
 /* ---------- 6 · Awards ---------- */
 const catIcon = `<svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true"><path d="M20 42 L24 14 L40 29 Q48 26 56 29 L72 14 L76 42 Q82 72 48 82 Q14 72 20 42 Z" fill="${C.tint}" stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"/><ellipse cx="37" cy="49" rx="3.5" ry="5" fill="${C.ink}"/><ellipse cx="59" cy="49" rx="3.5" ry="5" fill="${C.ink}"/><path d="M44 59 H52 L48 64 Z" fill="${C.acc}"/><path d="M30 60 H12 M30 65 L14 70 M66 60 H84 M66 65 L82 70" stroke="${C.ink}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
 const eyeIcon = `<svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true"><path d="M8 48 Q48 10 88 48 Q48 86 8 48 Z" fill="${C.panel}" stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"/><circle cx="48" cy="48" r="15" fill="${C.acc}"/><circle cx="48" cy="48" r="6.5" fill="${C.ink}"/><circle cx="52" cy="44" r="2.5" fill="#fff"/></svg>`;
@@ -482,8 +526,10 @@ const SOURCES = [
   ["Body · fuel", [
     ["EFSA 2015", "European Food Safety Authority. Scientific opinion on the safety of caffeine (2015)."],
     ["Killer et al. 2014", "Killer SC, Blannin AK, Jeukendrup AE. No evidence of dehydration with moderate daily coffee intake. PLoS ONE 9 (2014): e84154."]]],
-  ["Moving more", [
-    ["WHO 2020", "World Health Organization. Guidelines on physical activity and sedentary behaviour (2020)."]]]
+  ["Moving more · steps", [
+    ["WHO 2020", "World Health Organization. Guidelines on physical activity and sedentary behaviour (2020)."],
+    ["Ding et al. 2025", "Ding D, et al. Daily steps and health outcomes in adults: a systematic review and dose-response meta-analysis. The Lancet Public Health (2025)."],
+    ["Paluch et al. 2022", "Paluch AE, et al. Daily steps and all-cause mortality: a meta-analysis of 15 international cohorts. The Lancet Public Health 7 (2022)."]]]
 ];
 function sources(n, total) {
   const group = ([head, items]) => `<div class="src-group"><b>${esc(head)}</b>${items.map(([, t]) => `<span>${esc(t)}</span>`).join("")}</div>`;
@@ -505,6 +551,7 @@ export const SLIDES = [
   { id: "attention", render: attention, stage: "c1" },
   { id: "hours", render: hours, stage: "c2" },
   { id: "body", render: body, stage: "c3" },
+  { id: "move", render: move },
   { id: "awards", render: awards },
   { id: "habits", render: habits, stage: "vote" },
   { id: "close", render: close },

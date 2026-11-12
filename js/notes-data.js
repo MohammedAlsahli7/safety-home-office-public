@@ -11,7 +11,7 @@ const CARD_TITLES = Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), `Card
 export const TITLES = {
   intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
   courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
-  title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body",
+  title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body", move: "Body · steps",
   awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so",
   sources: "Sources (only if someone asks)"
 };
@@ -20,8 +20,8 @@ export const TITLES = {
 export const TARGETS = {
   intro: "while people join, about 0:20",
   courses: "0:00 to 0:17", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
-  attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:30", awards: "4:30 to 4:45",
-  habits: "4:45 to 5:20", close: "5:20 to 5:50"
+  attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:20", move: "4:20 to 4:45", awards: "4:45 to 5:00",
+  habits: "5:00 to 5:35", close: "5:35 to 6:05"
 };
 
 const NEXT = "(When most have answered, press Show answers, then Next card.)";
@@ -122,6 +122,11 @@ That’s the 20-20-20 rule. And {dark} of us work in the dark, so the lamp matte
 Fuel: **one glass of water with every coffee.** Yesterday we drank {coffee} coffees and {water} glasses of water.
 
 (If water comes out ahead: “Water is winning. Good. Keep pairing them.”)`,
+  move: `One more for the body: your legs. At the office, the car park and the walk between meeting rooms did this for us. At home it’s the kitchen and back, and this morning we said that costs us about {stepsDrop} steps a day.
+
+The good news: you don’t need 10,000. Around 7,000 a day already gets most of the benefit. So stand up when a call ends, and take the calls you only need to listen to on your feet.
+
+(If home days are already close to 7,000: “Most of us are nearly there. Keep it up.”)`,
   awards: `Before we finish, this morning’s awards. Coworker of the month: {coworker}, with {coworkerVotes} votes. Staring champion: {stare}. Unmute if it was you. And most caffeinated: {maxCoffee} in one day. Please drink some water.`,
   habits: `Three things for this week. Raise your screen to eye level. Mute the news alerts, and check the news when you choose. Stand up when a call ends.
 

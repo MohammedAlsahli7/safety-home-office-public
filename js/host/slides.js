@@ -8,8 +8,8 @@ import { C, f1, esc, enough, PHONE, callout, share, confess, lamp, qrSVG } from 
 
 const COWORKER = { cat: "The cat", kids: "The kids", door: "The doorbell", chat: "The family group chat" };
 const num = (i, total) => `<span class="s-num">${i} / ${total}</span>`;
-/* A small superscript pointing at the numbered list on the sources slide (11) */
-const ref = (...n) => `<sup class="ref">${n.join(",")}</sup>`;
+/* A one-line footnote at the bottom of a slide, short names only; full references are on slide 11 */
+const foot = (...n) => `<span class="s-foot">Sources: ${n.map(i => esc(SOURCES.flatMap(g => g[1]).at(i - 1)[0])).join(" · ")}</span>`;
 const dash = v => (v === null || v === undefined || v === "" ? "—" : v);
 
 /* ---------- KPI slides: figures come from the presenter tools, never from the code ---------- */
@@ -225,10 +225,10 @@ function attention(n, total, s) {
   return `
   <div class="slide">
     <div class="s-body" style="gap: 48px; justify-content: center">
-      <div class="lead-fix"><h2 class="h">Mute the news alerts. Check the news when you choose.</h2><p class="why">Every alert puts you back on edge.${ref(1, 2)}</p></div>
+      <div class="lead-fix"><h2 class="h">Mute the news alerts. Check the news when you choose.</h2><p class="why">Every alert puts you back on edge.</p></div>
       <div style="display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 40px; align-items: stretch">
         <div class="panel" style="display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 22px 26px">
-          <span class="chart-label">Stress, out of 10${ref(3)}</span>
+          <span class="chart-label">Stress, out of 10</span>
           <div style="display: grid; grid-template-columns: 280px minmax(0, 1fr) 64px; gap: 16px; align-items: center">
             <span style="font-size: var(--t-body); line-height: 1.25">Constantly check email, texts and social media</span>
             <span class="track" style="height: 22px"><i style="width: 53%; background: ${C.acc}"></i></span>
@@ -244,6 +244,7 @@ function attention(n, total, s) {
         </div>
       </div>
     </div>
+    ${foot(1, 2, 3)}
     ${num(n, total)}
   </div>`;
 }
@@ -260,7 +261,7 @@ function hours(n, total, s) {
   return `
   <div class="slide">
     <div class="s-body" style="gap: 34px; justify-content: center">
-      <div class="lead-fix"><h2 class="h">Close the laptop at 4. Put it out of sight.</h2><p class="why">At home, the office has no door, so the workday leaks at both ends.${ref(4)}</p></div>
+      <div class="lead-fix"><h2 class="h">Close the laptop at 4. Put it out of sight.</h2><p class="why">At home, the office has no door, so the workday leaks at both ends.</p></div>
       <svg viewBox="0 0 1152 178" width="1152" height="178" role="img" aria-label="A day from 5am to 8pm. The workday runs 7am to 4pm, with leaks in the hour before and the hour after.">
         <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="${C.tint}"/><rect width="4" height="10" fill="${C.acc}"/></pattern></defs>
         <rect x="${f1(X(5))}" y="96" width="${f1(X(20) - X(5))}" height="42" rx="8" fill="${C.line2}"/>
@@ -282,6 +283,7 @@ function hours(n, total, s) {
         ${confess(CONFESSIONS.c2, s.confess.c2)}
       </div>
     </div>
+    ${foot(4)}
     ${num(n, total)}
   </div>`;
 }
@@ -300,7 +302,7 @@ function body(n, total, s) {
   return `
   <div class="slide">
     <div class="s-body" style="gap: 18px">
-      <div class="lead-fix"><h2 class="h">Raise your screen to eye level.</h2><p class="why">Two books under the laptop will do.${ref(5)} Then rest your eyes, and drink water.</p></div>
+      <div class="lead-fix"><h2 class="h">Raise your screen to eye level.</h2><p class="why">Two books under the laptop will do. Then rest your eyes, and drink water.</p></div>
       <div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; min-height: 0">
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border: 2px solid ${C.acc}">
           ${head("Neck")}
@@ -309,7 +311,7 @@ function body(n, total, s) {
             <div style="display: flex; flex-direction: column; gap: 5px">
               <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1">5 kg</span>
               <span style="font-size: var(--t-tick); color: ${C.sub}">head, upright</span>
-              <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1; color: ${C.accText}; margin-top: 6px">27 kg${ref(6)}</span>
+              <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1; color: ${C.accText}; margin-top: 6px">27 kg</span>
               <span style="font-size: var(--t-tick); color: ${C.sub}">neck, at a 60° tilt</span>
             </div>
           </div>
@@ -324,14 +326,14 @@ function body(n, total, s) {
               <circle cx="64" cy="64" r="54" fill="none" stroke="${C.acc}" stroke-width="10" stroke-linecap="round" stroke-dasharray="254 340" transform="rotate(-90 64 64)"/>
               <text x="64" y="72" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 500">20 s</text>
             </svg>
-            <span style="display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 17px; line-height: 1.2"><b style="font-family: var(--display); font-size: var(--t-head); font-weight: 800; font-stretch: 80%; color: ${C.accText}">20-20-20${ref(8)}</b><span>every 20 min</span><span>look 6 m away</span><span>for 20 s</span></span>
+            <span style="display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 17px; line-height: 1.2"><b style="font-family: var(--display); font-size: var(--t-head); font-weight: 800; font-stretch: 80%; color: ${C.accText}">20-20-20</b><span>every 20 min</span><span>look 6 m away</span><span>for 20 s</span></span>
           </div>
-          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}">Blinks a minute: about 15 normally, 5 to 7 at a screen${ref(7)}</span>
+          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}">Blinks a minute: about 15 normally, 5 to 7 at a screen</span>
           <div style="margin-top: auto">${share(s.light.dark, s.light.n, "work in the dark", "stack")}</div>
         </div>
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
           ${head("Fuel")}
-          <span class="pfix">One glass of water with every coffee.${ref(9, 10)}</span>
+          <span class="pfix">One glass of water with every coffee.</span>
           <div style="display: flex; align-items: center; height: 128px">
             ${enough(s.fuel.n) ? `<svg width="236" height="128" viewBox="0 0 284 ${Math.max(160, rowsC * 21 + 12 + Math.ceil(nw / 13) * 21)}" role="img" aria-label="${s.fuel.coffee} coffees and ${s.fuel.water} glasses of water"><path d="${cups}" fill="${C.acc}"/><path d="${glasses}" fill="${C.water}"/></svg>` : ""}
           </div>
@@ -341,6 +343,7 @@ function body(n, total, s) {
       </div>
       ${confess(CONFESSIONS.c3, s.confess.c3)}
     </div>
+    ${foot(5, 6, 7, 8, 9, 10)}
     ${num(n, total)}
   </div>`;
 }
@@ -381,7 +384,7 @@ function awards(n, total, s) {
 }
 
 /* ---------- 7 · Three things + one-tap vote ---------- */
-const HABIT_REFS = { "Raise your screen to eye level": [5], "Mute the news alerts": [1], "Stand up when a call ends": [11], "Close the laptop at 4, out of sight": [4] };
+const HABIT_REFS = { "Raise your screen to eye level": 5, "Mute the news alerts": 1, "Stand up when a call ends": 11, "Close the laptop at 4, out of sight": 4 };
 function habits(n, total, s) {
   const v = s.vote, max = Math.max(...v.counts);
   return `
@@ -397,7 +400,7 @@ function habits(n, total, s) {
           return `
           <div style="flex: 1; display: grid; grid-template-columns: 56px minmax(0, 1fr) 300px; gap: 20px; align-items: center; padding: 16px 28px; border-radius: 16px; background: ${C.panel}; border: 1px solid ${C.line2}">
             <span style="font-family: var(--mono); font-size: 38px; font-weight: 500; line-height: 1; color: ${C.accText}">${i + 1}</span>
-            <span style="font-size: 40px; line-height: 1.05; font-weight: 800; font-stretch: 75%">${t}${HABIT_REFS[t] ? ref(...HABIT_REFS[t]) : ""}</span>
+            <span style="font-size: 40px; line-height: 1.05; font-weight: 800; font-stretch: 75%">${t}</span>
             <span style="display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 14px; align-items: center">
               <span class="track" style="height: 20px"><i style="width: ${v.n ? (c / v.n * 100).toFixed(1) : 0}%; background: ${lead ? C.acc : C.grey}"></i></span>
               <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; color: ${lead ? C.accText : C.ink}">${v.n ? c : ""}</span>
@@ -407,6 +410,7 @@ function habits(n, total, s) {
       </div>
       <span style="font-size: var(--t-body); color: ${C.sub}">Nothing to buy. Each one works at a dining table.</span>
     </div>
+    ${foot(...HABITS.map(h => HABIT_REFS[h]).filter(Boolean))}
     ${num(n, total)}
   </div>`;
 }
@@ -464,26 +468,25 @@ function close(n, total, s) {
 /* ---------- 11 · Sources: kept small, after the close, only if someone asks ---------- */
 const SOURCES = [
   ["Attention · mute the news alerts", [
-    "Fitz N, Kushlev K, Jagannathan R, et al. Batching smartphone notifications can improve well-being. Computers in Human Behavior 101 (2019): 84–94.",
-    "McLaughlin B, Gotlieb MR, Mills DJ. Caught in a dangerous world: problematic news consumption and its relationship to mental and physical ill-being. Health Communication (2022).",
-    "American Psychological Association. Stress in America: Coping with Change, part 2 (February 2017)."]],
+    ["Fitz et al. 2019", "Fitz N, Kushlev K, Jagannathan R, et al. Batching smartphone notifications can improve well-being. Computers in Human Behavior 101 (2019): 84–94."],
+    ["McLaughlin et al. 2022", "McLaughlin B, Gotlieb MR, Mills DJ. Caught in a dangerous world: problematic news consumption and its relationship to mental and physical ill-being. Health Communication (2022)."],
+    ["APA 2017", "American Psychological Association. Stress in America: Coping with Change, part 2 (February 2017)."]]],
   ["Hours · close the laptop, out of sight", [
-    "Sonnentag S, Cheng BH, Parker SL. Recovery from work: advancing the field toward the future. Annual Review of Organizational Psychology and Organizational Behavior 9 (2022): 33–60."]],
+    ["Sonnentag et al. 2022", "Sonnentag S, Cheng BH, Parker SL. Recovery from work: advancing the field toward the future. Annual Review of Organizational Psychology and Organizational Behavior 9 (2022): 33–60."]]],
   ["Body · screen at eye level", [
-    "OSHA. Computer Workstations eTool: Monitors (top of the screen at or slightly below eye level).",
-    "Hansraj KK. Assessment of stresses in the cervical spine caused by posture and position of the head. Surgical Technology International 25 (2014)."]],
+    ["OSHA", "OSHA. Computer Workstations eTool: Monitors (top of the screen at or slightly below eye level)."],
+    ["Hansraj 2014", "Hansraj KK. Assessment of stresses in the cervical spine caused by posture and position of the head. Surgical Technology International 25 (2014)."]]],
   ["Body · eyes", [
-    "American Academy of Ophthalmology. Computers, digital devices and eye strain (2024, reviewed 2025).",
-    "Talens-Estarelles C, Cerviño A, García-Lázaro S, et al. The effects of breaks on digital eye strain, dry eye and binocular vision: testing the 20-20-20 rule. Contact Lens & Anterior Eye (2022)."]],
+    ["AAO 2024", "American Academy of Ophthalmology. Computers, digital devices and eye strain (2024, reviewed 2025)."],
+    ["Talens-Estarelles et al. 2022", "Talens-Estarelles C, Cerviño A, García-Lázaro S, et al. The effects of breaks on digital eye strain, dry eye and binocular vision: testing the 20-20-20 rule. Contact Lens & Anterior Eye (2022)."]]],
   ["Body · fuel", [
-    "European Food Safety Authority. Scientific opinion on the safety of caffeine (2015).",
-    "Killer SC, Blannin AK, Jeukendrup AE. No evidence of dehydration with moderate daily coffee intake. PLoS ONE 9 (2014): e84154."]],
+    ["EFSA 2015", "European Food Safety Authority. Scientific opinion on the safety of caffeine (2015)."],
+    ["Killer et al. 2014", "Killer SC, Blannin AK, Jeukendrup AE. No evidence of dehydration with moderate daily coffee intake. PLoS ONE 9 (2014): e84154."]]],
   ["Moving more", [
-    "World Health Organization. Guidelines on physical activity and sedentary behaviour (2020)."]]
+    ["WHO 2020", "World Health Organization. Guidelines on physical activity and sedentary behaviour (2020)."]]]
 ];
 function sources(n, total) {
-  let k = 0;   /* numbered in the order the superscripts appear on the slides */
-  const group = ([head, items]) => `<div class="src-group"><b>${esc(head)}</b>${items.map(t => `<span><i>${++k}</i>${esc(t)}</span>`).join("")}</div>`;
+  const group = ([head, items]) => `<div class="src-group"><b>${esc(head)}</b>${items.map(([, t]) => `<span>${esc(t)}</span>`).join("")}</div>`;
   return `
   <div class="slide">
     <div class="s-body" style="gap: 22px">

@@ -1,5 +1,5 @@
 /* Pure scoring: one player's answers → personal report. No DOM, safe for Node tests.
-   answers = { light: 0..100, posture: 0..1, laptop: "desk", ..., fuel: {coffee, water}, stare: seconds, verdict: 0..10 } */
+   answers = { light: 0..100, posture: 0..1, laptop: "desk", ..., fuel: {coffee, water}, steps: {office, home}, stare: seconds, verdict: 0..10 } */
 import { AREAS, CARDS, FINDINGS, ALL_CLEAR, PRESCRIPTIONS, poseIndex, lightBucket } from "./content.js";
 
 const POSE_POINTS = [0, 1, 3, 3];
@@ -12,6 +12,8 @@ export function rawPoints(a) {
   if (typeof a.posture === "number") pts.posture += POSE_POINTS[poseIndex(a.posture)];
   if (a.fuel) pts.energy += Math.max(0, Math.min(3, (a.fuel.coffee || 0) - (a.fuel.water || 0)));
   if (typeof a.stare === "number") pts.eyes += a.stare < 8 ? 0 : a.stare < 15 ? 1 : a.stare < 25 ? 2 : 3;
+  /* Steps: few on home days, or half the office days or less */
+  if (a.steps) pts.energy += (a.steps.home < 3000 ? 1 : 0) + (a.steps.office > 0 && a.steps.home <= a.steps.office / 2 ? 1 : 0);
 
   CARDS.filter(c => c.kind === "options").forEach(c => {
     const opt = c.options.find(o => o.v === a[c.key]);
@@ -24,7 +26,7 @@ export function rawPoints(a) {
 
 /* Highest possible points per area, derived from the table so they never drift apart. */
 export const MAX_POINTS = (() => {
-  const max = { posture: POSE_POINTS[3], energy: 3, eyes: 2 + 3, balance: 0, mind: 0 };
+  const max = { posture: POSE_POINTS[3], energy: 3 + 2, eyes: 2 + 3, balance: 0, mind: 0 };
   CARDS.filter(c => c.kind === "options").forEach(c => {
     AREAS.forEach(k => { max[k] += Math.max(0, ...c.options.map(o => o.pts[k] || 0)); });
   });

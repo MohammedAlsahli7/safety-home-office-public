@@ -3,7 +3,7 @@
    figure or name is ever in this public file.
    In a script, {token} shows a live team number, a line in (parentheses) is a stage direction,
    **text** is bold, and a blank line starts a new paragraph. */
-import { CARDS, POSES, HABITS } from "./content.js";
+import { CARDS, POSES, HABITS, fmtSteps } from "./content.js";
 import { SAFETY_LABELS } from "./kpis.js";
 import { config } from "./config.js";
 
@@ -26,7 +26,48 @@ export const TARGETS = {
 
 const NEXT = "(When most have answered, press Show answers, then Next card.)";
 const WORD = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+/* One script per card, keyed by the card, so adding a card never moves a script to the wrong screen */
+const CARD_SCRIPTS = {
+  posture: `Card 1. Turn the dial until the skeleton looks like you right now. Be honest: nobody sees who picked what.
+
+${NEXT}`,
+  laptop: `Where does your laptop live most of the day? Raised up, flat on a table, on your lap, or in bed with you.
+
+${NEXT}`,
+  morning: `Between the alarm and 7:00. Which route is closest to your mornings?
+
+${NEXT}`,
+  fuel: `Coffee versus water, yesterday. Count every cup of coffee, qahwa or karak, and every glass of water.
+
+${NEXT}`,
+  stand: `When did you last stand up, before you opened this? And yes, walking to the fridge is an option.
+
+${NEXT}`,
+  steps: `Your daily steps. Office days: the walk from the car park, the meeting rooms, the coffee machine. Home days: the kitchen and back. One slider each, and a rough guess is fine.
+
+${NEXT}`,
+  coworker: `Your most frequent coworker. Who interrupts your workday the most?
+
+${NEXT}`,
+  lunch: `Lunch yesterday happened… where? Pick the closest one.
+
+${NEXT}`,
+  stare: `Staring contest. Stare at the dot, and tap the moment you blink. Then look at something far away for 20 seconds. Let’s all do it together.
+
+(This one takes about 40 seconds. Wait for the eye break before moving on.)`,
+  news: `News alerts, these days. How does your phone handle them?
+
+${NEXT}`,
+  logoff: `5:00 pm. Where is your laptop on a typical day?
+
+${NEXT}`,
+  verdict: `Last card. Working from home so far, from 0 to 10.
+
+(Then press Finish and send reports.)`
+};
+
 export const DEFAULTS = {
+  ...Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), CARD_SCRIPTS[c.key] || ""])),
   join: `Good morning, everyone. Grab your phone and point the camera at the code on the screen. When it opens, there’s a lamp: pull its cord until it matches the light in your room right now.
 
 (Pull the lamp cord on your screen as you say it.)
@@ -36,39 +77,6 @@ Then pick a funny name and join. Nothing goes in under your real name, and there
 (Press I for your introduction. A small QR code stays in the corner, so people can keep joining.)
 
 (When the joined count stops climbing, press Start the game.)`,
-  q1: `Card 1. Turn the dial until the skeleton looks like you right now. Be honest: nobody sees who picked what.
-
-${NEXT}`,
-  q2: `Where does your laptop live most of the day? Raised up, flat on a table, on your lap, or in bed with you.
-
-${NEXT}`,
-  q3: `Between the alarm and 7:00. Which route is closest to your mornings?
-
-${NEXT}`,
-  q4: `Coffee versus water, yesterday. Count every cup of coffee, qahwa or karak, and every glass of water.
-
-${NEXT}`,
-  q5: `When did you last stand up, before you opened this? And yes, walking to the fridge is an option.
-
-${NEXT}`,
-  q6: `Your most frequent coworker. Who interrupts your workday the most?
-
-${NEXT}`,
-  q7: `Lunch yesterday happened… where? Pick the closest one.
-
-${NEXT}`,
-  q8: `Staring contest. Stare at the dot, and tap the moment you blink. Then look at something far away for 20 seconds. Let’s all do it together.
-
-(This one takes about 40 seconds. Wait for the eye break before moving on.)`,
-  q9: `News alerts, these days. How does your phone handle them?
-
-${NEXT}`,
-  q10: `5:00 pm. Where is your laptop on a typical day?
-
-${NEXT}`,
-  q11: `Last card. Working from home so far, from 0 to 10.
-
-(Then press Finish and send reports.)`,
   wrap: `Your report is on your phone. Only you can see it. Have a look while I start.
 
 {played} of us played. Thank you. Now, the safety moment.`,
@@ -239,6 +247,10 @@ export function tokens(s) {
     coworker: ok(s.coworker.n) ? COWORKER[top[0]] : null,
     coworkerVotes: ok(s.coworker.n) ? String(top[1]) : null,
     stare: ok(s.stare.n) ? `${s.stare.max.toFixed(1)} seconds` : null,
+    stepsOffice: ok(s.steps.n) ? fmtSteps(s.steps.office) : null,
+    stepsHome: ok(s.steps.n) ? fmtSteps(s.steps.home) : null,
+    stepsDrop: ok(s.steps.n) ? fmtSteps(Math.max(0, s.steps.office - s.steps.home)) : null,
+    stepsFewer: ofN(s.steps.fewer, s.steps.n),
     verdict: ok(s.verdict.n) ? s.verdict.avg.toFixed(1) : null,
     low: ok(s.verdict.n) ? String(s.verdict.low) : null,
     vote: voteTop >= 0 && ok(s.vote.n) ? HABITS[voteTop] : null
@@ -251,5 +263,6 @@ export const TOKEN_HELP = {
   news: "get every news alert", pillow: "email from the pillow", open: "laptop open at 5:00", pose: "most common pose",
   poseCount: "how many sit like it", dark: "work in the dark", coffee: "coffees yesterday, total", water: "glasses of water, total",
   maxCoffee: "most cups, one player", coworker: "top coworker", coworkerVotes: "its votes", stare: "longest stare",
+  stepsOffice: "steps a day on office days, average", stepsHome: "steps a day on home days, average", stepsDrop: "steps a day lost at home", stepsFewer: "walk less at home",
   verdict: "work-from-home average", low: "answered 5 or below", vote: "most-picked habit"
 };

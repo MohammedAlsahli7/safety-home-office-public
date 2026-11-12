@@ -2,10 +2,10 @@
    card body into el. set(value, now) records an answer: the app sends it straight away when
    `now` is true (a tap), or after the player pauses (a drag or a counter).
    A renderer may return a cleanup function; the app calls it before the card leaves the screen. */
-import { POSES, poseIndex, VERDICT_NOTES } from "../content.js";
+import { POSES, poseIndex, VERDICT_NOTES, fmtSteps } from "../content.js";
 import { config } from "../config.js";
 import { skeletonSVG } from "../skeleton.js";
-import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass, MAX_CUPS, MAX_GLASSES, MAX_COUNT } from "./art.js";
+import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass, MAX_CUPS, MAX_GLASSES, MAX_COUNT, stepsRings, stepsOffset } from "./art.js";
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 /* Phones follow their own reduced-motion setting; the presenter page (html.present) has its own switch (html.calm) */
@@ -17,7 +17,7 @@ const reduced = () => {
 
 export function renderCard(el, card, value, set) {
   const kind = card.kind === "options" ? card.layout : card.kind;
-  return ({ tiles, routes, stand, news, dial, fuel, stare, verdict })[kind](el, card, value, set) || (() => {});
+  return ({ tiles, routes, stand, news, dial, fuel, steps, stare, verdict })[kind](el, card, value, set) || (() => {});
 }
 
 /* Shared: a group of option buttons that keeps aria-pressed in sync */
@@ -207,6 +207,45 @@ function fuel(el, card, value, set) {
     const k = b.dataset.k;
     v[k] = Math.max(0, Math.min(MAX_COUNT, v[k] + Number(b.dataset.d)));
     draw(k === "coffee" && b.dataset.d === "1");
+    set({ ...v }, false);
+  });
+  draw();
+}
+
+/* ---------- Daily steps: two sliders, office days and home days, shown as two rings ---------- */
+function steps(el, card, value, set) {
+  const v = value ? { ...value } : { office: card.start, home: card.start };
+  let touched = !!value;
+  const ROWS = [["office", "Office days"], ["home", "Home days"]];
+  el.innerHTML = `
+    <div class="steps-card">
+      <div class="steps-rings">${stepsRings(v.office, v.home, card.max)}<span class="steps-mid" aria-live="polite"><b data-diff></b><small data-diff-note></small></span></div>
+      <div class="steps-sliders">
+        ${ROWS.map(([k, label]) => `
+        <label class="steps-row ${k}">
+          <span class="steps-head"><span class="steps-lbl"><i></i>${label}</span><span class="steps-val"><b data-n="${k}"></b> <small>steps a day</small></span></span>
+          <input type="range" class="steps-slider" data-k="${k}" min="0" max="${card.max}" step="${card.step}" value="${v[k]}" aria-label="${label}: steps a day">
+        </label>`).join("")}
+      </div>
+    </div>`;
+  const draw = () => {
+    ROWS.forEach(([k]) => {
+      const ring = el.querySelector(`.ring-${k}`);
+      ring.setAttribute("stroke-dashoffset", stepsOffset(k, v[k], card.max));
+      ring.setAttribute("opacity", v[k] > 0 ? 1 : 0);
+      el.querySelector(`[data-n="${k}"]`).textContent = fmtSteps(v[k]);
+      el.querySelector(`.steps-slider[data-k="${k}"]`).style.setProperty("--fill", `${(v[k] / card.max * 100).toFixed(1)}%`);
+    });
+    const d = v.home - v.office;
+    el.querySelector("[data-diff]").textContent = !touched ? "Slide" : d === 0 ? "Same" : `${d < 0 ? "−" : "+"}${fmtSteps(Math.abs(d))}`;
+    el.querySelector("[data-diff-note]").textContent = !touched ? "both bars below" : d === 0 ? "as the office" : `a day at home`;
+  };
+  el.addEventListener("input", e => {
+    const s = e.target.closest(".steps-slider");
+    if (!s) return;
+    v[s.dataset.k] = Number(s.value);
+    touched = true;
+    draw();
     set({ ...v }, false);
   });
   draw();

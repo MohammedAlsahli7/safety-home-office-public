@@ -86,7 +86,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .slide.game { padding-bottom: 122px; }
 .mono-cap { font-family: var(--mono); font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .q-top { display: flex; align-items: center; gap: 20px; }
-.q-segs { display: grid; grid-template-columns: repeat(11, 30px); gap: 5px; }
+.q-segs { display: grid; grid-auto-flow: column; grid-auto-columns: 30px; gap: 5px; }   /* one segment per card, however many */
 .q-segs i { height: 6px; border-radius: 3px; background: var(--line); }
 .q-segs i.done { background: #A89D8B; }
 .q-segs i.now { background: var(--accent); }
@@ -193,6 +193,19 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .m-hist .col small { font-family: var(--mono); font-size: 18px; color: var(--sub); min-height: 22px; }
 .m-hist .col i { display: block; width: 62%; border-radius: 6px 6px 2px 2px; background: #A89D8B; transition: height 0.5s ease; }
 .m-hist .col.lead i { background: var(--accent); }
+/* Daily steps: the team's two averages as rings, office outside and home inside */
+.m-steps { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 44px; align-items: center; }
+.m-steps .steps-mid b { font-size: var(--t-num); }
+.m-steps .steps-mid small { font-size: var(--t-tick); }
+.m-steps-read { display: flex; flex-direction: column; gap: 14px; }
+.m-steps-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 20px; border-radius: 18px; background: var(--panel); border: 1.5px solid var(--line); font-size: var(--t-body); font-weight: 700; font-stretch: 85%; }
+.m-steps-row i { width: 16px; height: 16px; border-radius: 50%; background: var(--c); }
+.m-steps-row b { font-family: var(--mono); font-size: var(--t-num); font-weight: 500; }
+.m-steps-row small { font-family: var(--mono); font-size: var(--t-tick); font-weight: 400; color: var(--muted); }
+.m-steps-row.office { --c: var(--done); }
+.m-steps-row.home { --c: var(--accent); border-color: var(--accent); }
+.m-steps-sum { font-size: var(--t-head); font-weight: 700; font-stretch: 85%; color: var(--accent-text); }
+#screen.reveal :is(.m-steps-row b, .m-steps-sum, .m-steps .steps-mid) { animation: pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.2) both; }
 .m-hist .col.lead small { color: var(--accent-text); font-weight: 600; }
 .m-hist .m-num { height: 48px; font-size: 19px; }
 /* ---------- The card itself, playable on the shared screen ----------
@@ -231,6 +244,15 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .play .stare-say { grid-column: 2; grid-row: 1; align-self: end; min-height: 0; margin: 0; font-size: 28px; line-height: 1.3; font-weight: 600; font-stretch: 88%; color: var(--ink); text-wrap: balance; }
 .play .act { grid-column: 2; grid-row: 2; align-self: start; justify-self: start; min-height: 66px; padding: 0 34px; border-radius: 16px; font-size: 23px; }
 .play .readout .big { font-size: 40px; }
+.play.k-steps .steps-card { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 40px; align-items: center; }
+.play .steps-rings svg { width: 290px; height: 290px; }
+.play .steps-mid b { font-size: 34px; }
+.play .steps-mid small { font-size: 14px; }
+.play .steps-sliders { gap: 16px; }
+.play .steps-row { padding: 14px 20px 8px; border-radius: 18px; }
+.play .steps-lbl { font-size: var(--t-body); }
+.play .steps-val b { font-size: 28px; }
+.play .steps-val small { font-size: 14px; }
 .play.k-verdict { display: grid; grid-template-columns: 500px minmax(0, 1fr); gap: 36px; align-items: center; }
 .play .gauge { width: 500px; margin-top: 22px; }
 .play .gauge button { width: 52px; height: 52px; font-size: 19px; }

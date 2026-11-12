@@ -60,6 +60,18 @@ export const standRing = (fill, size = 188) => `
     <g ${G(2.6)} transform="translate(64 60)"><path d="M12 0 V34 H48"/><path d="M16 34 V60 M44 34 V60"/><path d="M12 46 H48"/></g>
   </svg>`;
 
+/* Daily steps: office days on the outer ring, home days on the inner one. A full ring is `max` steps. */
+const STEP_R = { office: 84, home: 58 };
+export const stepsCirc = k => 2 * Math.PI * STEP_R[k];
+export const stepsOffset = (k, v, max) => (stepsCirc(k) * (1 - Math.max(0, Math.min(1, (v || 0) / max)))).toFixed(1);
+export const stepsRings = (office, home, max, size = 200) => `
+  <svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">
+    ${["office", "home"].map(k => `
+    <circle cx="100" cy="100" r="${STEP_R[k]}" style="stroke: var(--line)" stroke-width="16" fill="none"/>
+    <circle class="ring-${k}" cx="100" cy="100" r="${STEP_R[k]}" style="stroke: var(${k === "office" ? "--done" : "--accent"})" stroke-width="16" stroke-linecap="round" fill="none"
+      stroke-dasharray="${stepsCirc(k).toFixed(1)}" stroke-dashoffset="${stepsOffset(k, k === "office" ? office : home, max)}" transform="rotate(-90 100 100)" opacity="${(k === "office" ? office : home) > 0 ? 1 : 0}"/>`).join("")}
+  </svg>`;
+
 /* News: a phone that fills with alerts, goes quiet, or spins on refresh */
 const WIDTHS = [[92, 64], [78, 52], [88, 70], [70, 46], [84, 60]];
 const TIMES = ["now", "1m", "3m", "6m", "9m"];

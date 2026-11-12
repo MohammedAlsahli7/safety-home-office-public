@@ -14,6 +14,8 @@ const SAMPLE = {
   stand: ["30m", "30m", "30m", "1h", "1h", "1h", "1h", "1h", "2h", "2h", "2h", "2h", "fridge", "fridge"],
   coworker: ["cat", "cat", "cat", "cat", "cat", "kids", "kids", "kids", "kids", "door", "door", "chat", "chat", "chat"],
   lunch: ["table", "table", "table", "table", "table", "keyboard", "keyboard", "keyboard", "keyboard", "meeting", "meeting", "meeting", "none", "none"],
+  office: [3000, 4500, 5000, 6000, 6000, 6500, 7000, 7500, 8000, 8000, 9000, 10000, 11000, 12500],
+  home: [1500, 2000, 2000, 2500, 3000, 3000, 3500, 4000, 4000, 4500, 5000, 6000, 7500, 9000],
   stare: [4.8, 6.2, 7.5, 8.1, 9.9, 10.4, 11.0, 11.6, 12.9, 13.1, 14.6, 15.8, 31.2, 41.7],
   news: ["off", "off", "few", "few", "few", "few", "few", "few", "all", "all", "all", "all", "refresh", "refresh"],
   logoff: ["packed", "packed", "closed", "closed", "closed", "closed", "closed", "open", "open", "open", "open", "open", "meeting", "meeting"],
@@ -32,10 +34,14 @@ function shuffled(list) {
 export function startDemo(send, { instant = false } = {}) {
   const cols = Object.fromEntries(Object.entries(SAMPLE).map(([k, v]) => [k, shuffled(v)]));
   const fuelOrder = shuffled([...Array(14).keys()]);
+  /* Office and home stay paired by rank, so most players walk less at home; a few are shifted up */
+  const stepsOrder = shuffled([...Array(14).keys()]);
   const players = Array.from({ length: 14 }, (_, i) => ({ p: "demo" + i, n: NICKNAMES[i] }));
   const timers = [];
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
-  const value = (key, i) => (key === "fuel" ? { coffee: SAMPLE.coffee[fuelOrder[i]], water: SAMPLE.water[fuelOrder[i]] } : cols[key][i]);
+  const value = (key, i) => (key === "fuel" ? { coffee: SAMPLE.coffee[fuelOrder[i]], water: SAMPLE.water[fuelOrder[i]] }
+    : key === "steps" ? { office: SAMPLE.office[stepsOrder[i]], home: SAMPLE.home[Math.min(13, stepsOrder[i] + (i % 5 === 0 ? 4 : 0))] }
+    : cols[key][i]);
 
   /* Everyone scans the QR code in the first few seconds */
   players.forEach((pl, i) => later(instant ? 0 : 500 + i * 380 + Math.random() * 500, () => send({ t: "join", p: pl.p, n: pl.n, L: cols.light[i] })));
@@ -52,7 +58,7 @@ export function startDemo(send, { instant = false } = {}) {
       if (q) {
         handled.add(stage);
         const key = CARDS[Number(q[1]) - 1].key;
-        const slow = key === "stare" ? 6000 : key === "fuel" || key === "posture" ? 3000 : 1200;
+        const slow = key === "stare" ? 6000 : key === "fuel" || key === "posture" || key === "steps" ? 3000 : 1200;
         shuffled([...Array(14).keys()]).forEach((i, k) => later(at(slow + k * 350 + Math.random() * 1500), () => send({ t: "ans", p: players[i].p, k: key, v: value(key, i) })));
       } else if (stage === "end") {
         handled.add(stage);

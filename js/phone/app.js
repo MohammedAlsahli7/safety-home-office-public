@@ -9,7 +9,7 @@
 import { config, isSessionCode } from "../config.js";
 import { store, randomCode } from "../store.js";
 import { createRelay } from "../relay.js";
-import { CARDS, NICKNAMES, AREAS, AREA_LABEL, AREA_WORDS, SEVERITY, PRESCRIPTIONS, CONFESSIONS, HABITS, lightName, lightBucket } from "../content.js";
+import { CARDS, CARDS_WORD, NICKNAMES, AREAS, AREA_LABEL, AREA_WORDS, SEVERITY, PRESCRIPTIONS, CONFESSIONS, HABITS, lightName, lightBucket } from "../content.js";
 import { report } from "../scoring.js";
 import { applyTheme, roomBg } from "./theme.js";
 import { renderCard } from "./cards.js";
@@ -22,8 +22,11 @@ const mono = (t, cls = "") => `<span class="mono-cap ${cls}">${t}</span>`;
 
 const session = config.session;
 
-/* Which view a presenter stage asks for: "lobby", "q1".."q11", then anything else is after the game */
-const cardIndexOf = s => (typeof s === "string" && /^q([1-9]|1[01])$/.test(s) ? Number(s.slice(1)) - 1 : -1);
+/* Which view a presenter stage asks for: "lobby", "q1".."qN" (one per card), then anything else is after the game */
+const cardIndexOf = s => {
+  const m = typeof s === "string" && /^q([1-9][0-9]?)$/.exec(s);
+  return m && Number(m[1]) <= CARDS.length ? Number(m[1]) - 1 : -1;
+};
 
 if (!isSessionCode(session)) {
   applyTheme(20);
@@ -173,7 +176,7 @@ function start() {
         <div class="cord" role="slider" tabindex="0" aria-label="Room light" aria-valuemin="0" aria-valuemax="100"></div>
         <h1 class="title-big">Home office<br>check-up</h1>
       </div>
-      <p class="lede">Eleven quick cards about where you work, your breaks and your screen. The presenter moves through them and you answer here. At the end you get a check-up report that only you can see.</p>
+      <p class="lede">${CARDS_WORD} quick cards about where you work, your breaks and your screen. The presenter moves through them and you answer here. At the end you get a check-up report that only you can see.</p>
       <div class="level"><div><b id="lvl"></b><span id="pct"></span></div><span>Pull the cord to match your room. Every card after this keeps your light.</span></div>
       <div class="playing">
         ${mono("Playing as")}
@@ -187,7 +190,7 @@ function start() {
         ${mono("How it works")}
         <div class="steps">
           <span class="num">1</span><span><b>Set your light</b><small>Pull the lamp cord above.</small></span>
-          <span class="num">2</span><span><b>Answer 11 cards</b><small>Tap, drag and count. The presenter moves everyone to the next card.</small></span>
+          <span class="num">2</span><span><b>Answer ${CARDS.length} cards</b><small>Tap, drag and count. The presenter moves everyone to the next card.</small></span>
           <span class="num">3</span><span><b>Get your report</b><small>Posture, energy, eyes, balance and mind.</small></span>
         </div>
       </div>

@@ -18,6 +18,8 @@ export function teamStats({ players = {}, taps = {}, votes = {} }) {
   const fuel = answered(answers, "fuel");
   const stare = answered(answers, "stare");
   const verdict = answered(answers, "verdict");
+  const steps = answered(answers, "steps");
+  const mean = list => (list.length ? list.reduce((s, x) => s + x, 0) / list.length : null);
   const opt = key => answered(answers, key).map(a => a[key]);
 
   const tally = key => {
@@ -67,6 +69,7 @@ export function teamStats({ players = {}, taps = {}, votes = {} }) {
     logoff: (() => { const t = tally("logoff"); return { ...t, open: t.counts.open + t.counts.meeting }; })(),
     coworker: { n: coworker.n, counts: coworker.counts, top: coworkerRank[0], second: coworkerRank[1] },
     fuel: { n: fuel.length, coffee: coffees.reduce((s, x) => s + x, 0), water: waters.reduce((s, x) => s + x, 0), maxCoffee: coffees.length ? Math.max(...coffees) : 0 },
+    steps: { n: steps.length, office: mean(steps.map(a => a.steps.office)), home: mean(steps.map(a => a.steps.home)), fewer: count(steps, a => a.steps.home < a.steps.office) },
     stare: { n: stare.length, avg: stare.length ? stare.reduce((s, a) => s + a.stare, 0) / stare.length : null, max: stare.length ? Math.max(...stare.map(a => a.stare)) : null },
     verdict: { n: verdict.length, hist, avg: avgVerdict, low: count(verdict, a => a.verdict <= 5), topNotes },
     strain: { n: strains.length, avg: avgStrain },
@@ -123,6 +126,7 @@ export function validAnswer(key, v) {
     case "fuel": return v && Number.isInteger(v.coffee) && Number.isInteger(v.water) && v.coffee >= 0 && v.coffee <= 20 && v.water >= 0 && v.water <= 20;
     case "stare": return typeof v === "number" && v >= 0 && v <= 600;
     case "verdict": return Number.isInteger(v) && v >= 0 && v <= 10;
+    case "steps": return !!v && [v.office, v.home].every(x => Number.isInteger(x) && x >= 0 && x <= 30000);
     case "options": return card.options.some(o => o.v === v);
     default: return false;
   }

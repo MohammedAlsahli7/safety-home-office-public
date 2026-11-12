@@ -4,10 +4,10 @@
    The join and card screens are a fixed frame plus live parts ([data-live] slots, filled by app.js),
    so the lamp cord and the card on screen can be played without being redrawn mid-drag. The buttons
    live in a separate control bar (app.js), so live updates here never swallow a click either. */
-import { CARDS, POSES, VERDICT_NOTES, poseIndex } from "../content.js";
+import { CARDS, CARDS_WORD, POSES, VERDICT_NOTES, poseIndex, fmtSteps } from "../content.js";
 import { config } from "../config.js";
 import { skeletonSVG } from "../skeleton.js";
-import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass } from "../phone/art.js";
+import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass, stepsRings } from "../phone/art.js";
 import { C, CORD, esc, lamp, qrSVG, roomColours } from "./parts.js";
 
 export const statusChip = status => `<span class="status" data-s="${status}"><i></i>${{ live: "Live", connecting: "Connecting", reconnecting: "Reconnecting", offline: "Offline", idle: "Starting" }[status] || status}</span>`;
@@ -82,7 +82,7 @@ export function joinFrame(url) {
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px">
       <div style="display: flex; flex-direction: column; justify-content: center; gap: 22px">
         <h1 class="h">Home office check-up</h1>
-        <p style="margin: 0; font-size: 24px; line-height: 1.4; color: var(--sub); max-width: 560px">Scan, pull the lamp cord, and wait for the first card. Eleven quick ones, on your phone, anonymous.</p>
+        <p style="margin: 0; font-size: 24px; line-height: 1.4; color: var(--sub); max-width: 560px">Scan, pull the lamp cord, and wait for the first card. ${CARDS_WORD} quick ones, on your phone, anonymous.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
           ${slot("count", "span", `style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: var(--accent-text); line-height: 1"`)}
           <span style="font-size: 22px; color: var(--sub)">joined</span>
@@ -120,6 +120,7 @@ function results(card, stats) {
   if (card.kind === "dial") return { n, counts: stats.posture.counts, max: Math.max(...stats.posture.counts), avg: stats.posture.avg };
   if (card.kind === "fuel") return { n, coffee: stats.fuel.coffee / stats.fuel.n, water: stats.fuel.water / stats.fuel.n };
   if (card.kind === "stare") return { n, avg: stats.stare.avg };
+  if (card.kind === "steps") return { n, office: stats.steps.office, home: stats.steps.home, fewer: stats.steps.fewer };
   if (card.kind === "verdict") return { n, hist: stats.verdict.hist, max: Math.max(...stats.verdict.hist), avg: stats.verdict.avg };
   return { n };
 }
@@ -151,6 +152,21 @@ function cardVisual(card, r) {
         <div class="m-fuel-col"><div class="fuel-scene water">${waterGlass(r ? r.water : 2, "hostGlass")}</div>${r ? `<span class="m-avg-n"><b>${f1(r.water)}</b> glasses on average</span>` : `<span class="t">Water</span>`}</div>
         <p class="m-note">${r ? `Team average for yesterday, from ${r.n} answers.` : "Count yesterday’s cups and glasses with the + and − buttons."}</p>
       </div>`;
+    case "steps": {
+      const d = r ? r.home - r.office : 0;
+      return `<div class="m-steps">
+        <div class="steps-rings">${stepsRings(r ? r.office : 7500, r ? r.home : 4000, card.max, 270)}${r ? `<span class="steps-mid"><b>${d < 0 ? "−" : d > 0 ? "+" : ""}${fmtSteps(Math.abs(d))}</b><small>a day at home</small></span>` : ""}</div>
+        <div class="m-steps-read">
+          ${r ? `<span class="m-steps-row office"><i></i><span>Office days</span><b>${fmtSteps(r.office)}</b></span>
+          <span class="m-steps-row home"><i></i><span>Home days</span><b>${fmtSteps(r.home)}</b></span>
+          <span class="m-steps-sum">${r.fewer} of ${r.n} walk less at home</span>
+          <span class="n">Team averages, steps a day, from ${r.n} answers.</span>`
+          : `<span class="m-steps-row office"><i></i><span>Office days</span><small>outer ring</small></span>
+          <span class="m-steps-row home"><i></i><span>Home days</span><small>inner ring</small></span>
+          <span class="n">Slide both on your phone. A rough guess is fine.</span>`}
+        </div>
+      </div>`;
+    }
     case "stare":
       return `<div class="m-stare">
         <svg viewBox="0 0 300 300" width="250" height="250" aria-hidden="true">

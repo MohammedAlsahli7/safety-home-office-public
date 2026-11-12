@@ -14,7 +14,7 @@ import { config, isSessionCode } from "../config.js";
 import { store } from "../store.js";
 import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
-import { CARDS, POSES, poseIndex, lightName } from "../content.js";
+import { CARDS, POSES, poseIndex, lightName, fmtSteps } from "../content.js";
 import { SLIDES } from "./slides.js";
 import { introFrame, joinFrame, joinNames, questionFrame, questionResults, questionSide, questionMoment, wrapScreen, statusChip } from "./screens.js";
 import { renderCard } from "../phone/cards.js";
@@ -231,6 +231,7 @@ function moment(t, k, p) {
   switch (k) {
     case "posture": return `Someone turned the dial to ${POSES[poseIndex(v)]}.`;
     case "fuel": return v.coffee >= 4 ? `Someone stacked ${v.coffee} cups of coffee yesterday.` : v.water >= 5 ? `Someone drank ${v.water} glasses of water yesterday.` : null;
+    case "steps": return v.office - v.home >= 5000 ? `Someone walks ${fmtSteps(v.office - v.home)} fewer steps a day at home.` : v.home > v.office ? "Someone walks more at home than at the office." : null;
     case "stare": return v >= 15 ? `Someone stared for ${v.toFixed(1)} seconds without blinking.` : null;
     case "coworker": return { cat: "Someone’s most frequent coworker is the cat.", kids: "Someone’s most frequent coworker is the kids.", door: "Someone’s most frequent coworker is the doorbell.", chat: "Someone’s most frequent coworker is the family group chat." }[v];
     case "laptop": return v === "bed" ? "Someone’s laptop lives in bed with them." : v === "lap" ? "Someone works from the sofa office." : null;

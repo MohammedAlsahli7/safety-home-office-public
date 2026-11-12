@@ -26,7 +26,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent
 .chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .chip.big { padding: 6px 12px; background: var(--tint); color: var(--tintInk); font-size: 15px; font-weight: 700; font-stretch: 88%; }
 .progress { display: flex; flex-direction: column; gap: 10px; }
-.segs { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
+.segs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }   /* one segment per card, however many */
 .segs i { height: 4px; border-radius: 2px; background: var(--line); }
 .segs i.done { background: var(--done); }
 .segs i.now { background: var(--accent); }

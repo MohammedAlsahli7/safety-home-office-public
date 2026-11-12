@@ -39,7 +39,7 @@ export const VERDICT_NOTES = [
   "My cat and I are thriving", "Never sending me back"
 ];
 
-/* The 11 cards, in order. `kind` picks the renderer on the phone. */
+/* The cards, in order. `kind` picks the renderer on the phone. */
 export const CARDS = [
   {
     key: "posture", kind: "dial",
@@ -83,6 +83,13 @@ export const CARDS = [
       { v: "2h", label: "Two hours or more", note: "deep focus mode", fill: 1, elapsed: "2 hrs or more", pts: { energy: 2, posture: 2 } },
       { v: "fridge", label: "Does walking to the fridge count?", note: "asking for a friend", fill: 0.3, elapsed: "fridge run", pts: { energy: 1 } }
     ]
+  },
+  {
+    /* Two sliders, office days and home days; two rings inside each other show them (a full ring is `max`) */
+    key: "steps", kind: "steps",
+    title: "Daily steps: office vs. home",
+    sub: "Slide both. A rough guess is fine.",
+    max: 15000, step: 500, start: 5000
   },
   {
     key: "coworker", kind: "options", layout: "tiles",
@@ -141,6 +148,10 @@ export const CARDS = [
 ];
 
 export const cardByKey = Object.fromEntries(CARDS.map(c => [c.key, c]));
+/* "Twelve quick cards": the count in words, for the landing and join screens */
+export const CARDS_WORD = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen"][CARDS.length] || String(CARDS.length);
+/* Steps, rounded to the hundred: 7,500 */
+export const fmtSteps = n => (Math.round(n / 100) * 100).toLocaleString("en-US");
 
 /* Strain report wording */
 export const FINDINGS = {

@@ -5,6 +5,7 @@
    (P), so that panel never has to open over the shared screen. */
 import { store } from "../store.js";
 import { loadKpis, rawKpis, saveKpis } from "../kpis.js";
+import { CARDS } from "../content.js";
 import { TITLES, TARGETS, DEFAULTS, kpiDefault, tokens, TOKEN_HELP } from "../notes-data.js";
 
 const root = document.getElementById("notes");
@@ -14,6 +15,24 @@ const KPI_IDS = ["intro", "courses", "phishing", "incidents", "close"];   /* wri
 
 let st = null, editing = false, size = store.get("notes.size", 22), saveTimer = null;
 const edits = () => store.get("notes", {});
+
+/* Saved script edits for the cards are keyed by screen (q1, q2…). When a card is added or moved, they
+   move with their card: the card order they were saved under is kept beside them, and edits from
+   before it was kept used the original eleven-card order. */
+const LEGACY_ORDER = ["posture", "laptop", "morning", "fuel", "stand", "coworker", "lunch", "stare", "news", "logoff", "verdict"];
+(() => {
+  const now = CARDS.map(c => c.key), was = store.get("notes.order", LEGACY_ORDER);
+  if (was.join() === now.join()) return;
+  const out = {};
+  Object.entries(edits()).forEach(([id, text]) => {
+    const m = /^q(\d+)$/.exec(id);
+    if (!m) { out[id] = text; return; }
+    const j = now.indexOf(was[Number(m[1]) - 1]);
+    if (j >= 0) out["q" + (j + 1)] = text;
+  });
+  store.set("notes", out);
+  store.set("notes.order", now);
+})();
 const defaultFor = id => (KPI_IDS.includes(id) ? kpiDefault(id, loadKpis()) : DEFAULTS[id] || "");
 const scriptFor = id => (id in edits() ? edits()[id] : defaultFor(id));
 const clock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };

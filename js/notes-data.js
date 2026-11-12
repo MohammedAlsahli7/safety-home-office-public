@@ -25,14 +25,15 @@ export const TARGETS = {
 };
 
 const NEXT = "(When most have answered, press Show answers, then Next card.)";
+const WORD = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 export const DEFAULTS = {
-  join: `Good morning, everyone. Before the safety moment, a quick game.
+  join: `Good morning, everyone. Grab your phone and point the camera at the code on the screen. When it opens, there’s a lamp: pull its cord until it matches the light in your room right now.
 
-Scan the QR code with your phone camera. Pull the lamp cord to match the light in your room, pick a funny name, and press Join.
+(Pull the lamp cord on your screen as you say it.)
 
-It’s anonymous: no real names, no camera. Only team totals show up here, and only once at least 5 people have answered.
+Then pick a funny name and join. Nothing goes in under your real name, and there’s no camera. I only ever see team totals, and only once at least ${WORD[config.minGroup] || config.minGroup} of you have answered.
 
-(While people join, press I or Introduction to introduce yourself. A small QR code stays on that screen.)
+(Press I for your introduction. A small QR code stays in the corner, so people can keep joining.)
 
 (When the joined count stops climbing, press Start the game.)`,
   q1: `Card 1. Turn the dial until the skeleton looks like you right now. Be honest: nobody sees who picked what.
@@ -136,19 +137,26 @@ const list = items => (items.length < 2 ? items.join("") : `${items.slice(0, -1)
 
 export function kpiDefault(id, k) {
   if (id === "intro") {
-    const i = k.intro;
+    const i = k.intro, e = i.education;
     if (!i.name) return "(Add your introduction first: press P on the presenter screen.)";
+    /* Said, not read: "Associate Data Scientist" → "an associate data scientist" (acronyms stay as they are) */
+    const lower = s => s.split(" ").map(w => (/^[A-Z0-9&]{2,}$/.test(w) ? w : w.toLowerCase())).join(" ");
     const [job, programme] = i.role.split("·").map(x => x.trim());
-    const role = job ? `, ${/^[aeiou]/i.test(job) ? "an" : "a"} ${job.toLowerCase()}${programme ? ` in the ${programme}` : ""}` : "";
-    const say = x => x.replace(/\s*·\s*/g, ", ");
-    const orgs = [i.home && `My home organization is ${say(i.home)}`, i.assignment && `I’m currently on assignment with ${say(i.assignment)}${i.assignmentNote ? `, working on ${i.assignmentNote}` : ""}`].filter(Boolean);
-    return `While you join, a quick introduction. I’m ${i.name}${role}.
-
-${orgs.join(", and ")}.${i.background.length ? `
+    const role = job ? `, ${/^[aeiou]/i.test(job) ? "an" : "a"} ${lower(job)}${programme ? ` in the ${programme}` : ""}` : "";
+    /* "Group / Unit" → "the Unit in Group": "the" only before names that end in an organization word */
+    const the = s => (/^the\s/i.test(s) || !/\b(Factory|Cent(er|re)|Department|Division|Group|Lab|Unit|Team|Office|Directorate|Programme?|Organi[sz]ation|Company)$/i.test(s) ? s : `the ${s}`);
+    const org = (s, link) => { const p = String(s || "").split(/\s*\/\s*/).filter(Boolean); return p.length ? the(p.at(-1)) + (p.length > 1 ? ` ${link} ${p.slice(0, -1).map(the).join(", ")}` : "") : ""; };
+    const home = org(i.home, "in"), away = org(i.assignment, "at");
+    const where = [home && `My home is ${home}`, away && `${home ? "and right now" : "Right now"} I’m on assignment with ${away}${i.assignmentNote ? `, working on ${i.assignmentNote}` : ""}`].filter(Boolean).join(", ");
+    const studied = e.school ? `I studied ${e.field ? `${lower(e.field)} ` : ""}at ${e.school}${e.focus ? `, mostly ${lower(e.focus)}` : ""}.` : "";
+    const why = /data/i.test(i.role)
+      ? "So you can guess how a data scientist runs a safety moment: data first. Anonymous data, from your phones, in a quick game."
+      : "Today I have our safety moment, and it starts with a quick game on your phones.";
+    return `${[`While you join: I’m ${i.name}${role}.`, where && `${where}.`, studied].filter(Boolean).join(" ")}${i.background.length ? `
 
 A bit about me: ${i.background.map((x, n) => (n ? x.charAt(0).toLowerCase() + x.slice(1) : x)).join("; ")}.` : ""}
 
-Today I have our safety moment, and it starts with that game on your phones.
+${why}
 
 (When the joined count stops climbing, press Start the game. ← or Esc goes back to the big QR code.)`;
   }

@@ -545,6 +545,14 @@ function toggleFullscreen() {
 }
 
 /* ---------- Presenter tools (P) ---------- */
+/* Which copy of the private data this browser has, so an old one is easy to spot */
+function savedLine() {
+  const k = loadKpis(), has = Object.keys(rawKpis()).length > 0;
+  const text = !has ? "Saved here: nothing yet."
+    : k.updated ? `Saved here: the copy dated ${esc(k.updated)}${k.intro.name ? `, for ${esc(k.intro.name)}` : ""}. If docs/kpis.json has a later date, paste it again.`
+    : "Saved here: an older copy with no date. Paste the latest docs/kpis.json.";
+  return `<span style="font-size: 12px; font-weight: 700; color: ${k.updated || !has ? "#1E7F55" : "#A15C00"}">${text}</span>`;
+}
 function renderTools() {
   if (toolsEl.hidden) return;
   if (toolsEl.contains(document.activeElement) && ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
@@ -561,6 +569,7 @@ function renderTools() {
     <form id="kpiform" style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #DDD3C2">
       <b>Private slide data: your introduction and the KPIs</b>
       <span style="color: #5F6A6B; font-size: 12px">Paste the JSON from docs/kpis.json. It stays in this browser only and is never published.</span>
+      ${savedLine()}
       <textarea name="kpi" rows="9" spellcheck="false">${esc(JSON.stringify(rawKpis(), null, 2))}</textarea>
       <button type="submit">Save</button>
       <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
@@ -634,6 +643,9 @@ function locked() {
 }
 
 addEventListener("resize", fit);
+/* A private link opened in a tab that already shows this page only changes the #hash, which doesn't
+   reload anything: reload, so the link's data (and key) are read like on a fresh open */
+addEventListener("hashchange", () => { if (/(?:^#|&)(kpi|key)=/.test(location.hash)) location.reload(); });
 importKeyFromHash();
 importKpisFromHash();
 if (location.hash) history.replaceState(null, "", location.pathname + location.search);

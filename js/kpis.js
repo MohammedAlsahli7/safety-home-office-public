@@ -6,6 +6,7 @@
 
    JSON shape (every part optional; everything below is made up):
    {
+     "updated": "2026-01-31",                               // shown in the presenter tools, to check the saved copy is the latest
      "intro": {                                             // behind the QR code screen (I)
        "name": "Sam", "role": "Engineer",
        "home": "Home team", "assignment": "Team on assignment", "assignmentNote": "what I do there",
@@ -56,6 +57,7 @@ export function cleanKpis(raw) {
   const board = close.board && typeof close.board === "object" ? close.board : {};
   const support = close.support && typeof close.support === "object" ? close.support : {};
   return {
+    updated: text(r.updated, 20),
     intro: {
       name: text(intro.name, 40), role: text(intro.role, 80),
       home: text(intro.home, 70), assignment: text(intro.assignment, 70), assignmentNote: text(intro.assignmentNote, 80),

@@ -3,15 +3,15 @@
    The presenter drives the pace: every screen change is published as a `stage`, and phones
    show exactly that card (or the lobby, the report, a confession, the vote). Phones never move on
    by themselves. Share this tab in Teams.
-   The presenter can play too: the lamp cord on the join screen and the card on each card screen work
-   like a phone's. The first touch of a card joins the presenter as one more player, "Presenter".
+   The presenter can play along: the lamp cord on the join screen and the card on each card screen work
+   like a phone's, show-only. Nothing the presenter does there is sent or counted.
    Only the browser that started the session can move the phones: every stage is signed with a key
    that never leaves it (see ../sign.js). Anyone else who opens host.html with the session code gets a
    locked page, and phones ignore unsigned or replayed stages.
    Buttons on screen, or keys: → Space PageDown next · ← PageUp back · I introduction · F full screen ·
    N speaker notes · P presenter tools */
 import { config, isSessionCode } from "../config.js";
-import { store, randomCode } from "../store.js";
+import { store } from "../store.js";
 import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
 import { CARDS, POSES, poseIndex, lightName } from "../content.js";
@@ -98,51 +98,28 @@ let state, feed, newest, screen, relay, demo, lastStage, status = "idle", render
 let lastAt = 0, sendChain = Promise.resolve(), revealed = new Set(), lastStats = null;
 let animUntil = 0, animTimer = null, gameStartedAt = 0, talkStartedAt = 0, introOn = false;
 
-/* ---------- The presenter plays too ----------
-   Saved per session in this browser. Nothing is sent until the presenter first touches a card; from
-   then on they're one more player, named "Presenter", and their answers count like anyone's.
-   The lamp cord on the join screen sets their room light. They don't get a report on screen. */
-const ME_NAME = "Presenter";
-let me = null, mePending = {}, lightTimer = null;
+/* ---------- The presenter plays along, show-only ----------
+   The lamp cord and the cards on the shared screen work like a phone's, but nothing is sent and
+   nothing counts: the presenter is never a player, so their stare can't win an award and the results
+   never wait for them. Their light and taps are kept per session in this browser, so a reload keeps them. */
+let me = null, handsOn = false, handsTimer = null;
 function loadMe() {
-  Object.values(mePending).forEach(clearTimeout);
-  mePending = {};
-  me = Object.assign({ pid: "pr-" + randomCode(10), L: 80, joined: false, answers: {}, done: false }, store.get("host.me." + session) || {});
+  const saved = store.get("host.me." + session) || {};
+  me = { L: typeof saved.L === "number" ? saved.L : 80, answers: saved.answers && typeof saved.answers === "object" ? saved.answers : {} };
+  handsOn = false;
 }
 const saveMe = () => store.set("host.me." + session, me);
-/* Applied here straight away, then sent; the relay's echo changes nothing */
-function meSend(m) {
-  const msg = { ...m, p: me.pid };
-  onMessage(msg);
-  relay.send(msg);
-}
-function meJoin() {
-  if (me.joined) return;
-  me.joined = true;
-  saveMe();
-  meSend({ t: "join", n: ME_NAME, L: me.L });
-}
-function meFlush(key) {
-  clearTimeout(mePending[key]);
-  delete mePending[key];
-  if (me.answers[key] !== undefined) meSend({ t: "ans", k: key, v: me.answers[key] });
-}
-const meFlushAll = () => Object.keys(mePending).forEach(meFlush);
-/* Like a phone: a tap is sent at once, a drag or a counter after a short pause */
+/* While the presenter is mid-play on the card (staring, say), the automatic results wait, so the
+   screen isn't swapped under them. Pressing Show answers still works at any time. */
 function meAnswer(key, v, now) {
-  meJoin();
   me.answers[key] = v;
   saveMe();
-  clearTimeout(mePending[key]);
-  if (now) meFlush(key);
-  else mePending[key] = setTimeout(() => meFlush(key), 700);
+  clearTimeout(handsTimer);
+  handsTimer = setTimeout(() => { handsOn = false; scheduleRender(); }, now ? 0 : 700);
 }
 function meLight(L) {
   me.L = Math.max(0, Math.min(100, Math.round(L)));
   saveMe();
-  if (!me.joined) return;
-  clearTimeout(lightTimer);
-  lightTimer = setTimeout(() => meSend({ t: "join", n: ME_NAME, L: me.L }), 700);
 }
 
 /* Speaker notes: a separate window (notes.html) in this same browser. It follows the screens,
@@ -316,7 +293,7 @@ function render() {
   const answered = card ? stats.answered[card.key] || 0 : 0;
   const everyone = stats.joined > 0 && answered >= stats.joined;
   /* Results appear by themselves once everyone has answered, or when the presenter asks */
-  const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card);
+  const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card) && !handsOn;
   if (autoReveal) revealed.add(sc.card);
   if (sc.id === "join" && introOn) {
     setFrame("intro", introFrame(loadKpis().intro, joinUrl()));
@@ -332,7 +309,7 @@ function render() {
     live("moment", questionMoment(feed));
     if (shown) live("results", questionResults(sc.card, stats));
   } else if (sc.id === "wrap") {
-    setWhole("wrap", wrapScreen({ reports: stats.done - (state.players[me.pid]?.done ? 1 : 0), feed, status }));
+    setWhole("wrap", wrapScreen({ reports: stats.done, feed, status }));
   } else {
     setWhole(sc.id, sc.slide.render(SLIDES.indexOf(sc.slide) + 1, SLIDES.length, stats));
   }
@@ -360,13 +337,13 @@ function fitNames() {
   }
 }
 
-/* The card on screen, playable like a phone's (same renderers). The first touch joins the presenter,
-   so the results also wait for the presenter's answer, and a staring contest isn't cut short. */
+/* The card on screen, playable like a phone's (same renderers), show-only: see meAnswer */
 function mountPlay(card) {
   const el = document.getElementById("play");
   if (!el) return;
+  handsOn = false;
   const stop = renderCard(el, card, me.answers[card.key], (v, now) => meAnswer(card.key, v, now));
-  el.addEventListener("pointerdown", meJoin);
+  el.addEventListener("pointerdown", () => { handsOn = true; clearTimeout(handsTimer); });
   /* A picked button lets go of the focus, so Space and Enter still move the presentation on.
      The staring contest's button keeps it: Space is a handy "I blinked". */
   el.addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.matches("[data-act]")) b.blur(); });
@@ -466,7 +443,7 @@ function advance() {
 function go(i) {
   const to = Math.max(0, Math.min(SCREENS.length - 1, i));
   if (to === screen) return;
-  meFlushAll();
+  handsOn = false;
   screen = to;
   introOn = false;
   store.set("host.at." + session, SCREENS[screen].id);
@@ -502,8 +479,6 @@ function publishStage() {
   if (s === lastStage) return;
   lastStage = s;
   if (demo) demo.onStage(s);
-  /* The presenter played: counted as finished, like a phone whose report just arrived */
-  if (s === "end" && me.joined && !me.done) { me.done = true; saveMe(); meSend({ t: "done" }); }
   /* Signed and sent in order; `at` only ever grows, so phones can drop replays */
   sendChain = sendChain.then(async () => {
     const at = lastAt = Math.max(Date.now(), lastAt + 1);
@@ -575,7 +550,7 @@ function renderTools() {
       <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
     </form>
     <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>I: your introduction (on the QR code screen)</li><li>F: full screen</li><li>N: speaker notes</li><li>P or Esc: close this panel</li></ul>
-    <span style="color: #5F6A6B; font-size: 12px">You can play on the shared screen: pull the lamp cord on the QR code screen, and answer each card there. Your first answer adds you as one more player, “Presenter”.</span>`;
+    <span style="color: #5F6A6B; font-size: 12px">You can play along on the shared screen: pull the lamp cord on the QR code screen, or do the staring contest with everyone. It’s show-only: nothing you do there is sent or counted.</span>`;
 }
 
 toolsEl.addEventListener("submit", e => {

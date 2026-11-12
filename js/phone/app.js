@@ -182,7 +182,7 @@ function start() {
         <button type="button" class="sq wide" data-a="choose" aria-expanded="${state.choosing}">${state.choosing ? "Close" : "Choose"}</button>
       </div>
       <div class="names" ${state.choosing ? "" : "hidden"}>${NICKNAMES.map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join("")}</div>
-      <button type="button" class="btn" data-a="join">Join as <span data-nick>${esc(state.nick)}</span></button>
+      <button type="button" class="btn" data-a="join"><span>Join as <span data-nick>${esc(state.nick)}</span></span></button>
       <div class="how">
         ${mono("How it works")}
         <div class="steps">
@@ -205,7 +205,7 @@ function start() {
           <span class="k">revealed at the end</span>
         </div>
       </div>
-      <button type="button" class="btn" data-a="join">Join as <span data-nick>${esc(state.nick)}</span></button>`;
+      <button type="button" class="btn" data-a="join"><span>Join as <span data-nick>${esc(state.nick)}</span></span></button>`;
     drawLamp();
     showNick();
     app.onclick = e => {

@@ -274,6 +274,7 @@ function setFrame(key, html) {
   if (key && key === frameKey) return false;
   unmount();
   unmount = () => {};
+  document.body.style.background = "";
   screenEl.innerHTML = html;
   frameKey = key;
   liveHtml = {};
@@ -360,6 +361,7 @@ function lightRoom(slide, L) {
   const p = roomPalette(L);
   Object.entries(HOST_VARS).forEach(([v, k]) => slide.style.setProperty("--" + v, p[k]));
   slide.style.setProperty("--bg", roomBg(L));
+  document.body.style.background = roomBg(L);   /* any space around the stage follows the room too */
 }
 function mountLamp() {
   const box = document.getElementById("pull-lamp"), cord = document.getElementById("cord");

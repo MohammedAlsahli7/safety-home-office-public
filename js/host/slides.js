@@ -237,9 +237,9 @@ function attention(n, total, s) {
           </div>
           <span class="src">American Psychological Association, Stress in America, 2017</span>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px; min-width: 0">
+          ${share(s.news.always, s.news.n, "get every news alert", "big-c")}
           ${confess(CONFESSIONS.c1, s.confess.c1)}
-          ${share(s.news.always, s.news.n, "get every news alert")}
         </div>
       </div>
     </div>
@@ -273,10 +273,12 @@ function hours(n, total, s) {
         <text x="${f1(X(16.5))}" y="60" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 18px">After 4:00</text>
         ${ticks}
       </svg>
-      <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 20px; align-items: stretch">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch">
+          ${share(s.morning.counts.pillow, s.morning.n, "check email from the pillow before 7:00")}
+          ${share(s.logoff.open, s.logoff.n, "laptops still open at 5:00")}
+        </div>
         ${confess(CONFESSIONS.c2, s.confess.c2)}
-        ${share(s.morning.counts.pillow, s.morning.n, "check email from the pillow", "stack")}
-        ${share(s.logoff.open, s.logoff.n, "laptops still open at 5:00", "stack")}
       </div>
     </div>
     ${num(n, total)}
@@ -297,16 +299,12 @@ function body(n, total, s) {
   return `
   <div class="slide">
     <div class="s-body" style="gap: 18px">
-      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 560px; gap: 40px; align-items: start">
-        <h2 class="h">Neck, eyes and fuel</h2>
-        ${confess(CONFESSIONS.c3, s.confess.c3)}
-      </div>
+      <div class="lead-fix"><h2 class="h">Raise your screen to eye level.</h2><p class="why">Two books under the laptop will do. Then rest your eyes, and drink water.</p></div>
       <div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; min-height: 0">
-        <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
+        <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; border: 2px solid ${C.acc}">
           ${head("Neck")}
-          <span class="pfix">Raise the screen to eye level. Two books will do.</span>
-          <div style="display: flex; align-items: center; gap: 16px; height: 128px">
-            <div style="flex: none; border-radius: 12px; color: ${C.bone}; background: radial-gradient(70% 60% at 50% 45%, ${C.film1}, ${C.film2})">${skeletonSVG(0.62, { w: 100, h: 125, ink: C.bone, sub: C.boneSub })}</div>
+          <div style="display: flex; align-items: center; gap: 18px; height: 196px">
+            <div style="flex: none; border-radius: 12px; color: ${C.bone}; background: radial-gradient(70% 60% at 50% 45%, ${C.film1}, ${C.film2})">${skeletonSVG(0.62, { w: 150, h: 188, ink: C.bone, sub: C.boneSub })}</div>
             <div style="display: flex; flex-direction: column; gap: 5px">
               <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1">5 kg</span>
               <span style="font-size: var(--t-tick); color: ${C.sub}">head, upright</span>
@@ -328,7 +326,7 @@ function body(n, total, s) {
             </svg>
             <span style="display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 17px; line-height: 1.2"><b style="font-family: var(--display); font-size: var(--t-head); font-weight: 800; font-stretch: 80%; color: ${C.accText}">20-20-20</b><span>every 20 min</span><span>look 6 m away</span><span>for 20 s</span></span>
           </div>
-          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}">Blinks a minute: 15 to 20 normally, far fewer at a screen</span>
+          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}">Blinks a minute: about 15 normally, 5 to 7 at a screen</span>
           <div style="margin-top: auto">${share(s.light.dark, s.light.n, "work in the dark", "stack")}</div>
         </div>
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
@@ -337,10 +335,11 @@ function body(n, total, s) {
           <div style="display: flex; align-items: center; height: 128px">
             ${enough(s.fuel.n) ? `<svg width="236" height="128" viewBox="0 0 284 ${Math.max(160, rowsC * 21 + 12 + Math.ceil(nw / 13) * 21)}" role="img" aria-label="${s.fuel.coffee} coffees and ${s.fuel.water} glasses of water"><path d="${cups}" fill="${C.acc}"/><path d="${glasses}" fill="${C.water}"/></svg>` : ""}
           </div>
-          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}"><span style="color: ${C.acc}">■</span> coffee, qahwa, karak &nbsp; <span style="color: ${C.water}">■</span> water${perIcon > 1 ? ` · each icon = ${perIcon}` : ""}</span>
+          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}"><span style="color: ${C.acc}">■</span> coffee, karak &nbsp; <span style="color: ${C.water}">■</span> water${perIcon > 1 ? ` · each icon = ${perIcon}` : ""}</span>
           <div style="margin-top: auto">${enough(s.fuel.n) ? callout(`${s.fuel.coffee} : ${s.fuel.water}`, "coffees to waters, yesterday", "stack") : share(0, s.fuel.n, "coffee vs water", "stack")}</div>
         </div>
       </div>
+      ${confess(CONFESSIONS.c3, s.confess.c3)}
     </div>
     ${num(n, total)}
   </div>`;
@@ -461,6 +460,38 @@ function close(n, total, s) {
   </div>`;
 }
 
+/* ---------- 11 · Sources: kept small, after the close, only if someone asks ---------- */
+const SOURCES = [
+  ["Attention · mute the news alerts", [
+    "Fitz N, Kushlev K, Jagannathan R, et al. Batching smartphone notifications can improve well-being. Computers in Human Behavior 101 (2019): 84–94.",
+    "McLaughlin B, Gotlieb MR, Mills DJ. Caught in a dangerous world: problematic news consumption and its relationship to mental and physical ill-being. Health Communication (2022).",
+    "American Psychological Association. Stress in America: Coping with Change, part 2 (February 2017)."]],
+  ["Hours · close the laptop, out of sight", [
+    "Sonnentag S, Cheng BH, Parker SL. Recovery from work: advancing the field toward the future. Annual Review of Organizational Psychology and Organizational Behavior 9 (2022): 33–60."]],
+  ["Body · screen at eye level", [
+    "OSHA. Computer Workstations eTool: Monitors (top of the screen at or slightly below eye level).",
+    "Hansraj KK. Assessment of stresses in the cervical spine caused by posture and position of the head. Surgical Technology International 25 (2014)."]],
+  ["Body · eyes", [
+    "American Academy of Ophthalmology. Computers, digital devices and eye strain (2024, reviewed 2025).",
+    "Talens-Estarelles C, Cerviño A, García-Lázaro S, et al. The effects of breaks on digital eye strain, dry eye and binocular vision: testing the 20-20-20 rule. Contact Lens & Anterior Eye (2022)."]],
+  ["Body · fuel", [
+    "European Food Safety Authority. Scientific opinion on the safety of caffeine (2015).",
+    "Killer SC, Blannin AK, Jeukendrup AE. No evidence of dehydration with moderate daily coffee intake. PLoS ONE 9 (2014): e84154."]],
+  ["Moving more", [
+    "World Health Organization. Guidelines on physical activity and sedentary behaviour (2020)."]]
+];
+function sources(n, total) {
+  const group = ([head, items]) => `<div class="src-group"><b>${esc(head)}</b>${items.map(t => `<span>${esc(t)}</span>`).join("")}</div>`;
+  return `
+  <div class="slide">
+    <div class="s-body" style="gap: 22px">
+      <h2 class="h" style="font-size: 44px">Sources</h2>
+      <div class="src-cols">${SOURCES.map(group).join("")}</div>
+    </div>
+    ${num(n, total)}
+  </div>`;
+}
+
 export const SLIDES = [
   { id: "courses", render: kpiCourses },
   { id: "phishing", render: kpiPhishing },
@@ -471,5 +502,6 @@ export const SLIDES = [
   { id: "body", render: body, stage: "c3" },
   { id: "awards", render: awards },
   { id: "habits", render: habits, stage: "vote" },
-  { id: "close", render: close }
+  { id: "close", render: close },
+  { id: "sources", render: sources }
 ];

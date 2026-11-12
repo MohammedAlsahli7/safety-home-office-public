@@ -71,7 +71,7 @@ export const CARDS = [
   {
     key: "fuel", kind: "fuel",
     title: "Coffee vs. water, yesterday",
-    sub: "Count every cup of coffee, qahwa or karak. Water counts by the glass."
+    sub: "Count every cup of coffee or karak. Water counts by the glass."
   },
   {
     key: "stand", kind: "options", layout: "stand",

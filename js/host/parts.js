@@ -24,30 +24,14 @@ export function share(part, n, txt, cls = "") {
   return callout(`${part} of ${n}`, txt, cls);
 }
 
-/* One figure per person who tapped; filled = "Guilty" */
-export function people(guilty, n) {
-  const w = Math.min(24, Math.floor(400 / Math.max(n, 1)));
-  let d1 = "", d0 = "";
-  for (let i = 0; i < n; i++) {
-    const s = w / 24, x = i * w;
-    const d = `M${f1(x + 10 * s)} ${f1(1.5)} a${f1(5.5 * s)} ${f1(5.5 * s)} 0 1 0 0.01 0 Z M${f1(x + 2 * s)} 28 Q${f1(x + 2 * s)} 15 ${f1(x + 10 * s)} 15 Q${f1(x + 18 * s)} 15 ${f1(x + 18 * s)} 28 Z `;
-    if (i < guilty) d1 += d; else d0 += d;
-  }
-  return `<svg width="${Math.max(w * n, 1)}" height="28" viewBox="0 0 ${Math.max(w * n, 1)} 28" role="img" aria-label="${guilty} of ${n}"><path d="${d1}" fill="${C.acc}"/><path d="${d0}" fill="${C.line}"/></svg>`;
-}
-
+/* A confession is an aside: one quiet line under the evidence, never the main point of a slide */
 export function confess(q, stat) {
   const ready = enough(stat.n);
   return `
     <div class="confess">
       ${PHONE}
-      <div style="display: flex; flex-direction: column; gap: 12px; min-width: 0">
-        <span class="q">“${q}”</span>
-        ${ready ? people(stat.guilty, stat.n) : ""}
-        ${ready
-          ? `<span style="display: flex; align-items: baseline; gap: 10px"><span class="big">${stat.guilty} of ${stat.n}</span><span class="g">tapped “Guilty”</span></span>`
-          : `<span class="g">Tap on your phone. ${stat.n} tapped so far.</span>`}
-      </div>
+      <span class="q">“${q}”</span>
+      <span class="res">${ready ? `<b>${stat.guilty} of ${stat.n}</b> tapped “Guilty”` : `Tap on your phone · ${stat.n} so far`}</span>
     </div>`;
 }
 

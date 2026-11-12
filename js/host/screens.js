@@ -29,18 +29,41 @@ export function introFrame(intro, url) {
     ${slot("status")}
     ${lamp("lin", 210, 40)}
     <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
-      <div style="display: flex; flex-direction: column; gap: 14px">
-        <h1 class="intro-name">${esc(intro.name)}</h1>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <span class="intro-label">Introduction</span>
+        <h2 class="h intro-name">${esc(intro.name)}</h2>
         ${intro.role ? `<p class="intro-role">${esc(intro.role)}</p>` : ""}
       </div>
-      ${intro.home || intro.assignment ? `<div class="intro-orgs">
-        ${intro.home ? `<div class="panel"><span class="lbl">Home organization</span><b>${esc(intro.home)}</b></div>` : ""}
-        ${intro.assignment ? `<div class="panel"><span class="lbl">On assignment with</span><b>${esc(intro.assignment)}</b>${intro.assignmentNote ? `<span class="note">${esc(intro.assignmentNote)}</span>` : ""}</div>` : ""}
-      </div>` : ""}
-      ${intro.background.length ? `<ul class="intro-bg">${intro.background.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${introPath(intro)}
     </div>
     ${join}
   </div>`;
+}
+
+/* The presenter's path as a picture, not sentences: studied → home organization → on assignment.
+   "Downstream / Global Optimizer Department" shows the last part big and the first part under it. */
+const IP_ICONS = {
+  cap: `<path d="M3 13 L17 6 L31 13 L17 20 Z"/><path d="M9 16 V23 Q17 28 25 23 V16"/><path d="M31 13 V21"/>`,
+  home: `<path d="M5 16 L17 6 L29 16"/><path d="M8 14 V29 H26 V14"/><path d="M14 29 V21 H20 V29"/>`,
+  case: `<rect x="5" y="11" width="24" height="17" rx="3"/><path d="M13 11 V7 H21 V11"/><path d="M5 18 H29"/>`
+};
+function introPath(intro) {
+  const split = s => { const p = String(s || "").split(/\s*\/\s*/).filter(Boolean); return p.length > 1 ? [p.at(-1), p.slice(0, -1).join(" · ")] : [p[0] || "", ""]; };
+  const step = (icon, label, main, sub, now) => `
+    <div class="ip-step${now ? " now" : ""}">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true" fill="none" stroke="${C.accText}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${IP_ICONS[icon]}</svg>
+      <span class="ip-lbl">${label}</span>
+      <b class="ip-main">${esc(main)}</b>
+      ${sub ? `<span class="ip-sub">${esc(sub)}</span>` : ""}
+    </div>`;
+  const arrow = `<svg class="ip-arrow" width="34" height="20" viewBox="0 0 34 20" aria-hidden="true"><path d="M3 10 H29 M22 3 L30 10 L22 17" fill="none" stroke="${C.deco}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const e = intro.education || {};
+  const steps = [
+    e.school && step("cap", "Studied", e.school, [e.field, e.focus].filter(Boolean).join(" · ")),
+    intro.home && step("home", "Home", ...split(intro.home)),
+    intro.assignment && step("case", "On assignment", ...split(intro.assignment), true)
+  ].filter(Boolean);
+  return steps.length ? `<div class="intro-path" style="grid-template-columns: ${steps.map(() => "minmax(0, 1fr)").join(" 34px ")}">${steps.join(arrow)}</div>` : "";
 }
 
 /* ---------- Join: the first screen. The lamp's cord can be pulled, like on the phones. ---------- */
@@ -117,7 +140,7 @@ function cardVisual(card, r) {
     }
     case "fuel":
       return `<div class="m-fuel">
-        <div class="m-fuel-col"><div class="fuel-scene coffee"><div class="tower">${cupTower(r ? Math.round(r.coffee) : 4)}</div></div>${r ? `<span class="m-avg-n"><b>${f1(r.coffee)}</b> cups on average</span>` : `<span class="t">Coffee, qahwa, karak</span>`}</div>
+        <div class="m-fuel-col"><div class="fuel-scene coffee"><div class="tower">${cupTower(r ? Math.round(r.coffee) : 4)}</div></div>${r ? `<span class="m-avg-n"><b>${f1(r.coffee)}</b> cups on average</span>` : `<span class="t">Coffee, Karak</span>`}</div>
         <div class="m-fuel-col"><div class="fuel-scene water">${waterGlass(r ? r.water : 2, "hostGlass")}</div>${r ? `<span class="m-avg-n"><b>${f1(r.water)}</b> glasses on average</span>` : `<span class="t">Water</span>`}</div>
         <p class="m-note">${r ? `Team average for yesterday, from ${r.n} answers.` : "Count yesterday’s cups and glasses with the + and − buttons."}</p>
       </div>`;

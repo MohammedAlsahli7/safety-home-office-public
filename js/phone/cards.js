@@ -174,7 +174,7 @@ function fuel(el, card, value, set) {
     <div class="grid2 fuel">
       <div class="fuel-col">
         <div class="fuel-scene coffee"><div class="tower"></div><span class="over" data-over="coffee" hidden></span></div>
-        <span class="t">Coffee, qahwa, karak</span>
+        <span class="t">Coffee, Karak</span>
         <div class="counter">
           <button type="button" class="step" data-k="coffee" data-d="-1" aria-label="One cup fewer">−</button>
           <span class="val"><b data-n="coffee"></b><small>cups</small></span>

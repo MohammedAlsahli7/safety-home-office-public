@@ -12,7 +12,8 @@ export const TITLES = {
   intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
   courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
   title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body",
-  awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so"
+  awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so",
+  sources: "Sources (only if someone asks)"
 };
 
 /* Where each talk slide should be, in minutes into the talk */
@@ -126,7 +127,8 @@ This morning we gave working from home {verdict} out of 10, and {low} of us said
 
 (If nobody said 5 or below: “Good to hear. The offer stands anyway.”)
 
-Your report stays on your phone. Thank you.`
+Your report stays on your phone. Thank you.`,
+  sources: `(Only if someone asks where a number or a recommendation comes from. Otherwise stop sharing after the handover.)`
 };
 
 /* ---------- KPI slides: written from the figures saved in this browser ---------- */

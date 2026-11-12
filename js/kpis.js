@@ -9,7 +9,8 @@
      "intro": {                                             // behind the QR code screen (I)
        "name": "Sam", "role": "Engineer",
        "home": "Home team", "assignment": "Team on assignment", "assignmentNote": "what I do there",
-       "background": ["Studied …", "Worked at …"]           // up to 4 short lines
+       "education": { "school": "…", "field": "…", "focus": "…" },   // drawn as the first step of the path
+       "background": ["Worked at …"]                        // for the speaker notes only, up to 4 lines
      },
      "period": "",
      "coursesTitle": "Safety courses", "safetyTitle": "Safety KPIs",   // slide headlines
@@ -58,7 +59,8 @@ export function cleanKpis(raw) {
     intro: {
       name: text(intro.name, 40), role: text(intro.role, 80),
       home: text(intro.home, 70), assignment: text(intro.assignment, 70), assignmentNote: text(intro.assignmentNote, 80),
-      background: (Array.isArray(intro.background) ? intro.background : []).map(x => text(x, 90)).filter(Boolean).slice(0, 4)
+      background: (Array.isArray(intro.background) ? intro.background : []).map(x => text(x, 140)).filter(Boolean).slice(0, 4),
+      education: (e => ({ school: text(e.school, 40), field: text(e.field, 50), focus: text(e.focus, 60) }))(intro.education && typeof intro.education === "object" ? intro.education : {})
     },
     period: text(r.period, 40),
     coursesTitle: text(r.coursesTitle, 48),

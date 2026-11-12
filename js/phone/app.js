@@ -44,8 +44,9 @@ function start() {
 
   /* A short buzz when the presenter moves everyone to a new card, opens a confession or the vote, or
      sends the reports. Android phones only: iPhone browsers have no vibration for web pages, and the
-     card still slides in. Only for a live move (the stage is less than 20 s old), never for a session a
-     reloaded page replays, and a burst of stages buzzes once. Browsers allow it after the first tap. */
+     card still slides in. Only for a stage the presenter just sent (never for one the player's own tap
+     brings up), and a burst of stages, like a reload's replay, buzzes once. No clock is compared, so a
+     laptop clock that's off doesn't matter. Browsers allow it once the player has tapped the page. */
   let buzzNext = false, buzzTimer = null;
   function buzz(pattern) {
     if (!buzzNext || typeof navigator.vibrate !== "function") return;
@@ -79,7 +80,7 @@ function start() {
     }
     lastAt = m.at;
     stage = m.s;
-    buzzNext = Date.now() - m.at < 20000;
+    buzzNext = true;
     update();
     buzzNext = false;
   }

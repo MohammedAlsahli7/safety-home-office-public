@@ -42,6 +42,17 @@ function start() {
   let stage = null, view = null, cleanup = () => {}, thanksTimer = null;
   const pending = {};
 
+  /* A short buzz when the presenter moves everyone to a new card, opens a confession or the vote, or
+     sends the reports. Android phones only: iPhone browsers have no vibration for web pages, and the
+     card still slides in. Only for a live move (the stage is less than 20 s old), never for a session a
+     reloaded page replays, and a burst of stages buzzes once. Browsers allow it after the first tap. */
+  let buzzNext = false, buzzTimer = null;
+  function buzz(pattern) {
+    if (!buzzNext || typeof navigator.vibrate !== "function") return;
+    clearTimeout(buzzTimer);
+    buzzTimer = setTimeout(() => { try { navigator.vibrate(pattern); } catch (_) { /* not allowed yet */ } }, 200);
+  }
+
   /* Only the presenter moves the phones: check each stage's signature, and drop anything older */
   let lastAt = 0, chain = Promise.resolve();
   let verify = null, verifiedPk = null;
@@ -68,7 +79,9 @@ function start() {
     }
     lastAt = m.at;
     stage = m.s;
+    buzzNext = Date.now() - m.at < 20000;
     update();
+    buzzNext = false;
   }
 
   const save = () => store.set(KEY, state);
@@ -127,6 +140,8 @@ function start() {
       else if (v === "closed") closedScreen();
       else lateScreen();
       window.scrollTo(0, 0);
+      if (v[0] === "q") buzz([80, 60, 80]);
+      else if (v === "report") buzz([160]);
       /* Each new card slides in; other views rise (not when the same view just redraws) */
       if (v !== update.lastView) {
         update.lastView = v;
@@ -444,6 +459,7 @@ function start() {
     if (!sheet.hidden && sheet.dataset.stage === stage) return;
     sheet.hidden = false;
     sheet.dataset.stage = stage;
+    buzz([80, 60, 80]);
     const q = stage;
     sheet.innerHTML = isConfession ? `
       <div class="sheet-in" role="dialog" aria-modal="true" aria-label="Anonymous confession">

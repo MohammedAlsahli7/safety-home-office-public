@@ -18,6 +18,7 @@ import { CARDS, POSES, poseIndex, lightName } from "../content.js";
 import { SLIDES } from "./slides.js";
 import { introFrame, joinFrame, joinNames, questionFrame, questionResults, questionSide, questionMoment, wrapScreen, statusChip } from "./screens.js";
 import { renderCard } from "../phone/cards.js";
+import { roomPalette, roomBg } from "../phone/theme.js";
 import { startDemo } from "./demo.js";
 import { esc, pullLamp, CORD } from "./parts.js";
 import { rawKpis, saveKpis, encodeKpis, importKpisFromHash, loadKpis } from "../kpis.js";
@@ -106,7 +107,7 @@ let me = null, mePending = {}, lightTimer = null;
 function loadMe() {
   Object.values(mePending).forEach(clearTimeout);
   mePending = {};
-  me = Object.assign({ pid: "pr-" + randomCode(10), L: 60, joined: false, answers: {}, done: false }, store.get("host.me." + session) || {});
+  me = Object.assign({ pid: "pr-" + randomCode(10), L: 80, joined: false, answers: {}, done: false }, store.get("host.me." + session) || {});
 }
 const saveMe = () => store.set("host.me." + session, me);
 /* Applied here straight away, then sent; the relay's echo changes nothing */
@@ -351,11 +352,21 @@ function mountPlay(card) {
   unmount = stop;
 }
 
-/* The join screen's lamp: pull the cord (or focus it and press ↑ ↓) to set the presenter's room light */
+/* The join screen's lamp: pull the cord (or focus it and press ↑ ↓) to set the presenter's room light.
+   The screen takes that light, like a phone's landing page: the same three palettes, and a background
+   that brightens smoothly with the cord. The slides stay in daylight. */
+const HOST_VARS = { bg: "bg", panel: "panel", panel2: "panel2", line: "line", line2: "line", ink: "ink", sub: "sub", muted: "muted", deco: "deco", accent: "accent", "accent-text": "accentText", tint: "tint", "tint-ink": "tintInk" };
+function lightRoom(slide, L) {
+  const p = roomPalette(L);
+  Object.entries(HOST_VARS).forEach(([v, k]) => slide.style.setProperty("--" + v, p[k]));
+  slide.style.setProperty("--bg", roomBg(L));
+}
 function mountLamp() {
   const box = document.getElementById("pull-lamp"), cord = document.getElementById("cord");
   if (!box || !cord) return;
+  const slide = box.closest(".slide");
   const draw = () => {
+    lightRoom(slide, me.L);
     box.innerHTML = pullLamp(me.L, lightName(me.L));
     cord.setAttribute("aria-valuenow", String(me.L));
     cord.setAttribute("aria-valuetext", lightName(me.L));
@@ -363,7 +374,7 @@ function mountLamp() {
   const toY = y => { meLight((y - CORD.top) / CORD.run * 100); draw(); };
   let pulling = false;
   const fromPointer = e => { const r = box.getBoundingClientRect(); toY((e.clientY - r.top) / r.height * 720); };
-  cord.addEventListener("pointerdown", e => { pulling = true; try { cord.setPointerCapture(e.pointerId); } catch (_) { /* older browsers */ } fromPointer(e); });
+  cord.addEventListener("pointerdown", e => { e.preventDefault(); pulling = true; try { cord.setPointerCapture(e.pointerId); } catch (_) { /* older browsers */ } fromPointer(e); });
   cord.addEventListener("pointermove", e => { if (pulling) fromPointer(e); });
   ["pointerup", "pointercancel"].forEach(ev => cord.addEventListener(ev, () => { pulling = false; cord.blur(); }));
   cord.addEventListener("keydown", e => {

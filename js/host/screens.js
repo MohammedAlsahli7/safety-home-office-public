@@ -46,16 +46,16 @@ export function introFrame(intro, url) {
 /* ---------- Join: the first screen. The lamp's cord can be pulled, like on the phones. ---------- */
 export function joinFrame(url) {
   return `
-  <div class="slide game">
+  <div class="slide game lamplit">
     ${slot("status")}
     <div class="pull-lamp" id="pull-lamp"></div>
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px">
       <div style="display: flex; flex-direction: column; justify-content: center; gap: 22px">
         <h1 style="margin: 0; font-size: 96px; line-height: 0.84; font-weight: 800; font-stretch: 62%; text-transform: uppercase">Home office<br>check-up</h1>
-        <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Scan, pull the lamp cord, and wait for the first card. Eleven quick ones, on your phone, anonymous.</p>
+        <p style="margin: 0; font-size: 24px; line-height: 1.4; color: var(--sub); max-width: 560px">Scan, pull the lamp cord, and wait for the first card. Eleven quick ones, on your phone, anonymous.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
-          ${slot("count", "span", `style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1"`)}
-          <span style="font-size: 22px; color: ${C.sub}">joined</span>
+          ${slot("count", "span", `style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: var(--accent-text); line-height: 1"`)}
+          <span style="font-size: 22px; color: var(--sub)">joined</span>
         </div>
         <div class="names-row" id="names" data-live="names"></div>
       </div>
@@ -63,7 +63,7 @@ export function joinFrame(url) {
         <div class="qr-card" data-join="${esc(url)}">
           ${qrSVG(url, 290)}
           <span style="font-size: 28px; font-weight: 800; font-stretch: 80%">Scan to play</span>
-          <span style="font-family: var(--mono); font-size: 12px; color: ${C.muted}; text-align: center; word-break: break-all">${esc(url.replace(/^https?:\/\//, ""))}</span>
+          <span style="font-family: var(--mono); font-size: 13px; color: ${C.muted}; text-align: center; word-break: break-all">${esc(url.replace(/^https?:\/\//, ""))}</span>
         </div>
       </div>
     </div>
@@ -164,7 +164,7 @@ export function questionFrame(index, shown) {
     </div>
     <div class="q-grid">
       <div class="q-main">
-        <h2 class="h" style="font-size: ${card.title.length > 26 ? 64 : 76}px">${esc(card.title)}</h2>
+        <h2 class="h" style="${card.title.length > 26 ? "font-size: 64px" : ""}">${esc(card.title)}</h2>
         <p class="q-sub">${esc(card.sub)}</p>
         ${shown ? slot("results", "div", `class="q-visual"`) : `<div class="q-visual"><div class="play k-${kind}" id="play"></div></div>`}
       </div>
@@ -214,7 +214,7 @@ export function wrapScreen({ reports, feed, status }) {
     ${statusChip(status)}
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 48px; align-items: center">
       <div style="display: flex; flex-direction: column; gap: 22px">
-        <h2 class="h" style="font-size: 96px">Your report is on your phone</h2>
+        <h2 class="h" style="font-size: 88px">Your report is on your phone</h2>
         <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Only you can see yours. The team’s totals come up in the next few slides.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
           <span style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1">${reports}</span>
@@ -222,8 +222,8 @@ export function wrapScreen({ reports, feed, status }) {
         </div>
       </div>
       <div style="display: flex; flex-direction: column; gap: 10px; position: relative">
-        <span style="font-size: 18px; font-weight: 700">From the check-up</span>
-        ${moments.map(f => `<div class="feed-item"><span style="font-size: 18px; line-height: 1.35">${esc(f)}</span></div>`).join("") || `<span class="wait">Moments from the game show up here. No names attached.</span>`}
+        <span style="font-size: var(--t-label); font-weight: 700">From the check-up</span>
+        ${moments.map(f => `<div class="feed-item"><span style="font-size: var(--t-label); line-height: 1.35">${esc(f)}</span></div>`).join("") || `<span class="wait">Moments from the game show up here. No names attached.</span>`}
       </div>
     </div>
   </div>`;

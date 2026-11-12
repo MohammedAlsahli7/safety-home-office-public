@@ -60,7 +60,7 @@ export function lamp(id, cx, right, height = 720) {
       </defs>
       <path d="M${cx - 60} 168 L${cx + 60} 168 L${cx + 200} ${height - 20} L${cx - 200} ${height - 20} Z" fill="url(#${id}c)"/>
       <circle cx="${cx}" cy="170" r="74" fill="url(#${id}h)"/>
-      <line x1="${cx}" y1="0" x2="${cx}" y2="104" stroke="${C.deco}" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+      <line x1="${cx}" y1="0" x2="${cx}" y2="104" stroke="var(--deco)" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>
       <path d="M${cx - 32} 104 H${cx + 32} L${cx + 66} 166 H${cx - 66} Z" fill="#2F3A40"/>
       <path d="M${cx - 66} 166 H${cx + 66}" stroke="${C.acc}" stroke-width="3" stroke-linecap="round"/>
       <circle cx="${cx}" cy="172" r="13" fill="#FFE6B8"/>
@@ -81,13 +81,13 @@ export function pullLamp(L, name) {
       </defs>
       <path d="M${cx - 60} 168 L${cx + 60} 168 L${cx + 200} 700 L${cx - 200} 700 Z" fill="url(#plc)" opacity="${(0.04 + 0.96 * k).toFixed(2)}"/>
       <circle cx="${cx}" cy="170" r="${(60 + 40 * k).toFixed(0)}" fill="url(#plh)" opacity="${(0.1 + 0.9 * k).toFixed(2)}"/>
-      <line x1="${cx}" y1="0" x2="${cx}" y2="104" stroke="${C.deco}" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>
+      <line x1="${cx}" y1="0" x2="${cx}" y2="104" stroke="var(--deco)" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>
       <path d="M${cx - 32} 104 H${cx + 32} L${cx + 66} 166 H${cx - 66} Z" fill="#2F3A40"/>
       <path d="M${cx - 66} 166 H${cx + 66}" stroke="${C.acc}" stroke-width="3" stroke-linecap="round"/>
       <circle cx="${cx}" cy="172" r="13" fill="${mix("#8C8478", "#FFE6B8")}"/>
-      <path d="M${CORD.x} 166 V${bead.toFixed(1)}" stroke="${C.deco}" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.1 6"/>
+      <path d="M${CORD.x} 166 V${bead.toFixed(1)}" stroke="var(--deco)" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.1 6"/>
       <circle cx="${CORD.x}" cy="${bead.toFixed(1)}" r="13" fill="${C.acc}" stroke="#2F3A40" stroke-width="2"/>
-      <text x="${CORD.x - 24}" y="${(bead + 5).toFixed(1)}" text-anchor="end" style="font-family: var(--mono); font-size: 14px; letter-spacing: 0.1em; fill: ${C.accText}">${k < 0.15 ? "PULL" : esc(name.toUpperCase())}</text>
+      <text x="${CORD.x - 24}" y="${(bead + 5).toFixed(1)}" text-anchor="end" style="font-family: var(--mono); font-size: 14px; letter-spacing: 0.1em; fill: var(--accent-text)">${k < 0.15 ? "PULL" : esc(name.toUpperCase())}</text>
     </svg>`;
 }
 

@@ -7,6 +7,15 @@
   --accent-text: #A15C00;  /* text: 4.7:1 on the page */
   --tint: #FCEBCB; --tint-ink: #6B4200; --water: #2A78D6; --grey: #8A9497; --good: #1E7F55;
   --display: "Archivo", system-ui, sans-serif;
+  /* One type scale for the 1280 × 720 stage. Teams often shows the shared window at half size or
+     less, so nothing the room needs to read goes below --t-tick. */
+  --t-hero: 96px;    /* the one big number on a slide */
+  --t-title: 72px;   /* every slide and card title */
+  --t-head: 28px;    /* panel headings, confessions */
+  --t-num: 32px;     /* numbers inside panels */
+  --t-body: 22px;    /* sentences */
+  --t-label: 19px;   /* labels, legends, short notes */
+  --t-tick: 16px;    /* chart ticks, sources, mono captions: the floor */
   --mono: "IBM Plex Mono", ui-monospace, monospace;
   color-scheme: light;
 }
@@ -17,34 +26,35 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 [hidden] { display: none !important; }
 
 #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
-#stage { width: 1280px; height: 720px; position: relative; transform-origin: 50% 50%; flex: none; }
+#stage { width: 1280px; height: 720px; position: relative; transform-origin: 50% 50%; flex: none; user-select: none; -webkit-user-select: none; }
+/* Nothing on the stage is for selecting: a drag (the lamp cord, the dial) must never select text or scroll a slide */
 
 /* ---------- Shared slide frame ---------- */
 .slide { position: absolute; inset: 0; padding: 44px 64px 58px; display: flex; flex-direction: column; gap: 20px; background: var(--bg); overflow: hidden; }
 .s-body { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 20px; }
-.s-num { position: absolute; right: 64px; bottom: 22px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
-.h { margin: 0; font-size: 80px; line-height: 0.92; font-weight: 800; font-stretch: 64%; text-wrap: balance; }
+.s-num { position: absolute; right: 64px; bottom: 22px; font-family: var(--mono); font-size: 14px; color: var(--muted); }
+.h { margin: 0; font-size: var(--t-title); line-height: 0.92; font-weight: 800; font-stretch: 64%; text-wrap: balance; }
 .panel { background: var(--panel); border: 1px solid var(--line2); border-radius: 18px; padding: 20px 22px; }
-.chart-label { font-size: 17px; font-weight: 600; }
-.src { font-size: 13px; color: var(--muted); }
-.wait { font-size: 17px; color: var(--muted); }
+.chart-label { font-size: var(--t-label); font-weight: 700; }
+.src { font-size: var(--t-tick); color: var(--muted); }
+.wait { font-size: var(--t-label); color: var(--muted); }
 
 .callout { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); }
 .callout svg { flex: none; }
 .callout .row { display: flex; align-items: baseline; gap: 12px; }
-.callout .big { font-family: var(--mono); font-size: 34px; font-weight: 500; line-height: 1; color: var(--accent-text); white-space: nowrap; }
-.callout .txt { font-size: 19px; line-height: 1.3; }
+.callout .big { font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1; color: var(--accent-text); white-space: nowrap; }
+.callout .txt { font-size: var(--t-body); line-height: 1.3; }
 .callout.stack .row { flex-direction: column; align-items: flex-start; gap: 4px; }
 .callout.stack .big { font-size: 30px; }
-.callout.stack .txt { font-size: 17px; }
+.callout.stack .txt { font-size: var(--t-label); }
 .callout.big-c { padding: 18px 22px; }
 .callout.big-c .big { font-size: 46px; }
 .callout.big-c .txt { font-size: 24px; }
 
 .confess { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); }
-.confess .q { font-size: 26px; line-height: 1.15; font-weight: 700; font-stretch: 85%; }
-.confess .big { font-family: var(--mono); font-size: 28px; font-weight: 500; line-height: 1; color: var(--accent-text); }
-.confess .g { font-size: 17px; color: var(--sub); }
+.confess .q { font-size: var(--t-head); line-height: 1.15; font-weight: 700; font-stretch: 85%; }
+.confess .big { font-family: var(--mono); font-size: 30px; font-weight: 500; line-height: 1; color: var(--accent-text); }
+.confess .g { font-size: var(--t-label); color: var(--sub); }
 
 .fix { padding: 16px 24px; border-radius: 16px; background: var(--tint); border: 1.5px solid var(--accent); font-size: 26px; line-height: 1.2; font-weight: 700; font-stretch: 85%; }
 .track { display: block; height: 14px; border-radius: 4px; background: var(--line2); overflow: hidden; }
@@ -69,7 +79,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 /* ---------- Game screens (join, one per card, wrap-up) ---------- */
 .slide.game { padding-bottom: 122px; }
-.mono-cap { font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.mono-cap { font-family: var(--mono); font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .q-top { display: flex; align-items: center; gap: 20px; }
 .q-segs { display: grid; grid-template-columns: repeat(11, 30px); gap: 5px; }
 .q-segs i { height: 6px; border-radius: 3px; background: var(--line); }
@@ -77,7 +87,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .q-segs i.now { background: var(--accent); }
 .q-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 40px; }
 .q-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.q-sub { margin: 0; font-size: 22px; line-height: 1.35; color: var(--sub); }
+.q-sub { margin: 0; font-size: var(--t-body); line-height: 1.35; color: var(--sub); }
 .q-visual { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding-top: 8px; }
 .q-side { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 18px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line2); align-self: start; }
 .q-count { position: relative; width: 170px; height: 170px; }
@@ -85,13 +95,13 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .q-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
 .q-num b { font-family: var(--mono); font-size: 54px; font-weight: 500; color: var(--accent-text); }
 .q-count.all .q-num b { color: var(--good); }
-.q-num small { font-size: 17px; color: var(--sub); margin-top: 4px; }
-.q-label { font-size: 17px; color: var(--sub); text-align: center; }
+.q-num small { font-size: 18px; color: var(--sub); margin-top: 4px; }
+.q-label { font-size: 18px; color: var(--sub); text-align: center; }
 .rooms { display: grid; grid-template-columns: repeat(7, 24px); gap: 7px; justify-content: center; padding-top: 6px; }
 .room { display: block; width: 24px; height: 20px; border-radius: 3px; border: 2px solid #B9AE9C; opacity: 0.45; transition: opacity 0.3s, border-color 0.3s; }
 .room.in { opacity: 1; border-color: var(--accent); }
 .q-wait { align-self: flex-start; margin-bottom: 14px; padding: 10px 16px; border-radius: 12px; background: var(--tint); border: 1.5px solid var(--accent); color: var(--tint-ink); font-size: 19px; font-weight: 600; }
-.q-moment { display: flex; align-items: baseline; gap: 14px; min-height: 28px; font-size: 19px; }
+.q-moment { display: flex; align-items: baseline; gap: 14px; min-height: 28px; font-size: 20px; }
 .q-moment > span:last-child { animation: fadein 0.5s ease-out; }
 @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
@@ -115,8 +125,8 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   --panelOn: #FFF7E8; --done: #A89D8B; --film1: #FBF8F1; --film2: #E4DCCC; --glow: rgba(0, 0, 0, 0);
   --accentText: #A15C00; --tintInk: #6B4200; --accentInk: #1B1206; --ring: rgba(232, 150, 30, 0.22);
 }
-.mirror .t { font-size: 22px; font-weight: 700; font-stretch: 82%; }
-.mirror .n { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.mirror .t { font-size: var(--t-body); font-weight: 700; font-stretch: 82%; }
+.mirror .n { font-family: var(--mono); font-size: 15px; color: var(--muted); }
 .m-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .m-tile { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 8px 16px; border-radius: 18px; background: var(--panel); border: 1.5px solid var(--line); text-align: center; }
 .m-tile .pic { display: grid; place-items: center; align-self: stretch; height: 158px; border-radius: 12px; background: var(--panel2); }
@@ -162,10 +172,10 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .m-pose .m-res { width: 100%; }
 .m-pose.avg .xray { background: radial-gradient(70% 60% at 50% 45%, #6B4200, #2A1A06); outline: 3px solid var(--accent); }
 .m-pose.avg .t { color: var(--accent-text); }
-.m-avg-n { font-size: 20px; color: var(--sub); }
+.m-avg-n { font-size: var(--t-body); color: var(--sub); }
 .m-avg-n b { font-family: var(--mono); font-size: 34px; font-weight: 500; color: var(--accent-text); margin-right: 6px; }
 .m-big-avg { display: flex; flex-direction: column; gap: 8px; }
-.m-big-avg b { font-family: var(--mono); font-size: 96px; font-weight: 500; line-height: 1; color: var(--accent-text); }
+.m-big-avg b { font-family: var(--mono); font-size: var(--t-hero); font-weight: 500; line-height: 1; color: var(--accent-text); }
 .m-big-avg span:not(.n) { font-size: 26px; font-weight: 600; font-stretch: 88%; }
 .m-verdict { display: flex; flex-direction: column; gap: 10px; }
 .m-avg-line { display: flex; align-items: baseline; gap: 12px; }
@@ -181,8 +191,8 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 /* ---------- The card itself, playable on the shared screen ----------
    Same renderers and base styles as the phones (cards.css), laid out for the 1280 × 720 stage. */
 .play { min-height: 0; }
-.play .t { font-size: 22px; line-height: 1.15; }
-.play .n { font-size: 13px; }
+.play .t { font-size: var(--t-body); line-height: 1.15; }
+.play .n { font-size: 15px; }
 .play.k-tiles .grid2 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .play .tile { gap: 8px; padding: 8px 8px 16px; border-radius: 18px; }
 .play .tile .pic { height: 158px; border-radius: 12px; }
@@ -208,7 +218,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .play .fuel-col .t { font-size: 22px; }
 .play .step { width: 56px; height: 56px; font-size: 28px; }
 .play .val b { font-size: 40px; }
-.play .val small { font-size: 12px; }
+.play .val small { font-size: 14px; }
 .play.k-stare { display: grid; grid-template-columns: 330px minmax(0, 1fr); grid-template-rows: 1fr auto; column-gap: 48px; row-gap: 22px; align-items: center; }
 .play .target { grid-column: 1; grid-row: 1 / span 2; width: 330px; }
 .play .stare-say { grid-column: 2; grid-row: 1; align-self: end; min-height: 0; margin: 0; font-size: 28px; line-height: 1.3; font-weight: 600; font-stretch: 88%; color: var(--ink); text-wrap: balance; }
@@ -218,7 +228,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .play .gauge { width: 500px; margin-top: 22px; }
 .play .gauge button { width: 52px; height: 52px; font-size: 19px; }
 .play .verdict-read { align-items: flex-start; text-align: left; }
-.play .score b { font-size: 120px; }
+.play .score b { font-size: var(--t-hero); }
 .play .score small { font-size: 18px; }
 .play .verdict-read .note { font-size: 28px; min-height: 0; }
 
@@ -228,6 +238,9 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .cord-hit { position: absolute; z-index: 3; width: 60px; border-radius: 30px; cursor: ns-resize; touch-action: none; }
 .cord-hit:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .ctl.small { min-height: 46px; padding: 0 18px; border-radius: 12px; font-size: 17px; }
+/* The join screen takes the presenter's room light (app.js sets the colours on it); the QR card stays white so it scans */
+.slide.lamplit { color: var(--ink); transition: background-color 0.35s ease, color 0.35s ease; }
+.slide.lamplit .qr-card { background: #fff; color: #1B2328; border-color: #E9E2D5; }
 
 /* ---------- Introduction: a small QR code stays up so people can keep joining ---------- */
 .intro-join { position: absolute; right: 64px; bottom: 122px; display: flex; align-items: center; gap: 14px; padding: 12px 18px 12px 12px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(27, 35, 40, 0.08); }
@@ -280,9 +293,9 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .intro-role { margin: 0; font-size: 28px; line-height: 1.3; color: var(--sub); }
 .intro-orgs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .intro-orgs .panel { display: flex; flex-direction: column; gap: 6px; padding: 18px 22px; }
-.intro-orgs .lbl { font-size: 17px; color: var(--muted); }
+.intro-orgs .lbl { font-size: 18px; color: var(--muted); }
 .intro-orgs b { font-size: 27px; line-height: 1.15; font-weight: 700; font-stretch: 85%; }
-.intro-orgs .note { font-size: 17px; color: var(--sub); }
+.intro-orgs .note { font-size: 18px; color: var(--sub); }
 .intro-bg { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 21px; line-height: 1.3; }
 .intro-bg li { display: flex; gap: 12px; align-items: baseline; }
 .intro-bg li::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); transform: translateY(-2px); }
@@ -291,9 +304,9 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 html.calm * { transition: none !important; animation: none !important; }
 
 /* A fixed recommendation leads each section; the team's numbers sit under it as evidence */
-.lead-fix .h { font-size: 72px; max-width: 1100px; }
+.lead-fix .h { font-size: var(--t-title); max-width: 1100px; }
 .lead-fix .why { margin: 8px 0 0; font-size: 26px; line-height: 1.3; color: var(--sub); }
-.pfix { padding: 9px 14px; border-radius: 12px; background: var(--tint); border: 1.5px solid var(--accent); font-size: 20px; line-height: 1.2; font-weight: 700; font-stretch: 85%; }
+.pfix { padding: 9px 14px; border-radius: 12px; background: var(--tint); border: 1.5px solid var(--accent); font-size: 21px; line-height: 1.2; font-weight: 700; font-stretch: 85%; }
 
 /* Closing slide: where to say so. The team board's QR code and the support line (private slide data) */
 .reach { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; padding: 14px 20px 14px 14px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--accent); }
@@ -301,7 +314,7 @@ html.calm * { transition: none !important; animation: none !important; }
 .reach svg { display: block; }
 .reach-txt { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .reach-txt > span { display: flex; flex-direction: column; gap: 4px; }
-.reach-txt b { font-size: 21px; line-height: 1.15; font-weight: 700; font-stretch: 85%; }
-.reach-txt .sub { font-size: 17px; line-height: 1.35; color: var(--sub); }
+.reach-txt b { font-size: 24px; line-height: 1.15; font-weight: 700; font-stretch: 85%; }
+.reach-txt .sub { font-size: var(--t-label); line-height: 1.35; color: var(--sub); }
 .reach-txt hr { width: 100%; margin: 0; border: 0; border-top: 1.5px dashed var(--line); }
-.reach-txt .tel { font-family: var(--mono); font-size: 19px; font-weight: 500; font-stretch: 100%; color: var(--accent-text); white-space: nowrap; }
+.reach-txt .tel { font-family: var(--mono); font-size: 22px; font-weight: 500; font-stretch: 100%; color: var(--accent-text); white-space: nowrap; }

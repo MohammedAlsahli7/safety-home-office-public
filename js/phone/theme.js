@@ -8,6 +8,9 @@ const THEMES = {
   day: { bg: "#EFE9DD", panel: "#F8F4EC", panel2: "#E6DFD1", panelOn: "#FFF7E8", line: "#D3C9B7", done: "#A89D8B", ink: "#1B2328", sub: "#4E5A60", muted: "#5F6A6B", deco: "#9A9080", film1: "#FBF8F1", film2: "#E4DCCC", tint: "#FCE7C2", tintInk: "#6B4200", accent: "#E8961E", accentInk: "#1B1206", accentText: "#A15C00", glow: "rgba(0, 0, 0, 0)", ring: "rgba(232, 150, 30, 0.22)", scheme: "light" }
 };
 
+/* The palette for a light level, for the presenter's join screen (host/app.js) */
+export const roomPalette = L => THEMES[lightBucket(L)];
+
 export function applyTheme(L) {
   const t = THEMES[lightBucket(L)];
   const root = document.documentElement.style;

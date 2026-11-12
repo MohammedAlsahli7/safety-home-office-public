@@ -1,4 +1,5 @@
-/* The presentation: 8 slides drawn from live team stats. Each slide may name a `stage`,
+/* The presentation: 10 slides, the last 7 drawn from live team stats. Sizes follow the type scale in
+   host.css (--t-hero … --t-tick). Each slide may name a `stage`,
    which tells every phone to show a confession or the closing vote while it is on screen. */
 import { loadKpis, SAFETY_LABELS } from "../kpis.js";
 import { CONFESSIONS, HABITS, POSES } from "../content.js";
@@ -14,7 +15,7 @@ const TICK = size => `<svg width="${size}" height="${size}" viewBox="0 0 30 30" 
 const kpiEmpty = what => `<div class="panel" style="flex: 1; display: grid; place-items: center"><span class="wait" style="font-size: 22px">Add the ${what} in the presenter tools (P).</span></div>`;
 const kpiHead = (title, sub) => `
   <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 20px">
-    <h2 class="h" style="white-space: nowrap; font-size: ${title.length > 22 ? 64 : 80}px">${esc(title)}</h2>${sub ? `<span style="font-size: 22px; color: ${C.sub}; text-align: right">${esc(sub)}</span>` : ""}
+    <h2 class="h" style="white-space: nowrap">${esc(title)}</h2>${sub ? `<span style="font-size: var(--t-body); color: ${C.sub}; text-align: right">${esc(sub)}</span>` : ""}
   </div>`;
 const HATCH = `repeating-linear-gradient(135deg, ${C.acc} 0 4px, ${C.tint} 4px 9px)`;
 
@@ -29,9 +30,9 @@ function kpiCourses(n, total) {
       <div style="display: grid; grid-template-columns: 300px minmax(0, 1fr) 120px; gap: 22px; align-items: center">
         <span style="font-size: 28px; line-height: 1.1; font-weight: 600; font-stretch: 85%">${esc(c.name)}</span>
         <span class="track" style="height: 22px; display: flex"><i style="width: ${p}%; background: ${done ? C.good : C.acc}; border-radius: ${c.enrolledRest ? "4px 0 0 4px" : "4px"}"></i>${c.enrolledRest && !done ? `<i style="width: ${100 - p}%; background: ${HATCH}; border-radius: 0 4px 4px 0"></i>` : ""}</span>
-        <span style="font-family: var(--mono); font-size: 30px; font-weight: 500; text-align: right">${c.pct === null ? "—" : `${c.pct}%`}</span>
+        <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; text-align: right">${c.pct === null ? "—" : `${c.pct}%`}</span>
       </div>
-      ${c.note ? `<span style="margin-left: 322px; font-size: 18px; color: ${C.tintInk}">${esc(c.note)}</span>` : ""}
+      ${c.note ? `<span style="margin-left: 322px; font-size: var(--t-label); color: ${C.tintInk}">${esc(c.note)}</span>` : ""}
     </div>`;
   };
   return `
@@ -40,7 +41,7 @@ function kpiCourses(n, total) {
       ${kpiHead(k.coursesTitle || "Safety courses", k.period ? `Completion · ${k.period}` : "Completion")}
       ${k.courses.length ? `
       <div class="panel" style="flex: 1; display: flex; flex-direction: column; justify-content: space-around; padding: 18px 34px">${k.courses.map(row).join("")}</div>
-      <div style="display: flex; gap: 26px; font-size: 19px; color: ${C.sub}">
+      <div style="display: flex; gap: 26px; font-size: var(--t-label); color: ${C.sub}">
         <span><span style="color: ${C.good}">■</span> complete</span>
         <span><span style="color: ${C.acc}">■</span> in progress</span>
         ${anyEnrolled ? `<span style="display: inline-flex; align-items: center; gap: 6px"><i style="display: inline-block; width: 26px; height: 14px; border-radius: 3px; background: ${HATCH}"></i> enrolled in upcoming sessions</span>` : ""}
@@ -59,7 +60,7 @@ function kpiPhishing(n, total) {
     return `<div class="slide"><div class="s-body" style="gap: 22px">${kpiHead(ph.title, "")}${kpiEmpty("phishing figures")}</div>${num(n, total)}</div>`;
   }
   /* Monthly chart: passed and neutral as labelled lines on one honest 0-based axis */
-  const W = 720, H = 250, top = 26, base = 216, x0 = 30, x1 = W - 30;
+  const W = 720, H = 250, top = 28, base = 214, x0 = 30, x1 = W - 30;
   const max = Math.max(100, ...m.map(r => Math.max(r.passed ?? 0, r.neutral ?? 0)));
   const yMax = Math.ceil(max / 100) * 100;
   const X = i => (m.length > 1 ? x0 + i * (x1 - x0) / (m.length - 1) : (x0 + x1) / 2);
@@ -67,33 +68,33 @@ function kpiPhishing(n, total) {
   const line = (key, color) => {
     const pts = m.map((r, i) => r[key] === null ? null : [X(i), Y(r[key])]).filter(Boolean);
     return `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${f1(p[0])} ${f1(p[1])}`).join(" ")}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-      ${m.map((r, i) => r[key] === null ? "" : `<circle cx="${f1(X(i))}" cy="${f1(Y(r[key]))}" r="4.5" fill="${color}"/><text x="${f1(X(i))}" y="${f1(Y(r[key]) - 11)}" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">${r[key]}</text>`).join("")}`;
+      ${m.map((r, i) => r[key] === null ? "" : `<circle cx="${f1(X(i))}" cy="${f1(Y(r[key]))}" r="4.5" fill="${color}"/><text x="${f1(X(i))}" y="${f1(Y(r[key]) - 11)}" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px">${r[key]}</text>`).join("")}`;
   };
   const chart = m.length ? `
     <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Passed and neutral results per month">
       <line x1="${x0 - 10}" y1="${base}" x2="${x1 + 10}" y2="${base}" stroke="${C.line}" stroke-width="1.5"/>
       ${line("passed", C.good)}${line("neutral", C.grey)}
-      ${m.map((r, i) => `<text x="${f1(X(i))}" y="${base + 24}" text-anchor="middle" fill="${C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">${esc(r.label)}</text>`).join("")}
+      ${m.map((r, i) => `<text x="${f1(X(i))}" y="${base + 26}" text-anchor="middle" fill="${C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px">${esc(r.label)}</text>`).join("")}
     </svg>` : "";
   const fails = m.length ? `
     <div style="display: flex; flex-direction: column; gap: 8px">
-      <span style="font-size: 19px; font-weight: 700">Failures (negative) per month</span>
+      <span class="chart-label">Failures (negative) per month</span>
       <div style="display: grid; grid-template-columns: repeat(${m.length}, minmax(0, 1fr)); gap: 8px">
         ${m.map(r => {
           const zero = r.negative === 0;
           return `<span style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0; border-radius: 10px; background: ${zero ? "#E3F1EA" : r.negative === null ? C.panel2 : C.tint}">
             <span style="font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 1; color: ${zero ? C.good : C.accText}">${r.negative ?? "—"}</span>
-            <span style="font-family: var(--mono); font-size: 12px; color: ${C.muted}">${esc(r.label)}</span>
+            <span style="font-family: var(--mono); font-size: 14px; color: ${C.muted}">${esc(r.label)}</span>
           </span>`;
         }).join("")}
       </div>
     </div>` : "";
   const deptRows = depts.map(([name, v]) => {
     const us = name === ph.team;
-    return `<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr) 62px; gap: 10px; align-items: center">
-      <span style="font-size: 17px; font-weight: ${us ? 800 : 500}; ${us ? `color: ${C.accText}` : ""}">${esc(name)}</span>
+    return `<div style="display: grid; grid-template-columns: 104px minmax(0, 1fr) 76px; gap: 10px; align-items: center">
+      <span style="font-size: var(--t-label); font-weight: ${us ? 800 : 500}; ${us ? `color: ${C.accText}` : ""}">${esc(name)}</span>
       <span class="track" style="height: 12px"><i style="width: ${v ?? 0}%; background: ${us ? C.acc : C.grey}"></i></span>
-      <span style="font-family: var(--mono); font-size: 16px; text-align: right; ${us ? `font-weight: 500; color: ${C.accText}` : ""}">${v === null ? "—" : v.toFixed(1) + "%"}</span>
+      <span style="font-family: var(--mono); font-size: 18px; text-align: right; ${us ? `font-weight: 500; color: ${C.accText}` : ""}">${v === null ? "—" : v.toFixed(1) + "%"}</span>
     </div>`;
   }).join("");
   const sub = [ph.scope, ph.range].filter(Boolean).join(" · ");
@@ -102,7 +103,7 @@ function kpiPhishing(n, total) {
   const statCard = (v, label, color, mark) => `
     <div class="panel" style="flex: 1; display: flex; align-items: center; gap: 16px; padding: 12px 22px">
       <span style="font-size: 64px; font-weight: 800; font-stretch: 68%; line-height: 0.9; color: ${color}">${v ?? "—"}</span>
-      <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 24px; font-weight: 700; font-stretch: 85%">${label}</span><span style="font-size: 15px; color: ${C.sub}">${esc(last.label === "Sep" && ph.period ? ph.period : last.label)}</span></span>
+      <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 24px; font-weight: 700; font-stretch: 85%">${label}</span><span style="font-size: var(--t-tick); color: ${C.sub}">${esc(last.label === "Sep" && ph.period ? ph.period : last.label)}</span></span>
       ${mark || ""}
     </div>`;
   const stats = last ? `
@@ -119,14 +120,14 @@ function kpiPhishing(n, total) {
       <div style="flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; min-height: 0">
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 24px">
           <div style="display: flex; justify-content: space-between; align-items: baseline">
-            <span style="font-size: 19px; font-weight: 700">Monthly results</span>
-            <span style="display: flex; gap: 18px; font-size: 16px; color: ${C.sub}"><span><span style="color: ${C.good}">●</span> passed</span><span><span style="color: ${C.grey}">●</span> neutral</span></span>
+            <span class="chart-label">Monthly results</span>
+            <span style="display: flex; gap: 18px; font-size: var(--t-tick); color: ${C.sub}"><span><span style="color: ${C.good}">●</span> passed</span><span><span style="color: ${C.grey}">●</span> neutral</span></span>
           </div>
           ${chart}
           ${fails}
         </div>
         ${depts.length ? `<div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
-          <span style="font-size: 19px; font-weight: 700">Positive response${ph.period ? ` · ${esc(ph.period)}` : ""}</span>
+          <span class="chart-label">Positive response${ph.period ? ` · ${esc(ph.period)}` : ""}</span>
           <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-around">${deptRows}</div>
         </div>` : ""}
       </div>
@@ -192,7 +193,7 @@ function kpiIncidents(n, total) {
           <span style="font-size: 320px; font-weight: 800; font-stretch: 62%; line-height: 0.8; color: ${zero ? C.good : C.ink}; transform: translateY(6px)">${sum === null ? "—" : sum}</span>
         </div>
       </div>
-      <div style="text-align: center; font-size: 21px; color: ${C.sub}">${zero ? "Zero across all six. Let’s keep it that way." : ""}</div>
+      <div style="text-align: center; font-size: var(--t-body); color: ${C.sub}">${zero ? "Zero across all six. Let’s keep it that way." : ""}</div>
     </div>
     ${num(n, total)}
   </div>`;
@@ -210,7 +211,7 @@ function title(n, total, s) {
       </div>
       <div style="max-width: 640px; display: flex; flex-direction: column; gap: 12px">
         ${callout(s.done, "of us played this morning. Only team totals appear here.")}
-        <span style="font-size: 20px; color: ${C.sub}">Keep the page open on your phone. Three quick confessions are coming.</span>
+        <span style="font-size: var(--t-body); color: ${C.sub}">Keep the page open on your phone. Three quick confessions are coming.</span>
       </div>
     </div>
     ${num(n, total)}
@@ -223,16 +224,16 @@ function attention(n, total, s) {
   <div class="slide">
     <div class="s-body" style="gap: 48px; justify-content: center">
       <div class="lead-fix"><h2 class="h">Mute the news alerts. Check the news when you choose.</h2><p class="why">Every alert puts you back on edge.</p></div>
-      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 40px; align-items: end">
-        <div class="panel" style="display: flex; flex-direction: column; gap: 14px">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 40px; align-items: stretch">
+        <div class="panel" style="display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 22px 26px">
           <span class="chart-label">Stress, out of 10</span>
-          <div style="display: grid; grid-template-columns: 250px minmax(0, 1fr) 46px; gap: 14px; align-items: center">
-            <span style="font-size: 18px">Constantly check email, texts and social media</span>
-            <span class="track" style="height: 18px"><i style="width: 53%; background: ${C.acc}"></i></span>
-            <b style="font-family: var(--mono); font-size: 22px; font-weight: 500; color: ${C.accText}">5.3</b>
-            <span style="font-size: 18px; color: ${C.sub}">Check less often</span>
-            <span class="track" style="height: 18px"><i style="width: 44%; background: ${C.grey}"></i></span>
-            <b style="font-family: var(--mono); font-size: 22px; font-weight: 500">4.4</b>
+          <div style="display: grid; grid-template-columns: 280px minmax(0, 1fr) 64px; gap: 16px; align-items: center">
+            <span style="font-size: var(--t-body); line-height: 1.25">Constantly check email, texts and social media</span>
+            <span class="track" style="height: 22px"><i style="width: 53%; background: ${C.acc}"></i></span>
+            <b style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; color: ${C.accText}">5.3</b>
+            <span style="font-size: var(--t-body); color: ${C.sub}">Check less often</span>
+            <span class="track" style="height: 22px"><i style="width: 44%; background: ${C.grey}"></i></span>
+            <b style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500">4.4</b>
           </div>
           <span class="src">American Psychological Association, Stress in America, 2017</span>
         </div>
@@ -253,7 +254,7 @@ function hours(n, total, s) {
   let ticks = "";
   for (let h = 5; h <= 20; h++) {
     const strong = h === 7 || h === 16;
-    ticks += `<line x1="${f1(X(h))}" y1="138" x2="${f1(X(h))}" y2="146" stroke="${C.deco}" stroke-width="1.5"/><text x="${f1(X(h))}" y="168" text-anchor="middle" fill="${strong ? C.ink : C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: ${strong ? 500 : 400}">${label(h)}</text>`;
+    ticks += `<line x1="${f1(X(h))}" y1="138" x2="${f1(X(h))}" y2="146" stroke="${C.deco}" stroke-width="1.5"/><text x="${f1(X(h))}" y="168" text-anchor="middle" fill="${strong ? C.ink : C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: ${strong ? 500 : 400}">${label(h)}</text>`;
   }
   return `
   <div class="slide">
@@ -263,13 +264,13 @@ function hours(n, total, s) {
         <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="${C.tint}"/><rect width="4" height="10" fill="${C.acc}"/></pattern></defs>
         <rect x="${f1(X(5))}" y="96" width="${f1(X(20) - X(5))}" height="42" rx="8" fill="${C.line2}"/>
         <rect x="${f1(X(7))}" y="96" width="${f1(X(16) - X(7))}" height="42" fill="#F2D49B"/>
-        <text x="${f1(X(11.5))}" y="123" text-anchor="middle" fill="${C.tintInk}" style="font-family: Archivo, sans-serif; font-size: 20px; font-weight: 700">Workday · 7:00 to 4:00</text>
+        <text x="${f1(X(11.5))}" y="124" text-anchor="middle" fill="${C.tintInk}" style="font-family: Archivo, sans-serif; font-size: 22px; font-weight: 700">Workday · 7:00 to 4:00</text>
         <rect x="${f1(X(6))}" y="96" width="${f1(X(7) - X(6))}" height="42" fill="url(#hatch)"/>
         <rect x="${f1(X(16))}" y="96" width="${f1(X(17) - X(16))}" height="42" fill="url(#hatch)"/>
         <path d="M${f1(X(6))} 82 V74 H${f1(X(7))} V82" fill="none" stroke="${C.accText}" stroke-width="2"/>
         <path d="M${f1(X(16))} 82 V74 H${f1(X(17))} V82" fill="none" stroke="${C.accText}" stroke-width="2"/>
-        <text x="${f1(X(6.5))}" y="60" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px">Before 7:00</text>
-        <text x="${f1(X(16.5))}" y="60" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px">After 4:00</text>
+        <text x="${f1(X(6.5))}" y="60" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 18px">Before 7:00</text>
+        <text x="${f1(X(16.5))}" y="60" text-anchor="middle" fill="${C.accText}" style="font-family: 'IBM Plex Mono', monospace; font-size: 18px">After 4:00</text>
         ${ticks}
       </svg>
       <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 20px; align-items: stretch">
@@ -291,7 +292,7 @@ function body(n, total, s) {
   let cups = "", glasses = "";
   for (let i = 0; i < nc; i++) { const x = (i % 13) * 22, y = Math.floor(i / 13) * 21; cups += `M${x + 3} ${y + 5} H${x + 19} L${x + 16.5} ${y + 17} Q${x + 11} ${y + 20} ${x + 5.5} ${y + 17} Z `; }
   for (let i = 0; i < nw; i++) { const x = (i % 13) * 22, y = rowsC * 21 + 12 + Math.floor(i / 13) * 21; glasses += `M${x + 5} ${y + 2} H${x + 17} L${x + 15.5} ${y + 19} H${x + 6.5} Z `; }
-  const head = t => `<span style="font-size: 28px; font-weight: 800; font-stretch: 80%">${t}</span>`;
+  const head = t => `<span style="font-size: var(--t-head); font-weight: 800; font-stretch: 80%">${t}</span>`;
   const pose = s.posture;
   return `
   <div class="slide">
@@ -307,10 +308,10 @@ function body(n, total, s) {
           <div style="display: flex; align-items: center; gap: 16px; height: 128px">
             <div style="flex: none; border-radius: 12px; color: ${C.bone}; background: radial-gradient(70% 60% at 50% 45%, ${C.film1}, ${C.film2})">${skeletonSVG(0.62, { w: 100, h: 125, ink: C.bone, sub: C.boneSub })}</div>
             <div style="display: flex; flex-direction: column; gap: 5px">
-              <span style="font-family: var(--mono); font-size: 30px; font-weight: 500; line-height: 1">5 kg</span>
-              <span style="font-size: 15px; color: ${C.sub}">head, upright</span>
-              <span style="font-family: var(--mono); font-size: 30px; font-weight: 500; line-height: 1; color: ${C.accText}; margin-top: 6px">27 kg</span>
-              <span style="font-size: 15px; color: ${C.sub}">neck, at a 60° tilt</span>
+              <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1">5 kg</span>
+              <span style="font-size: var(--t-tick); color: ${C.sub}">head, upright</span>
+              <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; line-height: 1; color: ${C.accText}; margin-top: 6px">27 kg</span>
+              <span style="font-size: var(--t-tick); color: ${C.sub}">neck, at a 60° tilt</span>
             </div>
           </div>
           <span class="src">Hansraj, 2014</span>
@@ -325,9 +326,9 @@ function body(n, total, s) {
               <circle cx="64" cy="64" r="54" fill="none" stroke="${C.acc}" stroke-width="10" stroke-linecap="round" stroke-dasharray="254 340" transform="rotate(-90 64 64)"/>
               <text x="64" y="72" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 30px; font-weight: 500">20 s</text>
             </svg>
-            <span style="display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 17px; line-height: 1.2"><b style="font-family: var(--display); font-size: 28px; font-weight: 800; font-stretch: 80%; color: ${C.accText}">20-20-20</b><span>every 20 min</span><span>look 6 m away</span><span>for 20 s</span></span>
+            <span style="display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 17px; line-height: 1.2"><b style="font-family: var(--display); font-size: var(--t-head); font-weight: 800; font-stretch: 80%; color: ${C.accText}">20-20-20</b><span>every 20 min</span><span>look 6 m away</span><span>for 20 s</span></span>
           </div>
-          <span style="font-size: 15px; line-height: 1.35; color: ${C.sub}">Blinks a minute: 15 to 20 normally, far fewer at a screen</span>
+          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}">Blinks a minute: 15 to 20 normally, far fewer at a screen</span>
           <div style="margin-top: auto">${share(s.light.dark, s.light.n, "work in the dark", "stack")}</div>
         </div>
         <div class="panel" style="display: flex; flex-direction: column; gap: 10px; padding: 16px 20px">
@@ -336,7 +337,7 @@ function body(n, total, s) {
           <div style="display: flex; align-items: center; height: 128px">
             ${enough(s.fuel.n) ? `<svg width="236" height="128" viewBox="0 0 284 ${Math.max(160, rowsC * 21 + 12 + Math.ceil(nw / 13) * 21)}" role="img" aria-label="${s.fuel.coffee} coffees and ${s.fuel.water} glasses of water"><path d="${cups}" fill="${C.acc}"/><path d="${glasses}" fill="${C.water}"/></svg>` : ""}
           </div>
-          <span style="font-size: 15px; line-height: 1.35; color: ${C.sub}"><span style="color: ${C.acc}">■</span> coffee, qahwa, karak &nbsp; <span style="color: ${C.water}">■</span> water${perIcon > 1 ? ` · each icon = ${perIcon}` : ""}</span>
+          <span style="font-size: var(--t-tick); line-height: 1.35; color: ${C.sub}"><span style="color: ${C.acc}">■</span> coffee, qahwa, karak &nbsp; <span style="color: ${C.water}">■</span> water${perIcon > 1 ? ` · each icon = ${perIcon}` : ""}</span>
           <div style="margin-top: auto">${enough(s.fuel.n) ? callout(`${s.fuel.coffee} : ${s.fuel.water}`, "coffees to waters, yesterday", "stack") : share(0, s.fuel.n, "coffee vs water", "stack")}</div>
         </div>
       </div>
@@ -350,24 +351,28 @@ const catIcon = `<svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="tr
 const eyeIcon = `<svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true"><path d="M8 48 Q48 10 88 48 Q48 86 8 48 Z" fill="${C.panel}" stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"/><circle cx="48" cy="48" r="15" fill="${C.acc}"/><circle cx="48" cy="48" r="6.5" fill="${C.ink}"/><circle cx="52" cy="44" r="2.5" fill="#fff"/></svg>`;
 const cupIcon = `<svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true"><path d="M36 22 Q32 14 38 8 M48 22 Q44 14 50 8 M60 22 Q56 14 62 8" stroke="${C.deco}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M20 32 H76 L68 74 Q48 86 28 74 Z" fill="${C.acc}" stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"/><path d="M20 32 H76" stroke="${C.ink}" stroke-width="3" stroke-linecap="round"/></svg>`;
 const award = (icon, t, winner, detail) => `
-  <div class="panel" style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 64px 30px 28px">
+  <div class="panel" style="position: relative; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 30px">
     <span style="position: absolute; right: 24px; top: 24px">${PHONE}</span>
-    <span style="display: block; transform: scale(1.35); transform-origin: 0 50%; margin-bottom: 18px">${icon}</span>
-    <span style="font-size: 28px; font-weight: 700; font-stretch: 85%; color: ${C.sub}">${t}</span>
-    <span style="font-size: ${winner.length > 12 ? 60 : 96}px; line-height: 0.9; font-weight: 800; font-stretch: 64%; color: ${C.accText}">${esc(winner)}</span>
-    <span style="font-size: 22px; line-height: 1.3">${detail}</span>
+    <span style="display: block; transform: scale(1.15); transform-origin: 0 50%; margin-bottom: 10px">${icon}</span>
+    <span style="font-size: var(--t-head); font-weight: 700; font-stretch: 85%; color: ${C.sub}">${t}</span>
+    <span style="font-size: ${winner.length > 12 ? 56 : 80}px; line-height: 0.92; font-weight: 800; font-stretch: 64%; color: ${C.accText}">${esc(winner)}</span>
+    <span style="font-size: var(--t-body); line-height: 1.3">${detail}</span>
   </div>`;
 
 function awards(n, total, s) {
   const cw = s.coworker, st = s.stare, fu = s.fuel;
   const wait = `<span class="wait">Shows at 5 answers</span>`;
   const top = cw.top || ["", 0], second = cw.second || ["", 0];
+  /* The most picked coworker; a tie names both rather than whichever comes first on the card */
+  const tied = Object.entries(cw.counts || {}).filter(([, c]) => c === top[1] && c > 0).map(([k]) => k);
+  const cwWinner = tied.length === 2 ? `${COWORKER[tied[0]]} and ${COWORKER[tied[1]].toLowerCase()}` : tied.length > 2 ? "A tie" : COWORKER[top[0]];
+  const cwDetail = tied.length === 2 ? `${top[1]} votes each.` : tied.length > 2 ? `${tied.map((k, i) => (i ? COWORKER[k].toLowerCase() : COWORKER[k])).join(", ").replace(/, ([^,]*)$/, " and $1")}: ${top[1]} votes each.` : `${top[1]} votes.${second[1] ? ` ${COWORKER[second[0]]} came second.` : ""}`;
   return `
   <div class="slide">
     <div class="s-body" style="gap: 28px">
       <h2 class="h">This morning’s awards</h2>
       <div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; min-height: 0">
-        ${enough(cw.n) ? award(catIcon, "Coworker of the month", COWORKER[top[0]], `${top[1]} votes.${second[1] ? ` ${COWORKER[second[0]]} came second.` : ""}`) : award(catIcon, "Coworker of the month", "…", wait)}
+        ${enough(cw.n) ? award(catIcon, "Coworker of the month", cwWinner, cwDetail) : award(catIcon, "Coworker of the month", "…", wait)}
         ${enough(st.n) ? award(eyeIcon, "Staring champion", `${st.max.toFixed(1)} s`, "Without one blink. Unmute if it was you.") : award(eyeIcon, "Staring champion", "…", wait)}
         ${enough(fu.n) ? award(cupIcon, "Most caffeinated", `${fu.maxCoffee} ${fu.maxCoffee === 1 ? "cup" : "cups"}`, "In one day. Please drink some water.") : award(cupIcon, "Most caffeinated", "…", wait)}
       </div>
@@ -384,23 +389,23 @@ function habits(n, total, s) {
     <div class="s-body" style="gap: 22px">
       <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
         <h2 class="h">Three things for this week</h2>
-        <span style="display: flex; align-items: center; gap: 10px; padding-bottom: 8px; font-size: 22px; color: ${C.sub}">${PHONE}${v.n ? `${v.n} voted` : "Tap the one you’ll start with"}</span>
+        <span style="display: flex; align-items: center; gap: 10px; padding-bottom: 8px; font-size: var(--t-body); color: ${C.sub}">${PHONE}${v.n ? `${v.n} voted` : "Tap the one you’ll start with"}</span>
       </div>
       <div style="flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0">
         ${HABITS.map((t, i) => {
           const c = v.counts[i], lead = v.n && c === max;
           return `
           <div style="flex: 1; display: grid; grid-template-columns: 56px minmax(0, 1fr) 300px; gap: 20px; align-items: center; padding: 16px 28px; border-radius: 16px; background: ${C.panel}; border: 1px solid ${C.line2}">
-            <span style="font-family: var(--mono); font-size: 46px; font-weight: 500; line-height: 1; color: ${C.accText}">${i + 1}</span>
-            <span style="font-size: 46px; line-height: 1.05; font-weight: 800; font-stretch: 75%">${t}</span>
+            <span style="font-family: var(--mono); font-size: 38px; font-weight: 500; line-height: 1; color: ${C.accText}">${i + 1}</span>
+            <span style="font-size: 40px; line-height: 1.05; font-weight: 800; font-stretch: 75%">${t}</span>
             <span style="display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 14px; align-items: center">
               <span class="track" style="height: 20px"><i style="width: ${v.n ? (c / v.n * 100).toFixed(1) : 0}%; background: ${lead ? C.acc : C.grey}"></i></span>
-              <span style="font-family: var(--mono); font-size: 30px; font-weight: 500; color: ${lead ? C.accText : C.ink}">${v.n ? c : ""}</span>
+              <span style="font-family: var(--mono); font-size: var(--t-num); font-weight: 500; color: ${lead ? C.accText : C.ink}">${v.n ? c : ""}</span>
             </span>
           </div>`;
         }).join("")}
       </div>
-      <span style="font-size: 21px; color: ${C.sub}">Nothing to buy. Each one works at a dining table.</span>
+      <span style="font-size: var(--t-body); color: ${C.sub}">Nothing to buy. Each one works at a dining table.</span>
     </div>
     ${num(n, total)}
   </div>`;
@@ -414,8 +419,8 @@ function close(n, total, s) {
   const hist = vd.hist.map((c, i) => {
     const h = c * unit;
     return `<rect x="${f1(cx(i) - 13)}" y="${f1(276 - h)}" width="26" height="${f1(h)}" rx="3" fill="${i <= 5 ? C.grey : C.acc}"/>
-      ${c ? `<text x="${f1(cx(i))}" y="${f1(268 - h)}" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">${c}</text>` : ""}
-      <text x="${f1(cx(i))}" y="298" text-anchor="middle" fill="${C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">${i}</text>`;
+      ${c ? `<text x="${f1(cx(i))}" y="${f1(268 - h)}" text-anchor="middle" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px">${c}</text>` : ""}
+      <text x="${f1(cx(i))}" y="300" text-anchor="middle" fill="${C.muted}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px">${i}</text>`;
   }).join("");
   const ready = enough(vd.n);
   /* Where to say so: the team board's QR code and the support line, from the private slide data */
@@ -434,22 +439,22 @@ function close(n, total, s) {
     ${lamp("l8", 210, reach ? -60 : 40)}
     <div class="s-body" style="display: grid; grid-template-columns: 520px minmax(0, 1fr); gap: 56px; align-items: stretch">
       <div class="panel" style="display: flex; flex-direction: column; gap: 14px">
-        <span style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 24px; font-weight: 700; font-stretch: 85%">Working from home so far</span>${PHONE}</span>
+        <span style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: var(--t-head); font-weight: 700; font-stretch: 85%">Working from home so far</span>${PHONE}</span>
         ${ready ? `
-        <span style="display: flex; align-items: baseline; gap: 12px"><span style="font-size: 120px; font-weight: 800; font-stretch: 70%; line-height: 0.85; color: ${C.accText}">${vd.avg.toFixed(1)}</span><span style="font-family: var(--mono); font-size: 22px; color: ${C.sub}">out of 10</span></span>
+        <span style="display: flex; align-items: baseline; gap: 12px"><span style="font-size: var(--t-hero); font-weight: 800; font-stretch: 70%; line-height: 0.85; color: ${C.accText}">${vd.avg.toFixed(1)}</span><span style="font-family: var(--mono); font-size: var(--t-body); color: ${C.sub}">out of 10</span></span>
         <svg width="456" height="306" viewBox="0 0 456 306" role="img" aria-label="Scores from 0 to 10, average ${vd.avg.toFixed(1)}">
           <line x1="0" y1="276" x2="456" y2="276" stroke="${C.line}" stroke-width="1.5"/>
           ${hist}
           <line x1="${f1(cx(vd.avg))}" y1="10" x2="${f1(cx(vd.avg))}" y2="276" stroke="${C.ink}" stroke-width="1.5" stroke-dasharray="5 5"/>
-          <text x="${f1(cx(vd.avg) - 8)}" y="20" text-anchor="end" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">average</text>
+          <text x="${f1(cx(vd.avg) - 8)}" y="22" text-anchor="end" fill="${C.ink}" style="font-family: 'IBM Plex Mono', monospace; font-size: 16px">average</text>
         </svg>
-        <span style="margin-top: auto; display: flex; align-items: center; gap: 10px; font-size: 18px; color: ${C.sub}"><span style="width: 14px; height: 14px; border-radius: 3px; background: ${C.grey}"></span><span><b style="font-family: var(--mono); font-weight: 500; color: ${C.ink}">${vd.low}</b> of us said 5 or below</span></span>`
+        <span style="margin-top: auto; display: flex; align-items: center; gap: 10px; font-size: var(--t-label); color: ${C.sub}"><span style="width: 14px; height: 14px; border-radius: 3px; background: ${C.grey}"></span><span><b style="font-family: var(--mono); font-weight: 500; color: ${C.ink}">${vd.low}</b> of us said 5 or below</span></span>`
         : `<span class="wait">Shows at 5 answers (${vd.n} so far)</span>`}
       </div>
       <div style="position: relative; display: flex; flex-direction: column; gap: ${reach ? 18 : 24}px; justify-content: center; padding-top: ${reach ? 0 : 120}px">
         <h2 style="margin: 0; font-size: ${reach ? 72 : 96}px; line-height: 0.88; font-weight: 800; font-stretch: 62%; text-transform: uppercase">If the weeks<br>feel heavy,<br>say so</h2>
-        <p style="margin: 0; font-size: ${reach ? 23 : 28}px; line-height: 1.35">Unmute. Message a colleague. Talk to your manager.</p>${reach}
-        <p style="margin: 0; font-size: 19px; color: ${C.sub}">Your report stays on your phone.</p>
+        <p style="margin: 0; font-size: ${reach ? "var(--t-body)" : "28px"}; line-height: 1.35">Unmute. Message a colleague. Talk to your manager.</p>${reach}
+        <p style="margin: 0; font-size: var(--t-label); color: ${C.sub}">Your report stays on your phone.</p>
       </div>
     </div>
     ${num(n, total)}

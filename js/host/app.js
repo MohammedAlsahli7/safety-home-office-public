@@ -137,7 +137,7 @@ function postNotes() {
   const sc = SCREENS[screen], nx = SCREENS[screen + 1];
   const nextBtn = controlsEl.querySelector('[data-go="next"]');
   notesChannel.postMessage({
-    type: "state", index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: nx ? nx.id : null,
+    type: "state", index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: introOn ? "join" : nx ? nx.id : null,
     nextLabel: sc.slide ? (nx ? "Next slide →" : "Last slide") : nextBtn ? nextBtn.textContent.trim() : "Next →", firstSlide: FIRST_SLIDE,
     screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats,
     tools: { session, status, demo: !!config.demo, join: joinUrl(), motion: motionOn() }
@@ -407,10 +407,10 @@ function renderControls() {
   if (sc.id === "agenda") {
     controlsEl.innerHTML = `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">QR code →</button>`;
   } else if (sc.id === "join") {
-    const intro = introOn
-      ? `<button type="button" class="ctl ghost" data-go="intro">← QR code</button>`
-      : `<button type="button" class="ctl ghost small" data-go="intro">Introduction</button>`;
-    controlsEl.innerHTML = `${intro}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
+    /* The introduction leads back to the QR code screen; the game starts from there */
+    controlsEl.innerHTML = introOn
+      ? `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">QR code →</button>`
+      : `<button type="button" class="ctl ghost small" data-go="intro">Introduction</button><span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">Start the game →</button>`;
   } else if (sc.card !== undefined) {
     const last = sc.card === CARDS.length - 1;
     controlsEl.innerHTML = `${backBtn}<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">${last ? "Finish and send reports →" : "Next card →"}</button>`;
@@ -446,6 +446,7 @@ function canReveal() {
 
 /* Next: on a card, show its answers first (like Kahoot's results), then move on */
 function advance() {
+  if (introOn) { toggleIntro(false); return; }   /* the introduction's next screen is the QR code screen */
   if (canReveal()) { revealed.add(SCREENS[screen].card); render(); animate("reveal"); postNotes(); return; }
   go(screen + 1);
 }

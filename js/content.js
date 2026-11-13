@@ -148,13 +148,12 @@ export const CARDS = [
 ];
 
 export const cardByKey = Object.fromEntries(CARDS.map(c => [c.key, c]));
-/* The agenda screen's default rows: the safety moment's parts. The private data can replace them
-   (kpis.json "agenda"), for example to add the rest of the meeting. */
+/* The agenda screen's default rows: the game, the safety moment, then a slot for what comes after.
+   The private data's "agenda" (kpis.json) replaces them, to name what comes after. */
 export const AGENDA = [
-  { title: "A quick check-up", detail: "A game on your phones. Anonymous, no camera.", time: "3 min" },
-  { title: "Our safety KPIs", detail: "Courses, phishing and incidents", time: "1 min" },
-  { title: "Working from home", detail: "Attention, hours and the body", time: "5 min" },
-  { title: "Three things for this week", detail: "And where to reach out", time: "1 min" }
+  { title: "Home office check-up", detail: "A quick game on your phones. Anonymous, no camera.", time: "4 min" },
+  { title: "Safety moment", detail: "Our safety KPIs, and how we’re doing working from home", time: "6 min" },
+  { title: "Up next", detail: "The rest of our monthly meeting", time: "" }
 ];
 
 /* "Twelve quick cards": the count in words, for the landing and join screens */

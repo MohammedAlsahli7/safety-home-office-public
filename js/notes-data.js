@@ -75,7 +75,7 @@ These weeks haven’t been normal. We’re all working from home, many of us wit
 
 Everyone’s situation at home is a bit different, so let’s keep giving each other a little extra room: a late reply, a muted mic, a doorbell in the middle of a call. And to anyone carrying more worry than usual right now: we’re in this together, and we’re here for one another.
 
-So let’s start this one on a good note: a quick game first, then a few minutes on how we’re doing at home.
+So let’s start this one on a good note: a quick game first, then our safety moment.
 
 (Don’t read the agenda out; it speaks for itself. Then press QR code.)`,
   join: `Grab your phone and point the camera at the code on the screen. When it opens, there’s a lamp: pull its cord until it matches the light in your room right now.
@@ -188,7 +188,7 @@ A bit about me: ${i.background.map((x, n) => (n ? x.charAt(0).toLowerCase() + x.
 
 ${why}
 
-(When the joined count stops climbing, press Start the game. ← or Esc goes back to the big QR code.)`;
+(Then press → to go back to the QR code screen, and press Start the game there when the joined count stops climbing.)`;
   }
   if (id === "close") {
     const { board, support } = k.close;

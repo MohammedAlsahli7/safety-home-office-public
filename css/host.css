@@ -295,11 +295,11 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
    #screen keeps the class for about a second, and live updates wait until it's gone, so an
    animation plays once per screen and never restarts mid-way. Strong enough to survive Teams. */
 #screen.enter > .slide { animation: screen-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-#screen.enter :is(.panel, .callout, .confess, .qr-card, .intro-join, .reach, .q-side, .play .tile, .play .route, .play .pick, .play .fuel-col, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .lead-fix .why, .pfix, .fix, .names-row, .intro-role, .ip-step) { animation: rise 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.15s; }
-#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(2) { animation-delay: 0.27s; }
-#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(3) { animation-delay: 0.39s; }
-#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(4) { animation-delay: 0.51s; }
-#screen.enter :is(.panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(n+5) { animation-delay: 0.6s; }
+#screen.enter :is(.agenda-row, .panel, .callout, .confess, .qr-card, .intro-join, .reach, .q-side, .play .tile, .play .route, .play .pick, .play .fuel-col, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .lead-fix .why, .pfix, .fix, .names-row, .intro-role, .ip-step) { animation: rise 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: 0.15s; }
+#screen.enter :is(.agenda-row, .panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(2) { animation-delay: 0.27s; }
+#screen.enter :is(.agenda-row, .panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(3) { animation-delay: 0.39s; }
+#screen.enter :is(.agenda-row, .panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(4) { animation-delay: 0.51s; }
+#screen.enter :is(.agenda-row, .panel, .callout, .confess, .m-tile, .m-route, .m-pick, .m-pose, .m-fuel-col, .feed-item, .ip-step):nth-child(n+5) { animation-delay: 0.6s; }
 #screen.enter :is(h1, h2.h, .intro-name) { animation: title-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 #screen.enter :is(.track i, .m-bar i) { animation: grow-x 1.1s 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-origin: 0 50%; }
 #screen.enter .big-zero span { animation: zero-pop 0.9s 0.3s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
@@ -319,6 +319,15 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 @keyframes lead-glow { 0% { box-shadow: 0 0 0 0 rgba(232, 150, 30, 0.6); } 100% { box-shadow: 0 0 0 3px rgba(196, 116, 10, 0.18); } }
 
 /* ---------- Introduction ---------- */
+/* Agenda: numbered rows, the time on the right */
+.agenda { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.agenda-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: baseline; gap: 18px; padding: 16px 0; border-top: 1.5px solid var(--line); }
+.agenda-row:last-child { border-bottom: 1.5px solid var(--line); }
+.agenda-n { font-family: var(--mono); font-size: var(--t-num); font-weight: 500; color: var(--accent-text); }
+.agenda-t { display: flex; flex-direction: column; gap: 4px; }
+.agenda-t b { font-size: var(--t-head); font-weight: 800; font-stretch: 85%; line-height: 1.15; }
+.agenda-t span { font-size: var(--t-body); color: var(--sub); line-height: 1.3; }
+.agenda-time { font-family: var(--mono); font-size: var(--t-label); color: var(--muted); white-space: nowrap; }
 .intro-label { font-family: var(--mono); font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-text); }
 .intro-name.h { font-size: 112px; line-height: 0.9; }   /* the name is this slide's focus */
 .intro-role { margin: 0; font-size: var(--t-head); line-height: 1.3; color: var(--sub); }

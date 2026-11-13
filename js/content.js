@@ -148,6 +148,15 @@ export const CARDS = [
 ];
 
 export const cardByKey = Object.fromEntries(CARDS.map(c => [c.key, c]));
+/* The agenda screen's default rows: the safety moment's parts. The private data can replace them
+   (kpis.json "agenda"), for example to add the rest of the meeting. */
+export const AGENDA = [
+  { title: "A quick check-up", detail: "A game on your phones. Anonymous, no camera.", time: "3 min" },
+  { title: "Our safety KPIs", detail: "Courses, phishing and incidents", time: "1 min" },
+  { title: "Working from home", detail: "Attention, hours and the body", time: "5 min" },
+  { title: "Three things for this week", detail: "And where to reach out", time: "1 min" }
+];
+
 /* "Twelve quick cards": the count in words, for the landing and join screens */
 export const CARDS_WORD = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen"][CARDS.length] || String(CARDS.length);
 /* Steps, rounded to the hundred: 7,500 */

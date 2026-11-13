@@ -4,7 +4,7 @@
    The join and card screens are a fixed frame plus live parts ([data-live] slots, filled by app.js),
    so the lamp cord and the card on screen can be played without being redrawn mid-drag. The buttons
    live in a separate control bar (app.js), so live updates here never swallow a click either. */
-import { CARDS, CARDS_WORD, POSES, VERDICT_NOTES, poseIndex, fmtSteps } from "../content.js";
+import { CARDS, CARDS_WORD, AGENDA, POSES, VERDICT_NOTES, poseIndex, fmtSteps } from "../content.js";
 import { config } from "../config.js";
 import { skeletonSVG } from "../skeleton.js";
 import { TILE_ART, ROUTES, standRing, newsPhone, cupTower, waterGlass, stepsRings } from "../phone/art.js";
@@ -74,6 +74,27 @@ function introPath(intro) {
 }
 
 /* ---------- Join: the first screen. The lamp's cord can be pulled, like on the phones. ---------- */
+/* ---------- Agenda: the first screen, while the presenter opens the meeting ---------- */
+export function agendaFrame(rows) {
+  const items = rows && rows.length ? rows : AGENDA;
+  return `
+  <div class="slide game">
+    ${slot("status")}
+    ${lamp("lag", 210, 40)}
+    <div class="s-body" style="justify-content: center; gap: 30px; max-width: 790px">
+      <h1 class="h">Agenda</h1>
+      <ol class="agenda">
+        ${items.map((a, i) => `
+        <li class="agenda-row">
+          <span class="agenda-n">${i + 1}</span>
+          <span class="agenda-t"><b>${esc(a.title)}</b>${a.detail ? `<span>${esc(a.detail)}</span>` : ""}</span>
+          ${a.time ? `<span class="agenda-time">${esc(a.time)}</span>` : ""}
+        </li>`).join("")}
+      </ol>
+    </div>
+  </div>`;
+}
+
 export function joinFrame(url) {
   return `
   <div class="slide game lamplit">

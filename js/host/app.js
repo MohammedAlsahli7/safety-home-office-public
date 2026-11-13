@@ -16,7 +16,7 @@ import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
 import { CARDS, POSES, poseIndex, lightName, fmtSteps } from "../content.js";
 import { SLIDES } from "./slides.js";
-import { introFrame, joinFrame, joinNames, questionFrame, questionResults, questionSide, questionMoment, wrapScreen, statusChip } from "./screens.js";
+import { agendaFrame, introFrame, joinFrame, joinNames, questionFrame, questionResults, questionSide, questionMoment, wrapScreen, statusChip } from "./screens.js";
 import { renderCard } from "../phone/cards.js";
 import { roomPalette, roomBg } from "../phone/theme.js";
 import { startDemo } from "./demo.js";
@@ -32,6 +32,7 @@ const screenEl = document.getElementById("screen");
 const controlsEl = document.getElementById("controls");
 
 const SCREENS = [
+  { id: "agenda", stage: "lobby" },   /* the opening, before anyone scans; phones that already joined wait in the lobby */
   { id: "join", stage: "lobby" },
   ...CARDS.map((c, i) => ({ id: "q" + (i + 1), card: i, stage: "q" + (i + 1) })),
   { id: "wrap", stage: "end" },
@@ -194,7 +195,7 @@ function boot() {
   if (config.demo) {
     const announce = !store.get("host.demoJoined." + session);
     store.set("host.demoJoined." + session, true);
-    demo = startDemo(m => { onMessage(m); if (m.t === "join" && announce) relay.send(m); }, { instant: screen > 0 });
+    demo = startDemo(m => { onMessage(m); if (m.t === "join" && announce) relay.send(m); }, { instant: screen > SCREENS.findIndex(s => s.id === "join") });
     demo.catchUp(SCREENS.slice(0, screen).map(s => s.stage));
   }
   show();
@@ -300,7 +301,9 @@ function render() {
   /* Results appear by themselves once everyone has answered, or when the presenter asks */
   const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card) && !handsOn;
   if (autoReveal) revealed.add(sc.card);
-  if (sc.id === "join" && introOn) {
+  if (sc.id === "agenda") {
+    setFrame("agenda", agendaFrame(loadKpis().agenda));
+  } else if (sc.id === "join" && introOn) {
     setFrame("intro", introFrame(loadKpis().intro, joinUrl()));
     live("count", String(stats.joined));
   } else if (sc.id === "join") {
@@ -401,7 +404,9 @@ function renderControls() {
     return;
   }
   controlsEl.className = "controls";
-  if (sc.id === "join") {
+  if (sc.id === "agenda") {
+    controlsEl.innerHTML = `<span class="ctl-note"></span><button type="button" class="ctl primary" data-go="next">QR code →</button>`;
+  } else if (sc.id === "join") {
     const intro = introOn
       ? `<button type="button" class="ctl ghost" data-go="intro">← QR code</button>`
       : `<button type="button" class="ctl ghost small" data-go="intro">Introduction</button>`;

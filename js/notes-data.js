@@ -9,7 +9,7 @@ import { config } from "./config.js";
 
 const CARD_TITLES = Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), `Card ${i + 1} · ${c.title}`]));
 export const TITLES = {
-  intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
+  agenda: "Agenda (opening)", intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
   courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
   title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body", move: "Body · steps",
   awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so",
@@ -18,6 +18,7 @@ export const TITLES = {
 
 /* Where each talk slide should be, in minutes into the talk */
 export const TARGETS = {
+  agenda: "before anyone scans, about 0:45",
   intro: "while people join, about 0:20",
   courses: "0:00 to 0:17", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
   attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:20", move: "4:20 to 4:45", awards: "4:45 to 5:00",
@@ -68,7 +69,16 @@ ${NEXT}`,
 
 export const DEFAULTS = {
   ...Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), CARD_SCRIPTS[c.key] || ""])),
-  join: `Good morning, everyone. Grab your phone and point the camera at the code on the screen. When it opens, there’s a lamp: pull its cord until it matches the light in your room right now.
+  agenda: `Good morning, everyone. It’s good to have us all together again. It’s been a while since we last met like this.
+
+These weeks haven’t been normal. We’re all working from home, many of us with family around and one eye on the news. And through all of it, you’ve kept things moving. Thank you for that, and for the patience you’ve shown each other.
+
+Everyone’s situation at home is a bit different, so let’s keep giving each other a little extra room: a late reply, a muted mic, a doorbell in the middle of a call. And to anyone carrying more worry than usual right now: we’re in this together, and we’re here for one another.
+
+So let’s start this one on a good note: a quick game first, then a few minutes on how we’re doing at home.
+
+(Don’t read the agenda out; it speaks for itself. Then press QR code.)`,
+  join: `Grab your phone and point the camera at the code on the screen. When it opens, there’s a lamp: pull its cord until it matches the light in your room right now.
 
 (Pull the lamp cord on your screen as you say it.)
 

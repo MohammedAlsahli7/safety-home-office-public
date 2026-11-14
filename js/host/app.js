@@ -138,6 +138,7 @@ function postNotes() {
   const nextBtn = controlsEl.querySelector('[data-go="next"]');
   notesChannel.postMessage({
     type: "state", index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: introOn ? "join" : nx ? nx.id : null,
+    shown: sc.card !== undefined && revealed.has(sc.card),
     nextLabel: sc.slide ? (nx ? "Next slide →" : "Last slide") : nextBtn ? nextBtn.textContent.trim() : "Next →", firstSlide: FIRST_SLIDE,
     screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats,
     tools: { session, status, demo: !!config.demo, join: joinUrl(), motion: motionOn() }
@@ -442,9 +443,13 @@ function fit() {
 /* ---------- Navigation and phone stages ---------- */
 /* Every card gets a "Show answers" step. Below the minimum group the screen says how many more are
    needed, and the counts fill in by themselves when the 5th answer arrives. */
+/* Next shows a card's answers first, but only when there's something to show: below config.minGroup
+   answers the counts stay hidden anyway, so Next goes straight to the next card. When the 5th answer
+   arrives the button turns back into Show answers (render() relabels it, and the notes window follows). */
 function canReveal() {
   const sc = SCREENS[screen];
-  return sc.card !== undefined && !revealed.has(sc.card);
+  if (sc.card === undefined || revealed.has(sc.card)) return false;
+  return (teamStats(state).answered[CARDS[sc.card].key] || 0) >= config.minGroup;
 }
 
 /* Next: on a card, show its answers first (like Kahoot's results), then move on */

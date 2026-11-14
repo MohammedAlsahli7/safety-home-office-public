@@ -181,7 +181,8 @@ function paint() {
   if (!st) return waiting();
   if (!document.getElementById("script")) frame();
   const live = tokens(st.stats);
-  document.getElementById("pos").textContent = `${st.index + 1} / ${st.total}`;
+  /* On a card, Show answers keeps the same screen: say so, so the press visibly did something */
+  document.getElementById("pos").textContent = `${st.index + 1} / ${st.total}${st.shown ? " · answers on screen" : ""}`;
   document.getElementById("title").textContent = TITLES[st.id] || st.id;
   document.getElementById("next").textContent = st.nextLabel || "Next →";
   const intro = document.getElementById("intro");

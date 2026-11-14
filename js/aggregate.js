@@ -70,7 +70,12 @@ export function teamStats({ players = {}, taps = {}, votes = {} }) {
     coworker: { n: coworker.n, counts: coworker.counts, top: coworkerRank[0], second: coworkerRank[1] },
     fuel: { n: fuel.length, coffee: coffees.reduce((s, x) => s + x, 0), water: waters.reduce((s, x) => s + x, 0), maxCoffee: coffees.length ? Math.max(...coffees) : 0 },
     steps: { n: steps.length, office: mean(steps.map(a => a.steps.office)), home: mean(steps.map(a => a.steps.home)), fewer: count(steps, a => a.steps.home < a.steps.office) },
-    stare: { n: stare.length, avg: stare.length ? stare.reduce((s, a) => s + a.stare, 0) / stare.length : null, max: stare.length ? Math.max(...stare.map(a => a.stare)) : null },
+    /* Stop at 20 seconds: the closest stop, and how many came within a second */
+    stare: (() => {
+      const goal = CARDS.find(c => c.key === "stare")?.target || 20, v = stare.map(a => a.stare);
+      const best = v.length ? v.reduce((b, x) => (Math.abs(x - goal) < Math.abs(b - goal) ? x : b)) : null;
+      return { n: v.length, goal, avg: mean(v), best, off: best === null ? null : Math.round(Math.abs(best - goal) * 10) / 10, near: count(v, x => Math.abs(x - goal) <= 1) };
+    })(),
     verdict: { n: verdict.length, hist, avg: avgVerdict, low: count(verdict, a => a.verdict <= 5), topNotes },
     strain: { n: strains.length, avg: avgStrain },
     confess: { c1: tapStats("c1"), c2: tapStats("c2"), c3: tapStats("c3") },

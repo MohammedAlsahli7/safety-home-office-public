@@ -12,7 +12,7 @@ export const config = Object.freeze({
   topicPrefix: "hoc-",
   /* A chart or number stays hidden until at least this many people have answered it. */
   minGroup: 5,
-  /* Seconds the staring contest's eye break lasts. */
+  /* Seconds the eye break after the 20-second stare lasts. */
   restSeconds: 20
 });
 

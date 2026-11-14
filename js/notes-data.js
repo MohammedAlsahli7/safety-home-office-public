@@ -55,9 +55,11 @@ ${NEXT}`,
   lunch: `Lunch yesterday happened… where? Pick the closest one.
 
 ${NEXT}`,
-  stare: `Staring contest. Stare at the dot, and tap the moment you blink. Then look at something far away for 20 seconds. Let’s all do it together.
+  stare: `Stop at 20 seconds. Tap Start, keep your eyes on the dot, and count to 20 in your head. The clock hides after three seconds. Tap Stop when you think you’re there. Closest wins.
 
-(This one takes about 40 seconds. The results don’t come up by themselves on this card: when everyone has finished and had the eye break, press Show answers.)`,
+Then look at something far away while your phone counts 20 seconds. That’s your eye break.
+
+(About 45 seconds. The results come up when everyone has stopped, or press Show answers.)`,
   news: `News alerts, these days. How does your phone handle them?
 
 ${NEXT}`,
@@ -139,7 +141,7 @@ Fuel: **one glass of water with every coffee.** Yesterday we drank {coffee} coff
 The good news: you don’t need 10,000. Around 7,000 a day already gets most of the benefit. So stand up when a call ends, and take the calls you only need to listen to on your feet.
 
 (If home days are already close to 7,000: “Most of us are nearly there. Keep it up.”)`,
-  awards: `Before we finish, this morning’s awards. Coworker of the month: {coworker}, with {coworkerVotes} votes. Staring champion: {stare}. Unmute if it was you. And most caffeinated: {maxCoffee} in one day. Please drink some water.`,
+  awards: `Before we finish, this morning’s awards. Coworker of the month: {coworker}, with {coworkerVotes} votes. Closest to 20 seconds: {stare}. Unmute if it was you. And most caffeinated: {maxCoffee} in one day. Please drink some water.`,
   habits: `Three things for this week. Raise your screen to eye level. Mute the news alerts, and check the news when you choose. Stand up when a call ends.
 
 Tap the one you’ll start with.
@@ -296,7 +298,7 @@ export function tokens(s) {
     maxCoffee: ok(s.fuel.n) ? `${s.fuel.maxCoffee} ${s.fuel.maxCoffee === 1 ? "cup" : "cups"}` : null,
     coworker: ok(s.coworker.n) ? COWORKER[top[0]] : null,
     coworkerVotes: ok(s.coworker.n) ? String(top[1]) : null,
-    stare: ok(s.stare.n) ? `${s.stare.max.toFixed(1)} seconds` : null,
+    stare: ok(s.stare.n) ? `${s.stare.best.toFixed(1)} seconds` : null,
     stepsOffice: ok(s.steps.n) ? fmtSteps(s.steps.office) : null,
     stepsHome: ok(s.steps.n) ? fmtSteps(s.steps.home) : null,
     stepsDrop: ok(s.steps.n) ? fmtSteps(Math.max(0, s.steps.office - s.steps.home)) : null,
@@ -312,7 +314,7 @@ export const TOKEN_HELP = {
   played: "players who finished", joined: "players who joined", c1: "confession 1, “Guilty”", c2: "confession 2", c3: "confession 3",
   news: "get every news alert", pillow: "email from the pillow", open: "laptop open at 5:00", pose: "most common pose",
   poseCount: "how many sit like it", dark: "work in the dark", coffee: "coffees yesterday, total", water: "glasses of water, total",
-  maxCoffee: "most cups, one player", coworker: "top coworker", coworkerVotes: "its votes", stare: "longest stare",
+  maxCoffee: "most cups, one player", coworker: "top coworker", coworkerVotes: "its votes", stare: "closest stop to 20 seconds",
   stepsOffice: "steps a day on office days, average", stepsHome: "steps a day on home days, average", stepsDrop: "steps a day lost at home", stepsFewer: "walk less at home",
   verdict: "work-from-home average", low: "answered 5 or below", vote: "most-picked habit"
 };

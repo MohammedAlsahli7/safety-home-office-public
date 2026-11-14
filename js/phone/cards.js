@@ -1,6 +1,8 @@
 /* Card renderers, ported from the design canvas. Each takes (el, card, value, set) and draws one
    card body into el. set(value, now) records an answer: the app sends it straight away when
-   `now` is true (a tap), or after the player pauses (a drag or a counter).
+   `now` is true (a tap). A drag or a counter calls it with `now` false: the app keeps it as a draft
+   until the player taps Done. Renderers with a starting value fill io.current, so Done can send
+   the value on screen even if the player didn't change it.
    A renderer may return a cleanup function; the app calls it before the card leaves the screen. */
 import { POSES, poseIndex, VERDICT_NOTES, fmtSteps } from "../content.js";
 import { config } from "../config.js";
@@ -15,10 +17,12 @@ const reduced = () => {
   return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 };
 
-export function renderCard(el, card, value, set) {
+export function renderCard(el, card, value, set, io = {}) {
   const kind = card.kind === "options" ? card.layout : card.kind;
-  return ({ tiles, routes, stand, news, dial, fuel, steps, stare, verdict })[kind](el, card, value, set) || (() => {});
+  return ({ tiles, routes, stand, news, dial, fuel, steps, stare, verdict })[kind](el, card, value, set, io) || (() => {});
 }
+/* Cards answered by dragging or counting: the answer goes out when the player taps Done */
+export const NEEDS_DONE = new Set(["dial", "fuel", "steps"]);
 
 /* Shared: a group of option buttons that keeps aria-pressed in sync */
 function pickGroup(el, selector, card, value, onPick) {
@@ -92,7 +96,7 @@ function news(el, card, value, set) {
 }
 
 /* ---------- Posture dial: drag around the ring, or tap a pose to glide there ---------- */
-function dial(el, card, value, set) {
+function dial(el, card, value, set, io) {
   const at = (deg, r) => [165 + r * Math.cos(deg * Math.PI / 180), 165 + r * Math.sin(deg * Math.PI / 180)];
   const p = xy => `${xy[0].toFixed(1)} ${xy[1].toFixed(1)}`;
   let t = typeof value === "number" ? value : 1 / 3;
@@ -126,6 +130,7 @@ function dial(el, card, value, set) {
     dialEl.setAttribute("aria-valuetext", POSES[pi]);
   };
   const commit = () => set(Math.round(t * 1000) / 1000, false);
+  io.current = () => Math.round(t * 1000) / 1000;
   const fromPointer = e => {
     const r = dialEl.getBoundingClientRect();
     let ang = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI;
@@ -168,8 +173,9 @@ function dial(el, card, value, set) {
 }
 
 /* ---------- Coffee vs. water: a cup tower and a glass ---------- */
-function fuel(el, card, value, set) {
+function fuel(el, card, value, set, io) {
   const v = value ? { ...value } : { coffee: 0, water: 0 };
+  io.current = () => ({ ...v });
   el.innerHTML = `
     <div class="grid2 fuel">
       <div class="fuel-col">
@@ -213,8 +219,9 @@ function fuel(el, card, value, set) {
 }
 
 /* ---------- Daily steps: two sliders, office days and home days, shown as two rings ---------- */
-function steps(el, card, value, set) {
+function steps(el, card, value, set, io) {
   const v = value ? { ...value } : { office: card.start, home: card.start };
+  io.current = () => ({ ...v });
   let touched = !!value;
   const ROWS = [["office", "Office days"], ["home", "Home days"]];
   el.innerHTML = `
@@ -251,11 +258,13 @@ function steps(el, card, value, set) {
   draw();
 }
 
-/* ---------- Staring contest, then a 20-second eye break ---------- */
+/* ---------- Stop at 20 seconds: stare at the dot, count in your head, then a 20-second eye break ----------
+   The clock shows for the first 3 seconds only, so it's a guess. The answer (seconds) is sent when the
+   player taps Stop: finishing, never starting. One try. A forgotten clock stops itself at 60 seconds. */
 function stare(el, card, value, set) {
-  const CIRC = 879.6, REST = config.restSeconds;
+  const CIRC = 879.6, REST = config.restSeconds, GOAL = card.target || 20, SHOWN = 3, LIMIT = 60;
   let phase = typeof value === "number" ? "done" : "ready";
-  let started = 0, stared = typeof value === "number" ? value : 0, restEnds = 0, timer = null;
+  let started = 0, stopped = typeof value === "number" ? value : 0, restEnds = 0, timer = null;
   el.innerHTML = `
     <p class="sub stare-say" aria-live="polite"></p>
     <div class="target" data-box>
@@ -275,23 +284,26 @@ function stare(el, card, value, set) {
     <button type="button" class="act" data-act></button>`;
   const $ = s => el.querySelector(s);
   const stop = () => { clearInterval(timer); timer = null; };
+  /* "0.4 s early", "1.2 s late", "spot on" */
+  const howFar = v => { const d = Math.round((v - GOAL) * 10) / 10; return d === 0 ? "spot on" : `${Math.abs(d).toFixed(1)} s ${d < 0 ? "early" : "late"}`; };
   const draw = () => {
     const now = performance.now();
-    let say, display, caption, ring = CIRC, pulse = 1, label, quiet = false;
+    let say, display, caption, ring = CIRC, pulse = 1, label, quiet = false, hide = false;
     if (phase === "staring") {
       const s = (now - started) / 1000;
-      say = "Keep your eyes on the dot. Tap as soon as you blink.";
-      display = `${s.toFixed(1)} s`; caption = "staring"; ring = CIRC * (1 - Math.min(1, s / 30)); label = "I blinked";
+      const shown = s < SHOWN;
+      say = shown ? "Eyes on the dot. Keep counting: the clock hides in a moment." : `Eyes on the dot. Tap Stop when you think ${GOAL} seconds are up.`;
+      display = shown ? `${s.toFixed(1)} s` : "? s"; caption = shown ? "counting" : "clock hidden"; label = "Stop";
     } else if (phase === "rest") {
       const left = Math.max(0, (restEnds - now) / 1000);
-      say = `You lasted ${stared.toFixed(1)} s. Now rest your eyes: look at something about 6 m away until the ring empties.`;
+      say = `You stopped at ${stopped.toFixed(1)} s, ${howFar(stopped)}. Now rest your eyes: look at something about 6 m away until the ring empties.`;
       display = String(Math.ceil(left)); caption = "look away"; ring = CIRC * (1 - left / REST); pulse = 0; label = "Resting…"; quiet = true;
     } else if (phase === "done") {
-      say = `You lasted ${stared.toFixed(1)} s, then gave your eyes ${REST} seconds off.`;
-      display = `${stared.toFixed(1)} s`; caption = "your score"; pulse = 0; label = "Try again";
+      say = `You stopped at ${stopped.toFixed(1)} s, ${howFar(stopped)}. Then your eyes got ${REST} seconds off.`;
+      display = `${stopped.toFixed(1)} s`; caption = howFar(stopped); pulse = 0; hide = true;
     } else {
-      say = "Stare at the dot. Tap the moment you blink.";
-      display = "0.0 s"; caption = "ready"; label = "Start staring";
+      say = `Tap Start, keep your eyes on the dot and count in your head. Tap Stop at ${GOAL} seconds. Closest wins.`;
+      display = "0.0 s"; caption = "ready"; label = "Start";
     }
     $(".stare-say").textContent = say;
     $("[data-display]").textContent = display;
@@ -300,27 +312,29 @@ function stare(el, card, value, set) {
     $(".pulse").style.opacity = String(pulse);
     $(".pulse").classList.toggle("on", phase === "ready" || phase === "staring");
     const act = $("[data-act]");
-    act.textContent = label;
+    act.hidden = hide;
+    if (label) act.textContent = label;
     act.disabled = quiet;
     act.classList.toggle("quiet", quiet);
+    act.classList.toggle("stop", phase === "staring");
+  };
+  const finish = () => {
+    const now = performance.now();
+    stopped = Math.min(LIMIT, Math.round((now - started) / 100) / 10);
+    set(stopped, true);
+    phase = "rest"; restEnds = now + REST * 1000;
+    draw();
   };
   const tick = () => {
+    if (phase === "staring" && performance.now() - started >= LIMIT * 1000) finish();
     if (phase === "rest" && performance.now() >= restEnds) { stop(); phase = "done"; }
     draw();
   };
   const start = () => { stop(); phase = "staring"; started = performance.now(); timer = setInterval(tick, 100); draw(); };
-  const blink = () => {
-    const now = performance.now();
-    stared = Math.round((now - started) / 100) / 10;
-    set(stared, true);
-    phase = "rest"; restEnds = now + REST * 1000;
-    draw();
-  };
   $("[data-act]").addEventListener("click", () => {
-    if (phase === "staring") blink();
-    else if (phase === "ready" || phase === "done") start();
+    if (phase === "staring") finish();
+    else if (phase === "ready") start();
   });
-  $("[data-box]").addEventListener("pointerdown", () => { if (phase === "staring") blink(); });
   draw();
   return stop;
 }

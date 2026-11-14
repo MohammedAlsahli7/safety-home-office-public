@@ -140,7 +140,7 @@ function results(card, stats) {
   }
   if (card.kind === "dial") return { n, counts: stats.posture.counts, max: Math.max(...stats.posture.counts), avg: stats.posture.avg };
   if (card.kind === "fuel") return { n, coffee: stats.fuel.coffee / stats.fuel.n, water: stats.fuel.water / stats.fuel.n };
-  if (card.kind === "stare") return { n, avg: stats.stare.avg };
+  if (card.kind === "stare") return { n, ...stats.stare };
   if (card.kind === "steps") return { n, office: stats.steps.office, home: stats.steps.home, fewer: stats.steps.fewer };
   if (card.kind === "verdict") return { n, hist: stats.verdict.hist, max: Math.max(...stats.verdict.hist), avg: stats.verdict.avg };
   return { n };
@@ -199,8 +199,8 @@ function cardVisual(card, r) {
           <circle class="pulse-host" cx="150" cy="150" r="12" style="fill: var(--accent)"/>
           <circle cx="150" cy="150" r="10" style="fill: var(--accent)"/>
         </svg>
-        ${r ? `<div class="m-big-avg"><b>${f1(r.avg)} s</b><span>team average before the first blink</span><span class="n">from ${r.n} answers</span></div>`
-          : `<ol class="m-steps"><li>Stare at the dot on your phone.</li><li>Tap the moment you blink.</li><li>Then look at something 6 m away for 20 seconds.</li></ol>`}
+        ${r ? `<div class="m-big-avg"><b>${f1(r.best)} s</b><span>the closest stop to ${r.goal} seconds${r.off ? `, ${f1(r.off)} s off` : ": spot on"}</span><span class="n">Team average ${f1(r.avg)} s · ${r.near} of ${r.n} within a second</span></div>`
+          : `<ol class="m-steps"><li>Tap Start and keep your eyes on the dot.</li><li>Count to ${card.target || 20} in your head. The clock hides after 3 seconds.</li><li>Tap Stop at ${card.target || 20}. Then look at something 6 m away while your phone counts the eye break.</li></ol>`}
       </div>`;
     case "verdict":
       if (r) {
@@ -253,7 +253,7 @@ export function questionSide(index, stats, players, shown) {
   const joined = stats.joined;
   const n = stats.answered[card.key] || 0;
   const all = joined > 0 && n >= joined;
-  /* The staring contest never shows its results by itself: the presenter waits for the last starer */
+  /* On the 20-second stare, answered means stopped */
   const stare = card.kind === "stare";
   const R = 70, CIRC = 2 * Math.PI * R, share = joined ? Math.min(1, n / joined) : 0;
   const rooms = Object.values(players).slice(0, 28).map(p => {
@@ -269,7 +269,7 @@ export function questionSide(index, stats, players, shown) {
       </svg>
       <span class="q-num"><b>${n}</b><small>of ${joined}</small></span>
     </div>
-    <span class="q-label">${stare ? (all ? "Everyone has finished" : "finished") : all ? "Everyone has answered" : "answered"}${shown ? "<br>Only totals are shown" : stare ? "<br>Results come when everyone’s done" : ""}</span>
+    <span class="q-label">${stare ? (all ? "Everyone has stopped" : "stopped") : all ? "Everyone has answered" : "answered"}${shown ? "<br>Only totals are shown" : ""}</span>
     ${rooms ? `<div class="rooms">${rooms}</div>` : ""}`;
 }
 

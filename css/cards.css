@@ -95,7 +95,7 @@
 .val b { font-family: var(--mono); font-size: 32px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .val small { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
-/* ---------- Staring contest ---------- */
+/* ---------- Stop at 20 seconds (the stare) ---------- */
 .stare-say { min-height: 44px; }
 .target { position: relative; width: min(300px, 100%, 42dvh); aspect-ratio: 1; align-self: center; }
 .target svg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -106,6 +106,7 @@
 .readout .big { font-family: var(--mono); font-size: 30px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .act { min-height: 52px; border-radius: 14px; border: 1.5px solid var(--accent); background: var(--tint); color: var(--tintInk); font-size: 16px; font-weight: 700; }
 .act.quiet { border-color: var(--line); background: var(--panel2); color: var(--muted); cursor: default; }
+.act.stop { border-color: var(--accent); background: var(--accent); color: var(--accentInk); }
 
 /* ---------- 0 to 10 verdict ---------- */
 .gauge { position: relative; width: min(350px, 100%); aspect-ratio: 350 / 212; align-self: center; margin-top: 10px; }

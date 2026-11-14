@@ -114,9 +114,9 @@ export const CARDS = [
     ]
   },
   {
-    key: "stare", kind: "stare",
-    title: "Staring contest",
-    sub: "Stare at the dot. Tap the moment you blink."
+    key: "stare", kind: "stare", target: 20,
+    title: "Stop at 20 seconds",
+    sub: "Stare at the dot and count in your head. The clock hides after 3 seconds."
   },
   {
     key: "news", kind: "options", layout: "news",

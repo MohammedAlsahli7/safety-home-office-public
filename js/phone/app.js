@@ -12,7 +12,7 @@ import { createRelay } from "../relay.js";
 import { CARDS, CARDS_WORD, NICKNAMES, AREAS, AREA_LABEL, AREA_WORDS, SEVERITY, PRESCRIPTIONS, CONFESSIONS, HABITS, lightName, lightBucket } from "../content.js";
 import { report } from "../scoring.js";
 import { applyTheme, roomBg } from "./theme.js";
-import { renderCard } from "./cards.js";
+import { renderCard, NEEDS_DONE } from "./cards.js";
 import { canSign, verifier, stageText, fingerprint } from "../sign.js";
 
 const app = document.getElementById("app");
@@ -99,13 +99,18 @@ function start() {
   relay.connect();
   const send = payload => relay.send({ ...payload, p: state.pid });
 
-  /* ---------- Answers: sent on tap, or after a short pause while dragging or counting ---------- */
+  /* ---------- Answers: a tap is sent at once. A drag or a counter is a draft until the player taps
+     Done, so the shared screen's "answered" count means finished, not still sliding. A draft the
+     player never confirmed is still sent when the presenter moves on, so nothing is lost. ---------- */
+  const sentAs = () => (state.sentV ||= {});
+  const unsent = key => state.answers[key] !== undefined && sentAs()[key] !== JSON.stringify(state.answers[key]);
   function flush(key) {
     clearTimeout(pending[key]);
     delete pending[key];
     if (state.answers[key] === undefined) return;
     send({ t: "ans", k: key, v: state.answers[key] });
     state.sent[key] = true;
+    sentAs()[key] = JSON.stringify(state.answers[key]);
     save();
     showSent(key);
   }
@@ -115,7 +120,7 @@ function start() {
     save();
     clearTimeout(pending[key]);
     if (now) flush(key);
-    else { pending[key] = setTimeout(() => flush(key), 700); showSent(key, true); }
+    else { pending[key] = 0; showSent(key); }   /* a draft: Done sends it, or moving on */
   }
 
   /* ---------- View routing ---------- */
@@ -373,19 +378,37 @@ function start() {
       <div class="head"><h1>${esc(c.title)}</h1>${c.kind === "stare" ? "" : `<p class="sub">${esc(c.sub)}</p>`}</div>
       <div class="body" id="cardbody"></div>
       <div class="sent-line" id="sent" aria-live="polite"></div>`;
-    const done = renderCard(document.getElementById("cardbody"), c, state.answers[c.key], (v, now) => answer(c.key, v, now));
+    const io = {};
+    const done = renderCard(document.getElementById("cardbody"), c, state.answers[c.key], (v, now) => answer(c.key, v, now), io);
+    if (NEEDS_DONE.has(c.kind)) {
+      if (unsent(c.key)) pending[c.key] = 0;   /* a draft from before a reload */
+      document.getElementById("sent").addEventListener("click", e => {
+        if (!e.target.closest("[data-done]")) return;
+        if (state.answers[c.key] === undefined && io.current) state.answers[c.key] = io.current();
+        flush(c.key);
+      });
+    }
     showSent(c.key);
     return done;
   }
 
-  function showSent(key, waiting) {
+  const TICK = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 L10 17 L19 7"/></svg>`;
+  function showSent(key) {
     const el = document.getElementById("sent");
-    if (!el || view !== "q" + CARDS.findIndex(c => c.key === key)) return;
-    const sent = state.sent[key] && !waiting;
-    el.className = "sent-line" + (sent ? " ok" : "");
-    el.innerHTML = sent
-      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 L10 17 L19 7"/></svg><span>Sent. You can change it until the next card.</span>`
-      : waiting ? `<span>Sending…</span>` : `<span>Answer here. The presenter moves everyone on.</span>`;
+    const c = CARDS.find(x => x.key === key);
+    if (!el || view !== "q" + CARDS.indexOf(c)) return;
+    /* Drag and counter cards: a Done button until what's on screen has been sent */
+    const paint = (cls, html) => { el.className = cls; if (el.dataset.was !== html) { el.innerHTML = html; el.dataset.was = html; } };
+    if (NEEDS_DONE.has(c.kind) && (state.answers[key] === undefined || unsent(key))) {
+      /* Quiet until the player has moved something, so the first instinct is to answer, not to tap Done */
+      const untouched = state.answers[key] === undefined;
+      paint("sent-line has-btn", `<button type="button" class="btn${untouched ? " soft" : ""}" data-done>${state.sent[key] ? "Send the change" : "Done"}</button>`);
+      return;
+    }
+    const sent = state.sent[key];
+    paint("sent-line" + (sent ? " ok" : ""), sent
+      ? `${TICK}<span>${c.kind === "stare" ? "Sent. One try each, so that’s your time." : "Sent. You can change it until the next card."}</span>`
+      : `<span>Answer here. The presenter moves everyone on.</span>`);
   }
 
   /* ---------- Private report ---------- */

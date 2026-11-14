@@ -16,7 +16,7 @@ const SAMPLE = {
   lunch: ["table", "table", "table", "table", "table", "keyboard", "keyboard", "keyboard", "keyboard", "meeting", "meeting", "meeting", "none", "none"],
   office: [3000, 4500, 5000, 6000, 6000, 6500, 7000, 7500, 8000, 8000, 9000, 10000, 11000, 12500],
   home: [1500, 2000, 2000, 2500, 3000, 3000, 3500, 4000, 4000, 4500, 5000, 6000, 7500, 9000],
-  stare: [4.8, 6.2, 7.5, 8.1, 9.9, 10.4, 11.0, 11.6, 12.9, 13.1, 14.6, 15.8, 31.2, 41.7],
+  stare: [14.6, 16.2, 17.1, 17.9, 18.4, 18.8, 19.3, 19.7, 20.2, 20.6, 21.3, 22.1, 23.8, 26.4],
   news: ["off", "off", "few", "few", "few", "few", "few", "few", "all", "all", "all", "all", "refresh", "refresh"],
   logoff: ["packed", "packed", "closed", "closed", "closed", "closed", "closed", "open", "open", "open", "open", "open", "meeting", "meeting"],
   verdict: [3, 4, 5, 5, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9]
@@ -59,7 +59,8 @@ export function startDemo(send, { instant = false } = {}) {
         handled.add(stage);
         const key = CARDS[Number(q[1]) - 1].key;
         const slow = key === "stare" ? 6000 : key === "fuel" || key === "posture" || key === "steps" ? 3000 : 1200;
-        shuffled([...Array(14).keys()]).forEach((i, k) => later(at(slow + k * 350 + Math.random() * 1500), () => send({ t: "ans", p: players[i].p, k: key, v: value(key, i) })));
+        /* On the 20-second stare each one stops at their own time (after a second or two to press Start) */
+        shuffled([...Array(14).keys()]).forEach((i, k) => later(at(key === "stare" ? 1500 + value(key, i) * 1000 + Math.random() * 1000 : slow + k * 350 + Math.random() * 1500), () => send({ t: "ans", p: players[i].p, k: key, v: value(key, i) })));
       } else if (stage === "end") {
         handled.add(stage);
         players.forEach((pl, i) => later(at(300 + i * 120), () => send({ t: "done", p: pl.p })));

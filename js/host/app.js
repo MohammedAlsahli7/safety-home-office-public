@@ -233,7 +233,7 @@ function moment(t, k, p) {
     case "posture": return `Someone turned the dial to ${POSES[poseIndex(v)]}.`;
     case "fuel": return v.coffee >= 4 ? `Someone stacked ${v.coffee} cups of coffee yesterday.` : v.water >= 5 ? `Someone drank ${v.water} glasses of water yesterday.` : null;
     case "steps": return v.office - v.home >= 5000 ? `Someone walks ${fmtSteps(v.office - v.home)} fewer steps a day at home.` : v.home > v.office ? "Someone walks more at home than at the office." : null;
-    case "stare": return v >= 15 ? `Someone stared for ${v.toFixed(1)} seconds without blinking.` : null;
+    case "stare": return Math.abs(v - 20) <= 0.3 ? `Someone stopped the clock at ${v.toFixed(1)} seconds.` : null;
     case "coworker": return { cat: "Someone’s most frequent coworker is the cat.", kids: "Someone’s most frequent coworker is the kids.", door: "Someone’s most frequent coworker is the doorbell.", chat: "Someone’s most frequent coworker is the family group chat." }[v];
     case "laptop": return v === "bed" ? "Someone’s laptop lives in bed with them." : v === "lap" ? "Someone works from the sofa office." : null;
     case "lunch": return v === "none" ? "Someone skipped lunch yesterday." : null;
@@ -298,9 +298,9 @@ function render() {
   const card = sc.card !== undefined ? CARDS[sc.card] : null;
   const answered = card ? stats.answered[card.key] || 0 : 0;
   const everyone = stats.joined > 0 && answered >= stats.joined;
-  /* Results appear by themselves once everyone has answered, or when the presenter asks. Never on the
-     staring contest: someone may still be staring, so the presenter decides when it's over */
-  const autoReveal = card && card.kind !== "stare" && everyone && answered >= config.minGroup && !revealed.has(sc.card) && !handsOn;
+  /* Results appear by themselves once everyone has finished (a tap, Done on a drag card, Stop on the
+     stare), or when the presenter asks */
+  const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card) && !handsOn;
   if (autoReveal) revealed.add(sc.card);
   if (sc.id === "agenda") {
     setFrame("agenda", agendaFrame(loadKpis().agenda));
@@ -354,7 +354,7 @@ function mountPlay(card) {
   const stop = renderCard(el, card, me.answers[card.key], (v, now) => meAnswer(card.key, v, now));
   el.addEventListener("pointerdown", () => { handsOn = true; clearTimeout(handsTimer); });
   /* A picked button lets go of the focus, so Space and Enter still move the presentation on.
-     The staring contest's button keeps it: Space is a handy "I blinked". */
+     The 20-second stare's button keeps it: Space is a handy Stop. */
   el.addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.matches("[data-act]")) b.blur(); });
   unmount = stop;
 }
@@ -564,7 +564,7 @@ function renderTools() {
       <button type="button" data-a="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
     </form>
     <ul class="keys"><li>→ Space PageDown: next</li><li>← PageUp: back</li><li>I: your introduction (on the QR code screen)</li><li>F: full screen</li><li>N: speaker notes</li><li>P or Esc: close this panel</li></ul>
-    <span style="color: #5F6A6B; font-size: 12px">You can play along on the shared screen: pull the lamp cord on the QR code screen, or do the staring contest with everyone. It’s show-only: nothing you do there is sent or counted.</span>`;
+    <span style="color: #5F6A6B; font-size: 12px">You can play along on the shared screen: pull the lamp cord on the QR code screen, or do the 20-second stare with everyone. It’s show-only: nothing you do there is sent or counted.</span>`;
 }
 
 toolsEl.addEventListener("submit", async e => {

@@ -419,7 +419,7 @@ function awards(n, total, s) {
       <h2 class="h">This morning’s awards</h2>
       <div style="flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; min-height: 0">
         ${enough(cw.n) ? award(catIcon, "Coworker of the month", cwWinner, cwDetail) : award(catIcon, "Coworker of the month", "…", wait)}
-        ${enough(st.n) ? award(eyeIcon, "Staring champion", `${st.max.toFixed(1)} s`, "Without one blink. Unmute if it was you.") : award(eyeIcon, "Staring champion", "…", wait)}
+        ${enough(st.n) ? award(eyeIcon, `Closest to ${st.goal} seconds`, `${st.best.toFixed(1)} s`, `${st.off ? `Only ${st.off.toFixed(1)} s off.` : "Spot on."} Unmute if it was you.`) : award(eyeIcon, `Closest to ${st.goal} seconds`, "…", wait)}
         ${enough(fu.n) ? award(cupIcon, "Most caffeinated", `${fu.maxCoffee} ${fu.maxCoffee === 1 ? "cup" : "cups"}`, "In one day. Please drink some water.") : award(cupIcon, "Most caffeinated", "…", wait)}
       </div>
     </div>

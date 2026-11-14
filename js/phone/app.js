@@ -142,6 +142,7 @@ function start() {
       cleanup = () => {};
       view = v;
       document.body.style.background = "";
+      app.classList.remove("fit");
       if (v === "landing") landing();
       else if (v === "lobby" || v === "connecting") lobby();
       else if (v[0] === "q") cleanup = card(Number(v.slice(1))) || cleanup;
@@ -375,10 +376,12 @@ function start() {
         <div class="segs" aria-hidden="true">${CARDS.map((x, j) => `<i class="${j === i ? "now" : state.answers[x.key] !== undefined ? "done" : ""}"></i>`).join("")}</div>
         ${mono(`Card ${String(i + 1).padStart(2, "0")} / ${CARDS.length}`)}
       </div>
-      <div class="head"><h1>${esc(c.title)}</h1>${c.kind === "stare" ? "" : `<p class="sub">${esc(c.sub)}</p>`}</div>
+      <div class="head"><h1>${esc(c.title)}</h1><p class="sub">${esc(c.sub)}</p></div>
       <div class="body" id="cardbody"></div>
       <div class="sent-line" id="sent" aria-live="polite"></div>`;
-    const io = {};
+    const io = { onPhone: true };
+    /* The stare fits one screen: the target takes the room left, so the dot and the button are both in view */
+    app.classList.toggle("fit", c.kind === "stare");
     const done = renderCard(document.getElementById("cardbody"), c, state.answers[c.key], (v, now) => answer(c.key, v, now), io);
     if (NEEDS_DONE.has(c.kind)) {
       if (unsent(c.key)) pending[c.key] = 0;   /* a draft from before a reload */
@@ -397,6 +400,7 @@ function start() {
     const el = document.getElementById("sent");
     const c = CARDS.find(x => x.key === key);
     if (!el || view !== "q" + CARDS.indexOf(c)) return;
+    if (c.kind === "stare") { el.hidden = true; return; }   /* its button says Sent */
     /* Drag and counter cards: a Done button until what's on screen has been sent */
     const paint = (cls, html) => { el.className = cls; if (el.dataset.was !== html) { el.innerHTML = html; el.dataset.was = html; } };
     if (NEEDS_DONE.has(c.kind) && (state.answers[key] === undefined || unsent(key))) {

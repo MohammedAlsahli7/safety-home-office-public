@@ -315,7 +315,9 @@ function render() {
     const shown = revealed.has(sc.card);
     if (setFrame(`${sc.id}:${shown ? "results" : "play"}`, questionFrame(sc.card, shown)) && !shown) mountPlay(card);
     live("side", questionSide(sc.card, stats, state.players, shown));
-    live("moment", questionMoment(feed));
+    /* No moments during the 20-second stare until its results are up: a changing line distracts from
+       counting, and "someone stopped at 19.8" would give the time away */
+    live("moment", card.kind === "stare" && !shown ? "" : questionMoment(feed));
     if (shown) live("results", questionResults(sc.card, stats));
   } else if (sc.id === "wrap") {
     setWhole("wrap", wrapScreen({ reports: stats.done, feed, status }));

@@ -259,14 +259,17 @@ function steps(el, card, value, set, io) {
 }
 
 /* ---------- Stop at 20 seconds: stare at the dot, count in your head, then a 20-second eye break ----------
-   The clock shows for the first 3 seconds only, so it's a guess. The answer (seconds) is sent when the
-   player taps Stop: finishing, never starting. One try. A forgotten clock stops itself at 60 seconds. */
-function stare(el, card, value, set) {
+   The rules are a fixed list of steps (card.steps) that never changes while playing: only the current
+   step is marked. Everything live stays inside the target (the number and its caption) and the button,
+   so nothing moves on the page. The clock shows for the first 3 seconds only, so it's a guess. The
+   answer (seconds) is sent when the player taps Stop: finishing, never starting. One try. A forgotten
+   clock stops itself at 60 seconds. */
+function stare(el, card, value, set, io) {
   const CIRC = 879.6, REST = config.restSeconds, GOAL = card.target || 20, SHOWN = 3, LIMIT = 60;
   let phase = typeof value === "number" ? "done" : "ready";
   let started = 0, stopped = typeof value === "number" ? value : 0, restEnds = 0, timer = null;
   el.innerHTML = `
-    <p class="sub stare-say" aria-live="polite"></p>
+    <ol class="stare-steps">${card.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
     <div class="target" data-box>
       <svg viewBox="0 0 300 300" aria-hidden="true">
         <defs><radialGradient id="eyeFilm" cx="50%" cy="45%" r="60%"><stop offset="0" style="stop-color: var(--film1)"/><stop offset="1" style="stop-color: var(--film2)"/></radialGradient></defs>
@@ -279,41 +282,39 @@ function stare(el, card, value, set) {
         <circle class="pulse" cx="150" cy="150" r="12" style="fill: var(--accent)"/>
         <circle cx="150" cy="150" r="10" style="fill: var(--accent)"/>
       </svg>
-      <div class="readout"><span class="big" data-display></span><span class="mono-cap" data-caption></span></div>
+      <div class="readout" aria-live="polite"><span class="big" data-display></span><span class="mono-cap" data-caption></span></div>
     </div>
     <button type="button" class="act" data-act></button>`;
   const $ = s => el.querySelector(s);
+  const steps = [...el.querySelectorAll(".stare-steps li")];
+  /* On a phone the button is also the confirmation (the card has no separate "Sent" line, so the
+     page never changes height); the presenter's show-only copy sends nothing, so it never says Sent */
+  const sent = io.onPhone ? "✓ Sent. " : "";
   const stop = () => { clearInterval(timer); timer = null; };
   /* "0.4 s early", "1.2 s late", "spot on" */
   const howFar = v => { const d = Math.round((v - GOAL) * 10) / 10; return d === 0 ? "spot on" : `${Math.abs(d).toFixed(1)} s ${d < 0 ? "early" : "late"}`; };
   const draw = () => {
     const now = performance.now();
-    let say, display, caption, ring = CIRC, pulse = 1, label, quiet = false, hide = false;
+    let display, caption, ring = CIRC, pulse = 1, label, quiet = false, at;
     if (phase === "staring") {
       const s = (now - started) / 1000;
-      const shown = s < SHOWN;
-      say = shown ? "Eyes on the dot. Keep counting: the clock hides in a moment." : `Eyes on the dot. Tap Stop when you think ${GOAL} seconds are up.`;
-      display = shown ? `${s.toFixed(1)} s` : "? s"; caption = shown ? "counting" : "clock hidden"; label = "Stop";
+      display = s < SHOWN ? `${s.toFixed(1)} s` : "? s"; caption = s < SHOWN ? "counting" : "clock hidden"; label = "Stop"; at = [1, 2];
     } else if (phase === "rest") {
       const left = Math.max(0, (restEnds - now) / 1000);
-      say = `You stopped at ${stopped.toFixed(1)} s, ${howFar(stopped)}. Now rest your eyes: look at something about 6 m away until the ring empties.`;
-      display = String(Math.ceil(left)); caption = "look away"; ring = CIRC * (1 - left / REST); pulse = 0; label = "Resting…"; quiet = true;
+      display = String(Math.ceil(left)); caption = "look far away"; ring = CIRC * (1 - left / REST); pulse = 0; label = `${sent}Eye break…`; quiet = true; at = [3];
     } else if (phase === "done") {
-      say = `You stopped at ${stopped.toFixed(1)} s, ${howFar(stopped)}. Then your eyes got ${REST} seconds off.`;
-      display = `${stopped.toFixed(1)} s`; caption = howFar(stopped); pulse = 0; hide = true;
+      display = `${stopped.toFixed(1)} s`; caption = howFar(stopped); pulse = 0; label = `${sent}That’s your time`; quiet = true; at = [];
     } else {
-      say = `Tap Start, keep your eyes on the dot and count in your head. Tap Stop at ${GOAL} seconds. Closest wins.`;
-      display = "0.0 s"; caption = "ready"; label = "Start";
+      display = "0.0 s"; caption = "ready"; label = "Start"; at = [0];
     }
-    $(".stare-say").textContent = say;
+    steps.forEach((li, i) => { li.classList.toggle("now", at.includes(i)); li.classList.toggle("past", phase === "done" || i < Math.min(...at)); });
     $("[data-display]").textContent = display;
     $("[data-caption]").textContent = caption;
     $(".prog").setAttribute("stroke-dashoffset", ring.toFixed(1));
     $(".pulse").style.opacity = String(pulse);
     $(".pulse").classList.toggle("on", phase === "ready" || phase === "staring");
     const act = $("[data-act]");
-    act.hidden = hide;
-    if (label) act.textContent = label;
+    act.textContent = label;
     act.disabled = quiet;
     act.classList.toggle("quiet", quiet);
     act.classList.toggle("stop", phase === "staring");

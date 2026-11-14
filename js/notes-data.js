@@ -7,6 +7,7 @@ import { CARDS, POSES, HABITS, fmtSteps } from "./content.js";
 import { SAFETY_LABELS } from "./kpis.js";
 import { config } from "./config.js";
 
+const STARE = CARDS.find(c => c.key === "stare");
 const CARD_TITLES = Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), `Card ${i + 1} · ${c.title}`]));
 export const TITLES = {
   agenda: "Agenda (opening)", intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
@@ -55,11 +56,16 @@ ${NEXT}`,
   lunch: `Lunch yesterday happened… where? Pick the closest one.
 
 ${NEXT}`,
-  stare: `Stop at 20 seconds. Tap Start, keep your eyes on the dot, and count to 20 in your head. The clock hides after three seconds. Tap Stop when you think you’re there. Closest wins.
+  /* Said in the same words as the numbered steps on the screens (card.steps), so the room hears what it reads */
+  stare: `Stop at 20 seconds. Closest to 20 wins. The steps are on your screen too:
 
-Then look at something far away while your phone counts 20 seconds. That’s your eye break.
+${STARE.steps.map((x, i) => `${["One", "Two", "Three", "Four", "Five"][i]}: ${x.charAt(0).toLowerCase() + x.slice(1)}`).join("\n")}
 
-(About 45 seconds. The results come up when everyone has stopped, or press Show answers.)`,
+Ready? Tap Start… now.
+
+(Press Start on the shared screen as you say “now”, and count along in silence. Stay quiet while people count: the screen shows only how many have stopped.)
+
+(The results come up by themselves when everyone has stopped. If someone forgot, press Show answers.)`,
   news: `News alerts, these days. How does your phone handle them?
 
 ${NEXT}`,

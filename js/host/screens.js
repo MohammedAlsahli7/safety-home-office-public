@@ -200,7 +200,7 @@ function cardVisual(card, r) {
           <circle cx="150" cy="150" r="10" style="fill: var(--accent)"/>
         </svg>
         ${r ? `<div class="m-big-avg"><b>${f1(r.best)} s</b><span>the closest stop to ${r.goal} seconds${r.off ? `, ${f1(r.off)} s off` : ": spot on"}</span><span class="n">Team average ${f1(r.avg)} s · ${r.near} of ${r.n} within a second</span></div>`
-          : `<ol class="m-steps"><li>Tap Start and keep your eyes on the dot.</li><li>Count to ${card.target || 20} in your head. The clock hides after 3 seconds.</li><li>Tap Stop at ${card.target || 20}. Then look at something 6 m away while your phone counts the eye break.</li></ol>`}
+          : `<ol class="m-steps">${card.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>`}
       </div>`;
     case "verdict":
       if (r) {

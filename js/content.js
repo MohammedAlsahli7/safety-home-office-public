@@ -116,7 +116,14 @@ export const CARDS = [
   {
     key: "stare", kind: "stare", target: 20,
     title: "Stop at 20 seconds",
-    sub: "Stare at the dot and count in your head. The clock hides after 3 seconds."
+    sub: "Closest to 20 seconds wins.",
+    /* The rules, in one place: the phones, the shared screen and the script all use these words */
+    steps: [
+      "Tap Start. Keep your eyes on the dot.",
+      "Count to 20 in your head. The clock hides after 3\u00a0seconds.",
+      "Tap Stop when you think it’s 20.",
+      "Look far away while your phone counts your eye break."
+    ]
   },
   {
     key: "news", kind: "options", layout: "news",

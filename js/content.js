@@ -44,7 +44,7 @@ export const CARDS = [
   {
     key: "posture", kind: "dial",
     title: "Which one is you right now?",
-    sub: "Turn the dial until the skeleton looks like you."
+    sub: "Turn the dial until the skeleton looks like you, then tap Done."
   },
   {
     key: "laptop", kind: "options", layout: "tiles",
@@ -71,7 +71,7 @@ export const CARDS = [
   {
     key: "fuel", kind: "fuel",
     title: "Coffee vs. water, yesterday",
-    sub: "Count every cup of coffee or karak. Water counts by the glass."
+    sub: "Count every cup of coffee or karak, and every glass of water. Then tap Done."
   },
   {
     key: "stand", kind: "options", layout: "stand",
@@ -88,7 +88,7 @@ export const CARDS = [
     /* Two sliders, office days and home days; two rings inside each other show them (a full ring is `max`) */
     key: "steps", kind: "steps",
     title: "Daily steps: office vs. home",
-    sub: "Slide both. A rough guess is fine.",
+    sub: "Slide both, then tap Done. A rough guess is fine.",
     max: 15000, step: 500, start: 5000
   },
   {

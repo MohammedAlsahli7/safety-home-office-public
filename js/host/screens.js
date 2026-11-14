@@ -171,7 +171,7 @@ function cardVisual(card, r) {
       return `<div class="m-fuel">
         <div class="m-fuel-col"><div class="fuel-scene coffee"><div class="tower">${cupTower(r ? Math.round(r.coffee) : 4)}</div></div>${r ? `<span class="m-avg-n"><b>${f1(r.coffee)}</b> cups on average</span>` : `<span class="t">Coffee, Karak</span>`}</div>
         <div class="m-fuel-col"><div class="fuel-scene water">${waterGlass(r ? r.water : 2, "hostGlass")}</div>${r ? `<span class="m-avg-n"><b>${f1(r.water)}</b> glasses on average</span>` : `<span class="t">Water</span>`}</div>
-        <p class="m-note">${r ? `Team average for yesterday, from ${r.n} answers.` : "Count yesterday’s cups and glasses with the + and − buttons."}</p>
+        <p class="m-note">${r ? `Team average for yesterday, from ${r.n} answers.` : "Count yesterday’s cups and glasses with + and −, then tap Done."}</p>
       </div>`;
     case "steps": {
       const d = r ? r.home - r.office : 0;
@@ -184,7 +184,7 @@ function cardVisual(card, r) {
           <span class="n">Team averages, steps a day, from ${r.n} answers.</span>`
           : `<span class="m-steps-row office"><i></i><span>Office days</span><small>outer ring</small></span>
           <span class="m-steps-row home"><i></i><span>Home days</span><small>inner ring</small></span>
-          <span class="n">Slide both on your phone. A rough guess is fine.</span>`}
+          <span class="n">Slide both on your phone, then tap Done. A rough guess is fine.</span>`}
         </div>
       </div>`;
     }
@@ -244,7 +244,7 @@ export function questionFrame(index, shown) {
 /* Live: the results, once shown (never below the minimum group) */
 export function questionResults(index, stats) {
   const card = CARDS[index], r = results(card, stats);
-  return `${r.wait ? `<span class="q-wait">Counts appear once ${config.minGroup} people have answered, to keep answers anonymous. ${r.n} so far.</span>` : ""}${cardVisual(card, r.wait ? null : r)}`;
+  return `${r.wait ? `<span class="q-wait">Counts appear once ${config.minGroup} people have ${card.kind === "stare" ? "stopped" : "answered"}, to keep answers anonymous. ${r.n} so far.</span>` : ""}${cardVisual(card, r.wait ? null : r)}`;
 }
 
 /* Live: how many have answered, and a window per player that lights up when they have */

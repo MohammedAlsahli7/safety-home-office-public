@@ -28,11 +28,12 @@ export const TARGETS = {
   next: "the handover, right after the close", discuss: "after the next item, about 10 minutes", closing: "the last minute of the meeting"
 };
 
-const NEXT = "(When most have answered, press Show answers, then Next card.)";
+/* The results come up by themselves once everyone has answered (Done on the drag cards) */
+const NEXT = "(The answers come up by themselves once everyone has answered. To move on sooner, press Show answers. Then Next card.)";
 const WORD = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 /* One script per card, keyed by the card, so adding a card never moves a script to the wrong screen */
 const CARD_SCRIPTS = {
-  posture: `Card 1. Turn the dial until the skeleton looks like you right now. Be honest: nobody sees who picked what.
+  posture: `Card 1. Turn the dial until the skeleton looks like you right now, then tap Done. Be honest: nobody sees who picked what.
 
 ${NEXT}`,
   laptop: `Where does your laptop live most of the day? Raised up, flat on a table, on your lap, or in bed with you.
@@ -41,13 +42,13 @@ ${NEXT}`,
   morning: `Between the alarm and 7:00. Which route is closest to your mornings?
 
 ${NEXT}`,
-  fuel: `Coffee versus water, yesterday. Count every cup of coffee, qahwa or karak, and every glass of water.
+  fuel: `Coffee versus water, yesterday. Count every cup of coffee, qahwa or karak, and every glass of water. Then tap Done.
 
 ${NEXT}`,
   stand: `When did you last stand up, before you opened this? And yes, walking to the fridge is an option.
 
 ${NEXT}`,
-  steps: `Your daily steps. Office days: the walk from the car park, the meeting rooms, the coffee machine. Home days: the kitchen and back. One slider each, and a rough guess is fine.
+  steps: `Your daily steps. Office days: the walk from the car park, the meeting rooms, the coffee machine. Home days: the kitchen and back. One slider each, then tap Done. A rough guess is fine.
 
 ${NEXT}`,
   coworker: `Your most frequent coworker. Who interrupts your workday the most?
@@ -74,41 +75,43 @@ ${NEXT}`,
 ${NEXT}`,
   verdict: `Last card. Working from home so far, from 0 to 10.
 
-(Then press Finish and send reports.)`
+(The answers come up by themselves once everyone has answered, or press Show answers. Then Finish and send reports: the reports land on the phones.)`
 };
 
 export const DEFAULTS = {
   ...Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), CARD_SCRIPTS[c.key] || ""])),
-  agenda: `Good morning, everyone. It’s good to have us all together again. It’s been a while since we last met like this.
+  agenda: `Good morning, everyone. It’s been a while since our last monthly meeting, so it’s really good to have everyone back together.
 
 These weeks haven’t been normal. We’re all working from home, many of us with family around and one eye on the news. And through all of it, you’ve kept things moving. Thank you for that, and for the patience you’ve shown each other.
 
 Everyone’s situation at home is a bit different, so let’s keep giving each other a little extra room: a late reply, a muted mic, a doorbell in the middle of a call. And to anyone carrying more worry than usual right now: we’re in this together, and we’re here for one another.
 
-So let’s start this one on a good note: a quick game first, then our safety moment.
+So let’s start this one on a good note. Here’s our agenda: a quick game on your phones first, then our safety moment, built on your answers, then the rest of our meeting.
 
-(Don’t read the agenda out; it speaks for itself. Then press QR code.)`,
+(Point along the agenda as you go. Then press QR code.)`,
   join: `Grab your phone and point the camera at the code on the screen. When it opens, there’s a lamp: pull its cord until it matches the light in your room right now.
 
 (Pull the lamp cord on your screen as you say it.)
 
 Then pick a funny name and join. Nothing goes in under your real name, and there’s no camera. I only ever see team totals, and only once at least ${WORD[config.minGroup] || config.minGroup} of you have answered.
 
-(Press I for your introduction. A small QR code stays in the corner, so people can keep joining.)
+(Press I for your introduction. A small QR code stays under the lamp, so people can keep joining. → brings you back here.)
 
-(When the joined count stops climbing, press Start the game.)`,
+(When the joined count stops climbing, press Start the game on this screen.)`,
   wrap: `Your report is on your phone. Only you can see it. Have a look while I start.
 
-{played} of us played. Thank you. Now, the safety moment.`,
+{played} of us played. Thank you.
+
+Before the safety moment, a quick look at our department’s safety KPIs.`,
   title: `Now, the safety moment. Keep still for a second. Don’t fix anything. Just notice where your neck is. Where your eyes are. And when you last checked the news.
 
 (Pause for 3 seconds.)
 
 That’s what the next five minutes are about.
 
-Most of us don’t have a real home office. We work from the dining table, the sofa, sometimes the bed, and we’re waiting to get back to the office. So nothing today needs a desk or costs money.
+Most of us don’t have a real home office. For now, we work from the dining table, the sofa, sometimes the bed. So nothing today needs a desk or costs money.
 
-{played} of you played the check-up this morning. Nobody sees anyone’s answers, but together they show something: uncertain times don’t stay in the news. They show up in our workday, and then in our bodies.
+Nobody sees anyone’s answers, but together they show something: uncertain times don’t stay in the news. They show up in our workday, and then in our bodies.
 
 Keep the page open on your phone. Three quick confessions are coming.`,
   attention: `First, attention. Confession number one is on your phone. Tap it while I talk.
@@ -243,7 +246,7 @@ Thank you all for joining, and see you at the next monthly meeting.`;
   }
   if (id === "courses") {
     if (!k.courses.length) return "(Add the KPI figures first: press P on the presenter screen.)";
-    const lines = ["Before I begin, allow me to share some safety KPIs for our department, starting with the safety courses."];
+    const lines = ["Starting with the safety courses."];
     const open = k.courses.filter(c => c.pct !== null && c.pct < 100);
     lines.push(open.length ? "All seems to be going well." : "Every course is complete.");
     open.forEach(c => lines.push(c.enrolledRest
@@ -273,7 +276,9 @@ ${failed.length ? `Fortunately, failures are almost at zero: just ${total === 1 
       : list(idx.map(name)));
     return `And lastly, ${zeros.length ? `we continue at zero in ${say(zeros)}.` : ""}${others.length ? ` We had ${list(others.map(i => `${v[i]} in ${name(i)}`))}.` : ""}
 
-Inshallah, we will keep all of these at zero.`;
+Inshallah, we will keep all of these at zero.
+
+But these count what happens on a site, on a road, or in an inbox. Working from home, the risk doesn’t arrive as an incident. It builds up slowly.`;
   }
   return "";
 }

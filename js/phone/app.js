@@ -196,7 +196,7 @@ function start() {
         ${mono("How it works")}
         <div class="steps">
           <span class="num">1</span><span><b>Set your light</b><small>Pull the lamp cord above.</small></span>
-          <span class="num">2</span><span><b>Answer ${CARDS.length} cards</b><small>Tap, drag and count. The presenter moves everyone to the next card.</small></span>
+          <span class="num">2</span><span><b>Answer ${CARDS.length} cards</b><small>Tap to answer. On a slider or a counter, set it and tap Done. The presenter moves everyone to the next card.</small></span>
           <span class="num">3</span><span><b>Get your report</b><small>Posture, energy, eyes, balance and mind.</small></span>
         </div>
       </div>

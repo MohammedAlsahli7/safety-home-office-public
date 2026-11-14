@@ -66,6 +66,9 @@ textarea { width: 100%; min-height: 46vh; padding: 14px 16px; border-radius: 14p
 .t-saved { font-size: 12px; font-weight: 700; color: #1E7F55; }
 .t-saved.old { color: var(--accent-text); }
 .kpi { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.io { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.row button.strong { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 700; }
+.row .t-fine { align-self: center; }
 .kpi textarea { min-height: 150px; font: 12px/1.4 var(--mono); border: 1px solid var(--line); }
 .wait-box { margin-top: 30vh; text-align: center; color: var(--sub); font-size: 17px; line-height: 1.5; }
 .wait-box b { color: var(--ink); font-size: 22px; }

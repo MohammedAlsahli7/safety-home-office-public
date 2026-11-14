@@ -8,6 +8,8 @@
    {
      "updated": "2026-01-31",                               // shown in the presenter tools, to check the saved copy is the latest
      "agenda": [{ "title": "…", "detail": "…", "time": "3 min" }],   // optional: replaces the default agenda (up to 8 rows)
+     "reminder": { "title": "…", "when": "…", "items": ["…"] },        // optional: the closing screen's reminder (up to 6 points)
+     "next": { "title": "…", "name": "…", "role": "…" },              // optional: the next presenter's title slide, after the close
      "intro": {                                             // behind the QR code screen (I)
        "name": "Sam", "role": "Engineer",
        "home": "Home team", "assignment": "Team on assignment", "assignmentNote": "what I do there",
@@ -63,6 +65,8 @@ export function cleanKpis(raw) {
     updated: text(r.updated, 20),
     agenda: (Array.isArray(r.agenda) ? r.agenda : []).filter(a => a && typeof a === "object" && text(a.title)).slice(0, 8)
       .map(a => ({ title: text(a.title, 60), detail: text(a.detail, 90), time: text(a.time, 16) })),
+    next: (x => ({ title: text(x.title, 80), name: text(x.name, 60), role: text(x.role, 60) }))(r.next && typeof r.next === "object" ? r.next : {}),
+    reminder: (m => ({ title: text(m.title, 60), when: text(m.when, 40), items: (Array.isArray(m.items) ? m.items : []).map(x => text(x, 80)).filter(Boolean).slice(0, 6) }))(r.reminder && typeof r.reminder === "object" ? r.reminder : {}),
     intro: {
       name: text(intro.name, 40), role: text(intro.role, 80),
       home: text(intro.home, 70), assignment: text(intro.assignment, 70), assignmentNote: text(intro.assignmentNote, 80),

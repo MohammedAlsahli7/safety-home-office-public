@@ -253,6 +253,8 @@ export function questionSide(index, stats, players, shown) {
   const joined = stats.joined;
   const n = stats.answered[card.key] || 0;
   const all = joined > 0 && n >= joined;
+  /* The staring contest never shows its results by itself: the presenter waits for the last starer */
+  const stare = card.kind === "stare";
   const R = 70, CIRC = 2 * Math.PI * R, share = joined ? Math.min(1, n / joined) : 0;
   const rooms = Object.values(players).slice(0, 28).map(p => {
     const [fill, glow] = roomColours(p.answers?.light);
@@ -267,7 +269,7 @@ export function questionSide(index, stats, players, shown) {
       </svg>
       <span class="q-num"><b>${n}</b><small>of ${joined}</small></span>
     </div>
-    <span class="q-label">${all ? "Everyone has answered" : "answered"}${shown ? "<br>Only totals are shown" : ""}</span>
+    <span class="q-label">${stare ? (all ? "Everyone has finished" : "finished") : all ? "Everyone has answered" : "answered"}${shown ? "<br>Only totals are shown" : stare ? "<br>Results come when everyone’s done" : ""}</span>
     ${rooms ? `<div class="rooms">${rooms}</div>` : ""}`;
 }
 

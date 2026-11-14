@@ -11,7 +11,7 @@ import { TITLES, TARGETS, DEFAULTS, kpiDefault, tokens, TOKEN_HELP } from "../no
 const root = document.getElementById("notes");
 const channel = (() => { try { return new BroadcastChannel("hoc-notes"); } catch (_) { return null; } })();
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const KPI_IDS = ["intro", "courses", "phishing", "incidents", "close"];   /* written from the private slide data */
+const KPI_IDS = ["intro", "courses", "phishing", "incidents", "close", "next", "discuss", "closing"];   /* written from the private slide data */
 
 let st = null, editing = false, size = store.get("notes.size", 22), saveTimer = null;
 const edits = () => store.get("notes", {});
@@ -20,19 +20,51 @@ const edits = () => store.get("notes", {});
    move with their card: the card order they were saved under is kept beside them, and edits from
    before it was kept used the original eleven-card order. */
 const LEGACY_ORDER = ["posture", "laptop", "morning", "fuel", "stand", "coworker", "lunch", "stare", "news", "logoff", "verdict"];
-(() => {
-  const now = CARDS.map(c => c.key), was = store.get("notes.order", LEGACY_ORDER);
-  if (was.join() === now.join()) return;
-  const out = {};
-  Object.entries(edits()).forEach(([id, text]) => {
+function inCardOrder(notes, was) {
+  const now = CARDS.map(c => c.key), out = {};
+  Object.entries(notes).forEach(([id, text]) => {
+    if (typeof text !== "string") return;
     const m = /^q(\d+)$/.exec(id);
     if (!m) { out[id] = text; return; }
     const j = now.indexOf(was[Number(m[1]) - 1]);
     if (j >= 0) out["q" + (j + 1)] = text;
   });
-  store.set("notes", out);
+  return out;
+}
+(() => {
+  const now = CARDS.map(c => c.key), was = store.get("notes.order", LEGACY_ORDER);
+  if (was.join() === now.join()) return;
+  store.set("notes", inCardOrder(edits(), was));
   store.set("notes.order", now);
 })();
+
+/* Export and import: the edited script and the private slide data in one file, to move them to
+   another browser or keep a copy. Never the presenter key. */
+function exportCopy() {
+  const copy = { kind: "home-office-check-up", exported: new Date().toISOString().slice(0, 16).replace("T", " "), order: CARDS.map(c => c.key), notes: edits(), data: rawKpis() };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(copy, null, 2)], { type: "application/json" }));
+  a.download = `home-office-check-up-private-${copy.exported.slice(0, 10)}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+/* Takes an exported copy (script and data), or plain slide data like docs/kpis.json */
+function importCopy(obj) {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) throw new Error("not a copy");
+  const notes = obj.notes && typeof obj.notes === "object" && !Array.isArray(obj.notes) ? obj.notes : null;
+  const plain = ["intro", "courses", "phishing", "safety", "close", "agenda", "reminder"].some(k => k in obj);
+  const data = obj.data && typeof obj.data === "object" ? obj.data : !notes && plain ? obj : null;
+  if (!notes && !data) throw new Error("not a copy");
+  if (data) saveKpis(data);   /* checks it first: throws on data it can't read */
+  if (notes) {
+    store.set("notes", inCardOrder(notes, Array.isArray(obj.order) ? obj.order : CARDS.map(c => c.key)));
+    store.set("notes.order", CARDS.map(c => c.key));
+  }
+  if (data) tool("kpis");   /* the presenter redraws the introduction and slides */
+  return [notes && "your script", data && "the slide data"].filter(Boolean).join(" and ");
+}
 const defaultFor = id => (KPI_IDS.includes(id) ? kpiDefault(id, loadKpis()) : DEFAULTS[id] || "");
 const scriptFor = id => (id in edits() ? edits()[id] : defaultFor(id));
 const clock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
@@ -76,6 +108,10 @@ function frame() {
         <button type="button" data-tool="motion" id="t-motion"></button>
       </div>
       <div class="row">
+        <button type="button" data-tool="reset" class="strong">Reset for the meeting</button>
+        <span class="t-fine">No demo players, no answers, a new QR code, and it opens on the agenda.</span>
+      </div>
+      <div class="row">
         <button type="button" data-tool="new" id="t-new"></button>
         <button type="button" data-tool="demo" id="t-demotoggle"></button>
       </div>
@@ -89,6 +125,16 @@ function frame() {
           <button type="button" data-tool="kpilink">Copy a private presenter link (this session, its key and these KPIs)</button>
         </div>
       </form>
+      <div class="io">
+        <b>Your script and slide data, as a file</b>
+        <span class="t-fine">Export saves your edited script and the private slide data to a file; Import loads one (or a plain docs/kpis.json) into this browser. The file has names in it, but never your presenter key. Keep it private.</span>
+        <div class="row">
+          <button type="button" data-tool="export">Export to a file</button>
+          <button type="button" data-tool="import">Import a file…</button>
+          <input type="file" id="t-file" accept=".json,application/json" hidden>
+        </div>
+        <span id="t-io" class="t-saved" role="status"></span>
+      </div>
       <p class="t-fine">Keys here: → and ← move the presenter, I shows your introduction on the QR code screen, P opens or closes these tools.</p>
     </details>`;
   fillKpiBox();
@@ -196,6 +242,23 @@ function save() {
   store.set("notes", all);
 }
 
+root.addEventListener("change", async e => {
+  if (e.target.id !== "t-file" || !e.target.files.length) return;
+  const file = e.target.files[0], out = document.getElementById("t-io");
+  e.target.value = "";
+  let obj;
+  try { obj = JSON.parse(await file.text()); } catch (_) { out.className = "t-saved old"; out.textContent = "That file isn't valid JSON."; return; }
+  const what = obj && obj.notes ? "your script edits and the slide data" : "the slide data";
+  if (!confirm(`Replace ${what} in this browser with the ones in ${file.name}?`)) return;
+  try {
+    if (editing) stopEdit();
+    const done = importCopy(obj);
+    out.className = "t-saved";
+    out.textContent = `Imported ${done} from ${file.name}.`;
+  } catch (_) { out.className = "t-saved old"; out.textContent = "That file isn't a copy of the script or the slide data."; return; }
+  fillKpiBox();
+  paint();
+});
 root.addEventListener("input", e => {
   if (e.target.id === "editor") { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
 });
@@ -223,6 +286,13 @@ root.addEventListener("click", async e => {
       tool("kpilink");   /* the presenter page builds it (it holds the key) and sends it back */
     } else if (a === "new") {
       if (confirm(st.tools.demo ? "Start a new demo? Phones on the old QR code will be told to scan the new one." : "Start a new session? Phones on the old QR code will be told to scan the new one.")) tool("new");
+    } else if (a === "reset") {
+      if (confirm("Reset for the meeting? Simulated players and all answers are cleared, a new QR code is made, and the presenter opens on the agenda. Phones on the old code are told to scan the new one.")) tool("reset");
+    } else if (a === "export") {
+      exportCopy();
+      document.getElementById("t-io").textContent = "Exported. Keep the file private.";
+    } else if (a === "import") {
+      document.getElementById("t-file").click();
     } else tool(a);
     return;
   }

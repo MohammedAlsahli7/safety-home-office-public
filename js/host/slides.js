@@ -531,6 +531,65 @@ const SOURCES = [
     ["Ding et al. 2025", "Ding D, et al. Daily steps and health outcomes in adults: a systematic review and dose-response meta-analysis. The Lancet Public Health (2025)."],
     ["Paluch et al. 2022", "Paluch AE, et al. Daily steps and all-cause mortality: a meta-analysis of 15 international cohorts. The Lancet Public Health 7 (2022)."]]]
 ];
+/* ---------- The next presenter's title slide ----------
+   Shared by this window until the next presenter shares their own screen. Their name and title
+   come from the private slide data. */
+function nextUp(n, total) {
+  const x = loadKpis().next;
+  return `
+  <div class="slide">
+    ${lamp("l11", 210, 40)}
+    <div class="s-body" style="justify-content: center; gap: 26px; max-width: 800px">
+      <span class="up-lbl">Up next</span>
+      <h2 class="h">${esc(x.title || "Our next item")}</h2>
+      ${x.name ? `<span class="up-who"><b>${esc(x.name)}</b>${x.role ? `<span>${esc(x.role)}</span>` : ""}</span>` : ""}
+    </div>
+    ${num(n, total)}
+  </div>`;
+}
+
+/* ---------- After the next presenter: the floor is open, then the closing ----------
+   The presenter shares this window again when the next item ends and moves on here. */
+function boardPanel(size) {
+  const { board } = loadKpis().close;
+  if (!board.url) return "";
+  return `
+        <div class="reach">
+          ${qrSVG(board.url, size)}
+          <div class="reach-txt"><span><b>${esc(board.title || "Share your experience")}</b>${board.where || board.question ? `<span class="sub">${board.where ? `On ${esc(board.where)}${board.question ? ": " : ""}` : ""}${board.question ? `“${esc(board.question)}”` : ""}</span>` : ""}</span></div>
+        </div>`;
+}
+function discuss(n, total) {
+  const board = boardPanel(200);
+  return `
+  <div class="slide">
+    ${lamp("l9", 210, 40)}
+    <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
+      <h2 class="h">The floor is open</h2>
+      <p class="lede">A question, a thought, or how working from home is going for you. Unmute, or write it in the chat.</p>
+      ${board}
+    </div>
+    ${num(n, total)}
+  </div>`;
+}
+function closing(n, total) {
+  const r = loadKpis().reminder;
+  return `
+  <div class="slide">
+    ${lamp("l10", 210, 40)}
+    <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
+      <h2 class="h">Thank you</h2>
+      ${r.title ? `
+      <div class="panel reminder">
+        <span class="reminder-lbl">Reminder</span>
+        <span class="reminder-title"><b>${esc(r.title)}</b>${r.when ? `<span>${esc(r.when)}</span>` : ""}</span>
+        ${r.items.length ? `<ul>${r.items.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      </div>` : `<p class="lede">See you at the next monthly meeting.</p>`}
+    </div>
+    ${num(n, total)}
+  </div>`;
+}
+
 function sources(n, total) {
   const group = ([head, items]) => `<div class="src-group"><b>${esc(head)}</b>${items.map(([, t]) => `<span>${esc(t)}</span>`).join("")}</div>`;
   return `
@@ -555,5 +614,8 @@ export const SLIDES = [
   { id: "awards", render: awards },
   { id: "habits", render: habits, stage: "vote" },
   { id: "close", render: close },
+  { id: "next", render: nextUp },
+  { id: "discuss", render: discuss },
+  { id: "closing", render: closing },
   { id: "sources", render: sources }
 ];

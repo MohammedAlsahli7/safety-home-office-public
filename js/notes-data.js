@@ -13,6 +13,7 @@ export const TITLES = {
   courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
   title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body", move: "Body · steps",
   awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so",
+  next: "Up next: the next presenter (keep sharing until they share)", discuss: "The floor is open (after the next item)", closing: "Closing: thank you and the reminder",
   sources: "Sources (only if someone asks)"
 };
 
@@ -22,7 +23,8 @@ export const TARGETS = {
   intro: "while people join, about 0:20",
   courses: "0:00 to 0:17", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
   attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:20", move: "4:20 to 4:45", awards: "4:45 to 5:00",
-  habits: "5:00 to 5:35", close: "5:35 to 6:05"
+  habits: "5:00 to 5:35", close: "5:35 to 6:05",
+  next: "the handover, right after the close", discuss: "after the next item, about 10 minutes", closing: "the last minute of the meeting"
 };
 
 const NEXT = "(When most have answered, press Show answers, then Next card.)";
@@ -55,7 +57,7 @@ ${NEXT}`,
 ${NEXT}`,
   stare: `Staring contest. Stare at the dot, and tap the moment you blink. Then look at something far away for 20 seconds. Let’s all do it together.
 
-(This one takes about 40 seconds. Wait for the eye break before moving on.)`,
+(This one takes about 40 seconds. The results don’t come up by themselves on this card: when everyone has finished and had the eye break, press Show answers.)`,
   news: `News alerts, these days. How does your phone handle them?
 
 ${NEXT}`,
@@ -151,8 +153,17 @@ This morning we gave working from home {verdict} out of 10, and {low} of us said
 
 (If nobody said 5 or below: “Good to hear. The offer stands anyway.”)
 
-Your report stays on your phone. Thank you.`,
-  sources: `(Only if someone asks where a number or a recommendation comes from. Otherwise stop sharing after the handover.)`
+Your report stays on your phone. Thank you.
+
+(Then press → for the next presenter’s title slide.)`,
+  next: `That’s our safety moment. Over to our next presenter.
+
+(Keep sharing this slide until their screen share starts. When that part ends, share this window again and press → for the open floor.)`,
+  discuss: `Thank you. Before we close, the floor is open: a question, a thought, or how working from home is going for you. Unmute, or write it in the chat.
+
+(Open discussion, about 10 minutes. Then press → for the closing.)`,
+  closing: `That’s all from us today. Thank you all for joining, and see you at the next monthly meeting.`,
+  sources: `(Only if someone asks where a number or a recommendation comes from.)`
 };
 
 /* ---------- KPI slides: written from the figures saved in this browser ---------- */
@@ -197,6 +208,30 @@ ${why}
       support.phone && `And if you’d rather talk to someone outside the team${support.name ? `, there’s the ${support.name}` : ""}. ${support.text || "To speak with a counselor, call"} ${support.phone}${support.note ? `, ${support.note}` : ""}.`
     ].filter(Boolean).join("\n\n");
     return extra ? DEFAULTS.close.replace("Your report stays on your phone.", `${extra}\n\nYour report stays on your phone.`) : DEFAULTS.close;
+  }
+  if (id === "next") {
+    const x = k.next;
+    if (!x.name) return DEFAULTS.next;
+    return `That’s our safety moment. Next, ${x.name} takes us through ${x.title ? `the ${x.title.replace(/^the\s+/i, "")}` : "our next item"}. Over to you, ${x.name.split(/\s+/)[0]}.
+
+(Keep sharing this slide until ${x.name.split(/\s+/)[0]}’s screen share starts. When that part ends, share this window again and press → for the open floor.)`;
+  }
+  if (id === "discuss") {
+    const { board } = k.close;
+    if (!board.url) return DEFAULTS.discuss;
+    return `Thank you. Before we close: ${board.where || "our team board"} is still open. Scan the code${board.question ? ` to answer “${board.question}”` : ""}, or share anything on your mind about working from home.
+
+And the floor is open now, if anyone would like to share or ask anything. Unmute, or write it in the chat.
+
+(Open discussion, about 10 minutes. Then press → for the closing.)`;
+  }
+  if (id === "closing") {
+    const r = k.reminder;
+    if (!r.title) return DEFAULTS.closing;
+    const items = r.items.map(x => (/^[A-Z][a-z]/.test(x) ? x.charAt(0).toLowerCase() + x.slice(1) : x));
+    return `To close, one reminder: the ${r.title}${r.when ? ` is on ${r.when}` : ""}.${items.length ? ` It covers ${list(items)}.` : ""} Please join if you can.
+
+Thank you all for joining, and see you at the next monthly meeting.`;
   }
   if (id === "courses") {
     if (!k.courses.length) return "(Add the KPI figures first: press P on the presenter screen.)";

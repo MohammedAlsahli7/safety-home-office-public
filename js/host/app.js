@@ -298,8 +298,9 @@ function render() {
   const card = sc.card !== undefined ? CARDS[sc.card] : null;
   const answered = card ? stats.answered[card.key] || 0 : 0;
   const everyone = stats.joined > 0 && answered >= stats.joined;
-  /* Results appear by themselves once everyone has answered, or when the presenter asks */
-  const autoReveal = card && everyone && answered >= config.minGroup && !revealed.has(sc.card) && !handsOn;
+  /* Results appear by themselves once everyone has answered, or when the presenter asks. Never on the
+     staring contest: someone may still be staring, so the presenter decides when it's over */
+  const autoReveal = card && card.kind !== "stare" && everyone && answered >= config.minGroup && !revealed.has(sc.card) && !handsOn;
   if (autoReveal) revealed.add(sc.card);
   if (sc.id === "agenda") {
     setFrame("agenda", agendaFrame(loadKpis().agenda));
@@ -551,6 +552,7 @@ function renderTools() {
     <button type="button" data-a="notes">Open speaker notes (N): a separate window only you see</button>
     <button type="button" data-a="talk">Skip to the talk (KPI slides)</button>
     <button type="button" data-a="motion">Animations: ${motionOn() ? "on" : "off"}</button>
+    <button type="button" data-a="reset" class="strong">Reset for the meeting: no demo players, no answers, new QR code, opens on the agenda</button>
     <button type="button" data-a="new">${config.demo ? "Start a new demo (new QR code)" : "Start a new session (clears rehearsal answers)"}</button>
     <button type="button" data-a="demo">${config.demo ? "Leave demo mode" : "Demo: add 14 simulated players (real phones can join too)"}</button>
     <form id="kpiform" style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #DDD3C2">
@@ -591,7 +593,24 @@ function privateLink() {
 
 /* The tools' actions, shared by this panel and the speaker notes window (which asks first where a
    question is needed, so these don't) */
-const TOOLS = ["talk", "motion", "new", "demo", "kpis"];
+const RESET_ASK = "Reset for the meeting? Simulated players and all answers are cleared, a new QR code is made, and the presenter opens on the agenda. Phones on the old code are told to scan the new one.";
+const TOOLS = ["talk", "motion", "new", "reset", "demo", "kpis"];
+/* A new session: a new key and QR code, no answers, back on the agenda. Phones on the old code are
+   told to scan the new one. */
+async function newSession() {
+  await closeSession();
+  await freshSession();
+  sign = await signer(hostKey.priv);
+  verifyOwn = await verifier(hostKey.pub);
+  const u = new URL(location.href); u.searchParams.delete("s"); history.replaceState(null, "", u);
+  boot();
+}
+/* Before leaving the page, give the "closed" stage a moment to reach the relay */
+const sent = () => new Promise(done => {
+  const t0 = Date.now();
+  const tick = () => ((!relay.outbox.length && !relay.flushing) || Date.now() - t0 > 2500 ? done() : setTimeout(tick, 100));
+  tick();
+});
 async function runTool(a) {
   if (a === "motion") {
     store.set("host.motion", !motionOn());
@@ -600,12 +619,23 @@ async function runTool(a) {
     toolsEl.hidden = true;
     go(FIRST_SLIDE);
   } else if (a === "new") {
-    await closeSession();
-    await freshSession();
-    sign = await signer(hostKey.priv);
-    verifyOwn = await verifier(hostKey.pub);
-    const u = new URL(location.href); u.searchParams.delete("s"); history.replaceState(null, "", u);
-    boot();
+    await newSession();
+  } else if (a === "reset") {
+    /* Reset for the meeting: no simulated players, no rehearsal answers, a new QR code, on the agenda.
+       From a demo, the demo's phones are told to scan the new code, and the meeting page (opened
+       without ?demo) picks up the reset flag and starts its own new session. */
+    toolsEl.hidden = true;
+    if (config.demo) {
+      await closeSession();
+      await sent();
+      store.remove("host.demo");
+      store.set("host.reset", true);
+      const u = new URL(location.href);
+      u.searchParams.delete("demo"); u.searchParams.delete("s"); u.hash = "";
+      location.href = u.toString();
+      return;
+    }
+    await newSession();
   } else if (a === "demo") {
     const u = new URL(location.href);
     if (config.demo) u.searchParams.delete("demo"); else u.searchParams.set("demo", "");
@@ -629,6 +659,8 @@ toolsEl.addEventListener("click", async e => {
     openNotes();
   } else if (a === "new") {
     if (confirm("Start a new session? Phones on the old QR code will be told to scan the new one.")) await runTool("new");
+  } else if (a === "reset") {
+    if (confirm(RESET_ASK)) await runTool("reset");
   } else if (TOOLS.includes(a)) {
     await runTool(a);
   }
@@ -656,7 +688,10 @@ importKeyFromHash();
 importKpisFromHash();
 if (location.hash) history.replaceState(null, "", location.pathname + location.search);
 fit();
-claimSession().then(ok => {
+claimSession().then(async ok => {
   if (!ok) { locked(); return; }
   boot();   /* the key hints live in the tools panel (P) and the notes window, not on the shared screen */
+  /* Reset for the meeting, pressed in a demo: this meeting page finishes it with a new session */
+  if (!config.demo && store.get("host.reset")) { store.remove("host.reset"); await runTool("reset"); }
+  if (config.demo) document.body.insertAdjacentHTML("beforeend", `<div class="demo-badge" title="Simulated players are playing. Before the meeting: P → Reset for the meeting.">Demo · simulated players</div>`);
 });

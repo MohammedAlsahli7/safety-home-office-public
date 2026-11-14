@@ -10,8 +10,8 @@
    locked page, and phones ignore unsigned or replayed stages.
    Buttons on screen, or keys: → Space PageDown next · ← PageUp back · I introduction · F full screen ·
    N speaker notes · P presenter tools */
-import { config, isSessionCode } from "../config.js";
-import { store } from "../store.js";
+import { config, isSessionCode, BUILD } from "../config.js";
+import { store, randomCode } from "../store.js";
 import { createRelay } from "../relay.js";
 import { teamStats, applyMessage } from "../aggregate.js";
 import { CARDS, POSES, poseIndex, lightName, fmtSteps } from "../content.js";
@@ -127,9 +127,16 @@ function meLight(L) {
    shows the script with live numbers, can press Back and Next, and has the presenter tools, so the
    P panel never has to open over the shared screen. Nothing here is shared on screen. */
 const notesChannel = (() => { try { return new BroadcastChannel("hoc-notes"); } catch (_) { return null; } })();
+/* Every presenter tab has its own id (kept across reloads of that tab). The notes window follows the
+   one tab that opened it (N opens notes.html#tab=<id>), and a tab obeys only notes messages addressed
+   to it, so a second presenter tab in the same browser can never be moved, or speak, by mistake. */
+const NONCE = randomCode(10);
+let TAB = (() => { try { const t = sessionStorage.getItem("hoc.tab") || randomCode(10); sessionStorage.setItem("hoc.tab", t); return t; } catch (_) { return randomCode(10); } })();
+/* A duplicated tab copies sessionStorage, and with it the id: ask, and take a new id if it's in use */
+if (notesChannel) notesChannel.postMessage({ type: "tab-check", tab: TAB, nonce: NONCE });
 let notesWin = null;
 function openNotes() {
-  notesWin = window.open("notes.html", "hoc-notes", "width=560,height=820");
+  notesWin = window.open("notes.html#tab=" + TAB, "hoc-notes", "width=560,height=820");
   if (notesWin) notesWin.focus();
 }
 function postNotes() {
@@ -137,7 +144,7 @@ function postNotes() {
   const sc = SCREENS[screen], nx = SCREENS[screen + 1];
   const nextBtn = controlsEl.querySelector('[data-go="next"]');
   notesChannel.postMessage({
-    type: "state", index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: introOn ? "join" : nx ? nx.id : null,
+    type: "state", tab: TAB, build: BUILD, index: screen, total: SCREENS.length, id: introOn ? "intro" : sc.id, nextId: introOn ? "join" : nx ? nx.id : null,
     shown: sc.card !== undefined && revealed.has(sc.card),
     nextLabel: sc.slide ? (nx ? "Next slide →" : "Last slide") : nextBtn ? nextBtn.textContent.trim() : "Next →", firstSlide: FIRST_SLIDE,
     screenStartedAt: cardStarted, gameStartedAt, talkStartedAt, stats: lastStats,
@@ -146,13 +153,60 @@ function postNotes() {
 }
 if (notesChannel) notesChannel.onmessage = async e => {
   const d = e.data || {};
-  if (!relay) return;
-  if (d.type === "hello") postNotes();
-  else if (d.type === "intro") toggleIntro();
+  if (d.type === "tab-check" && d.tab === TAB && d.nonce !== NONCE) { notesChannel.postMessage({ type: "tab-taken", nonce: d.nonce }); return; }
+  if (d.type === "tab-taken" && d.nonce === NONCE) { TAB = randomCode(10); try { sessionStorage.setItem("hoc.tab", TAB); } catch (_) { /* memory only */ } return; }
+  if (!relay || passive) return;
+  /* A notes window that hasn't picked a tab yet says hello to everyone; everything else is addressed */
+  if (d.type === "hello" && (!d.to || d.to === TAB)) { postNotes(); return; }
+  if (d.to !== TAB) return;
+  if (d.type === "intro") toggleIntro();
   else if (d.type === "go") { if (d.dir > 0) advance(); else back(); }
-  else if (d.type === "tool" && d.a === "kpilink") notesChannel.postMessage({ type: "kpilink", url: privateLink() });
+  else if (d.type === "tool" && d.a === "kpilink") notesChannel.postMessage({ type: "kpilink", tab: TAB, url: privateLink() });
   else if (d.type === "tool" && TOOLS.includes(d.a)) await runTool(d.a);
 };
+
+/* ---------- One presenter tab per session ----------
+   Two tabs on the same session would both sign stages and pull the phones back and forth. A Web Lock
+   per session lets only one tab present; another tab on the same session stands by, with a button to
+   take over (the first tab then stands by). The lock goes with the tab when it closes. */
+let releaseStage = null, passive = false;
+function holdStage(steal = false) {
+  if (!navigator.locks) return Promise.resolve(true);
+  const name = "hoc-present-" + session;
+  return new Promise(resolve => {
+    navigator.locks.request(name, steal ? { steal: true } : { ifAvailable: true }, lock => {
+      if (!lock) { resolve(false); return undefined; }
+      resolve(true);
+      return new Promise(release => { releaseStage = release; });
+    }).catch(() => { if (releaseStage) { releaseStage = null; standBy(); } });   /* another tab took over */
+  });
+}
+function letGoOfStage() {
+  const r = releaseStage;
+  releaseStage = null;
+  if (r) r();
+}
+function standBy() {
+  passive = true;
+  if (notesChannel) notesChannel.postMessage({ type: "standby", tab: TAB });   /* a notes window following this tab says so */
+  clearTimeout(renderTimer); renderTimer = null;
+  if (relay) { relay.close(); relay = null; }
+  if (demo) { demo.stop(); demo = null; }
+  toolsEl.hidden = true;
+  controlsEl.innerHTML = "";
+  screenEl.innerHTML = `
+  <div class="slide">
+    <div class="s-body" style="justify-content: center; max-width: 900px; gap: 24px">
+      <h1 class="h">This presentation is open in another tab</h1>
+      <p style="margin: 0; font-size: var(--t-head); line-height: 1.4; color: var(--sub)">The phones and the speaker notes follow that tab. Close this one, or present from here instead.</p>
+      <div><button type="button" class="ctl primary" data-take>Present from this tab</button></div>
+    </div>
+  </div>`;
+}
+screenEl.addEventListener("click", async e => {
+  if (!passive || !e.target.closest("[data-take]")) return;
+  if (await holdStage(true)) { passive = false; boot(); }
+});
 
 /* Animations play on the presenter page even when the laptop asks for reduced motion (it's a
    presentation); P → Animations turns them off. */
@@ -247,7 +301,7 @@ function moment(t, k, p) {
 
 /* ---------- Rendering ---------- */
 function scheduleRender() {
-  if (renderTimer) return;
+  if (renderTimer || passive) return;
   renderTimer = setTimeout(() => { renderTimer = null; render(); }, Math.max(250, animUntil - Date.now()));
 }
 
@@ -294,6 +348,7 @@ function live(name, html) {
 }
 
 function render() {
+  if (passive || !relay) return;
   const sc = SCREENS[screen];
   const stats = lastStats = teamStats(state);
   const card = sc.card !== undefined ? CARDS[sc.card] : null;
@@ -424,6 +479,7 @@ function renderControls() {
 }
 
 function show() {
+  if (passive || !relay) return;
   cardStarted = Date.now();
   const sc = SCREENS[screen];
   if (sc.card !== undefined && !gameStartedAt) gameStartedAt = cardStarted;
@@ -606,7 +662,9 @@ const TOOLS = ["talk", "motion", "new", "reset", "demo", "kpis"];
    told to scan the new one. */
 async function newSession() {
   await closeSession();
+  letGoOfStage();
   await freshSession();
+  await holdStage();
   sign = await signer(hostKey.priv);
   verifyOwn = await verifier(hostKey.pub);
   const u = new URL(location.href); u.searchParams.delete("s"); history.replaceState(null, "", u);
@@ -697,6 +755,7 @@ if (location.hash) history.replaceState(null, "", location.pathname + location.s
 fit();
 claimSession().then(async ok => {
   if (!ok) { locked(); return; }
+  if (!(await holdStage())) { standBy(); return; }
   boot();   /* the key hints live in the tools panel (P) and the notes window, not on the shared screen */
   /* Reset for the meeting, pressed in a demo: this meeting page finishes it with a new session */
   if (!config.demo && store.get("host.reset")) { store.remove("host.reset"); await runTool("reset"); }

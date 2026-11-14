@@ -70,6 +70,7 @@ textarea { width: 100%; min-height: 46vh; padding: 14px 16px; border-radius: 14p
 .row button.strong { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 700; }
 .row .t-fine { align-self: center; }
 .kpi textarea { min-height: 150px; font: 12px/1.4 var(--mono); border: 1px solid var(--line); }
+.link-warn { margin: 0; padding: 10px 14px; border-radius: 12px; background: #FDECEA; border: 1px solid #F2B8B5; color: #8C1D18; font-size: 14px; line-height: 1.4; font-weight: 600; }
 .wait-box { margin-top: 30vh; text-align: center; color: var(--sub); font-size: 17px; line-height: 1.5; }
 .wait-box b { color: var(--ink); font-size: 22px; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

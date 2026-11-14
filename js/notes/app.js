@@ -4,6 +4,7 @@
    presenter edit it (saved in this browser), can press Back and Next, and holds the presenter tools
    (P), so that panel never has to open over the shared screen. */
 import { store } from "../store.js";
+import { BUILD } from "../config.js";
 import { loadKpis, rawKpis, saveKpis } from "../kpis.js";
 import { CARDS } from "../content.js";
 import { TITLES, TARGETS, DEFAULTS, kpiDefault, tokens, TOKEN_HELP } from "../notes-data.js";
@@ -84,6 +85,7 @@ function frame() {
       <div class="where"><span id="pos"></span><b id="title"></b></div>
       <div class="clocks"><span id="c-screen" title="Time on this screen"></span><span id="c-total"></span><span id="target"></span><span id="relay" class="relay"></span></div>
     </header>
+    <p class="link-warn" id="link" role="alert" hidden></p>
     <nav class="drive">
       <button type="button" class="ghost" data-go="-1">← Back</button>
       <button type="button" class="primary" data-go="1" id="next">Next →</button>
@@ -141,7 +143,45 @@ function frame() {
 }
 
 /* ---------- Presenter tools: the same as the P panel on the presenter page ---------- */
-const tool = a => channel && channel.postMessage({ type: "tool", a });
+/* ---------- Which presenter tab this window follows ----------
+   Exactly one: the tab that opened it (N opens notes.html#tab=<id>). Every message to the presenter
+   is addressed to that tab, and states from any other presenter tab are ignored, with a warning. A
+   window opened by hand follows the first presenter tab that answers. */
+const tabFromHash = () => (location.hash.match(/(?:^#|&)tab=([a-z0-9]+)/) || [])[1] || null;
+let follow = tabFromHash(), lastHeard = 0, build = BUILD, standingBy = false;
+const others = new Map();   /* other presenter tabs heard lately: id → when */
+const send = msg => channel && follow && channel.postMessage({ ...msg, to: follow });
+function followTab(t) {
+  follow = t;
+  history.replaceState(null, "", "#tab=" + t);
+}
+addEventListener("hashchange", () => {
+  const t = tabFromHash();
+  if (!t || t === follow) return;
+  follow = t; st = null; lastHeard = 0; standingBy = false; others.clear();
+  waiting();
+  hello();
+});
+/* What's wrong with the link, if anything: shown under the header */
+function linkWarning() {
+  const now = Date.now();
+  [...others].forEach(([t, at]) => { if (now - at > 10000) others.delete(t); });
+  if (standingBy) return "The presenter tab this window follows is standing by: another tab took over the presentation. Press N in the tab you’re sharing to open its notes, and close this window.";
+  if (st && now - lastHeard > 5000) return "Not connected to the presenter tab. If you closed or reloaded it, press N there to reconnect this window.";
+  if (others.size) return "Another presenter tab is open in this browser. This window follows only the tab that opened it; press N in the tab you’re sharing to follow that one. Better: close the other tab.";
+  if (st && build !== BUILD) return "This window and the presenter page are different versions. Reload both (Ctrl+Shift+R).";
+  return "";
+}
+function paintLink() {
+  const el = document.getElementById("link");
+  if (!el) return;
+  const w = linkWarning();
+  el.hidden = !w;
+  el.textContent = w;
+}
+const hello = () => channel && channel.postMessage(follow ? { type: "hello", to: follow } : { type: "hello" });
+
+const tool = a => send({ type: "tool", a });
 function savedLine() {
   const k = loadKpis(), has = Object.keys(rawKpis()).length > 0;
   const el = document.getElementById("t-saved");
@@ -174,7 +214,7 @@ function paintTools() {
 }
 
 function waiting() {
-  root.innerHTML = `<div class="wait-box"><b>Waiting for the presenter page…</b><p>Open host.html in this browser and press N, or keep this window open: it connects by itself.</p></div>`;
+  root.innerHTML = `<div class="wait-box"><b>Waiting for the presenter page…</b><p>Open host.html in this browser and press N there: this window then follows that tab. It connects by itself.</p></div>`;
 }
 
 function paint() {
@@ -199,6 +239,7 @@ function paint() {
 }
 
 function tick() {
+  paintLink();
   if (!st) return;
   const now = Date.now();
   const cs = document.getElementById("c-screen"), ct = document.getElementById("c-total");
@@ -298,8 +339,8 @@ root.addEventListener("click", async e => {
     return;
   }
   const go = e.target.closest("[data-go]");
-  if (go) { if (editing) stopEdit(); if (channel) channel.postMessage({ type: "go", dir: Number(go.dataset.go) }); return; }
-  if (e.target.id === "intro") { if (channel) channel.postMessage({ type: "intro" }); return; }
+  if (go) { if (editing) stopEdit(); send({ type: "go", dir: Number(go.dataset.go) }); return; }
+  if (e.target.id === "intro") { send({ type: "intro" }); return; }
   const sz = e.target.closest("[data-size]");
   if (sz) {
     size = Math.max(14, Math.min(40, size + Number(sz.dataset.size)));
@@ -316,28 +357,35 @@ root.addEventListener("click", async e => {
 });
 document.addEventListener("keydown", e => {
   if (editing || e.metaKey || e.ctrlKey || e.altKey || e.target.closest("textarea, button")) return;
-  if ((e.key === "i" || e.key === "I") && channel) { channel.postMessage({ type: "intro" }); return; }
+  if (e.key === "i" || e.key === "I") { send({ type: "intro" }); return; }
   if (e.key === "p" || e.key === "P") { const d = document.getElementById("tools"); if (d) { d.open = !d.open; if (d.open) d.scrollIntoView({ block: "start" }); } return; }
   const dir = { ArrowRight: 1, PageDown: 1, " ": 1, ArrowLeft: -1, PageUp: -1 }[e.key];
-  if (dir && channel) { e.preventDefault(); channel.postMessage({ type: "go", dir }); }
+  if (dir) { e.preventDefault(); send({ type: "go", dir }); }
 });
 
 if (channel) {
   channel.onmessage = async e => {
     const d = e.data || {};
-    if (d.type === "kpilink" && linkButton) {
+    if (d.type === "kpilink" && linkButton && d.tab === follow) {
       try { await navigator.clipboard.writeText(d.url); linkButton.textContent = "Copied. Share it privately only."; } catch (_) { linkButton.textContent = "Copy failed. Click this window first, then try again."; }
       linkButton = null;
       return;
     }
+    if (d.type === "standby" && d.tab === follow) { standingBy = true; paintLink(); return; }
     if (d.type !== "state") return;
+    if (!follow && d.tab) followTab(d.tab);
+    if (d.tab !== follow) { others.set(d.tab, Date.now()); paintLink(); return; }
+    lastHeard = Date.now();
+    standingBy = false;
+    build = d.build || "dev";
     const moved = !st || st.id !== d.id;
     if (moved && editing) stopEdit();
     st = d;
     paint();
+    paintLink();
     if (moved) { const sc = document.getElementById("script"); if (sc) { sc.classList.remove("in"); void sc.offsetWidth; sc.classList.add("in"); } window.scrollTo(0, 0); }
   };
-  const hello = () => { if (!st) channel.postMessage({ type: "hello" }); };
+  /* Always ping the followed tab: its answer keeps the link fresh, and silence means it's gone */
   hello();
   setInterval(hello, 1500);
 } else {

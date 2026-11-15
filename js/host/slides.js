@@ -565,17 +565,17 @@ function nextUp(n, total) {
 
 /* ---------- After the next presenter: the floor is open, then the closing ----------
    The presenter shares this window again when the next item ends and moves on here. */
-/* The team board's QR code. On the open floor it takes anonymous questions, so it says that instead
-   of the board's own title and question. */
+/* The team board's QR code. On the open floor it's for sharing or asking anonymously, so it says that
+   instead of the board's own title and question. */
 function boardPanel(size, ask = false) {
   const { board } = loadKpis().close;
   if (!board.url) return "";
-  const title = ask ? "Ask anonymously" : board.title || "Share your experience";
+  const title = ask ? "Share or ask, anonymously" : board.title || "Share your experience";
   const question = ask ? "" : board.question;
   return `
         <div class="reach">
           ${qrSVG(board.url, size)}
-          <div class="reach-txt"><span><b>${esc(title)}</b>${board.where || question ? `<span class="sub">${board.where ? `${ask ? "Post your question on" : "On"} ${esc(board.where)}${question ? ": " : ""}` : ""}${question ? `“${esc(question)}”` : ""}</span>` : ""}</span></div>
+          <div class="reach-txt"><span><b>${esc(title)}</b>${board.where || question ? `<span class="sub">${board.where ? `${ask ? "Post it on" : "On"} ${esc(board.where)}${question ? ": " : ""}` : ""}${question ? `“${esc(question)}”` : ""}</span>` : ""}</span></div>
         </div>`;
 }
 function discuss(n, total) {
@@ -585,7 +585,7 @@ function discuss(n, total) {
     ${lamp("l9", 210, 40)}
     <div class="s-body" style="justify-content: center; gap: 30px; max-width: 800px">
       <h2 class="h">The floor is open</h2>
-      <p class="lede">A question or a thought: unmute, write it in the chat${loadKpis().close.board.url ? ", or ask anonymously on the board" : ""}.</p>
+      <p class="lede">Something to share or a question: unmute, write it in the chat${loadKpis().close.board.url ? ", or post it anonymously on the board" : ""}.</p>
       ${board}
     </div>
     ${num(n, total)}

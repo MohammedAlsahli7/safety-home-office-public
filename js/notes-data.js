@@ -235,7 +235,7 @@ ${why}
     if (!board.url) return DEFAULTS.discuss;
     return `Thank you. The floor is open now.
 
-If you’d like to share or ask anything, unmute or write it in the chat. And if you’d rather stay anonymous, scan the code and post your question on ${board.where || "our team board"}. I’ll read them out.
+If you’d like to share or ask anything, unmute or write it in the chat. And if you’d rather stay anonymous, scan the code and post it on ${board.where || "our team board"}: something to share, or a question. I’ll read them out.
 
 (Keep the board open beside you for new questions. Then press → for the closing.)`;
   }

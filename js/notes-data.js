@@ -233,11 +233,11 @@ ${why}
   if (id === "discuss") {
     const { board } = k.close;
     if (!board.url) return DEFAULTS.discuss;
-    return `Thank you. Before we close: ${board.where || "our team board"} is still open. Scan the code${board.question ? ` to answer “${board.question}”` : ""}, or share anything on your mind about working from home.
+    return `Thank you. The floor is open now.
 
-And the floor is open now, if anyone would like to share or ask anything. Unmute, or write it in the chat.
+If you’d like to share or ask anything, unmute or write it in the chat. And if you’d rather stay anonymous, scan the code and post your question on ${board.where || "our team board"}. I’ll read them out.
 
-(Open discussion, about 10 minutes. Then press → for the closing.)`;
+(Keep the board open beside you for new questions. Then press → for the closing.)`;
   }
   if (id === "closing") {
     const r = k.reminder;

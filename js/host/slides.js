@@ -202,6 +202,18 @@ function kpiIncidents(n, total) {
 }
 
 /* ---------- 2 · Title ---------- */
+/* ---------- The safety moment opens: a section slide, then the safety KPIs ---------- */
+function moment(n, total) {
+  return `
+  <div class="slide">
+    ${lamp("l12", 210, 150)}
+    <div class="s-body" style="justify-content: center; max-width: 760px">
+      <h1 class="h">Safety moment</h1>
+    </div>
+    ${num(n, total)}
+  </div>`;
+}
+
 function title(n, total, s) {
   return `
   <div class="slide">
@@ -603,6 +615,7 @@ function sources(n, total) {
 }
 
 export const SLIDES = [
+  { id: "moment", render: moment },
   { id: "courses", render: kpiCourses },
   { id: "phishing", render: kpiPhishing },
   { id: "incidents", render: kpiIncidents },

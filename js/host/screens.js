@@ -284,7 +284,7 @@ export function wrapScreen({ reports, feed, status }) {
     <div class="s-body" style="display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 48px; align-items: center">
       <div style="display: flex; flex-direction: column; gap: 22px">
         <h2 class="h">Your report is on your phone</h2>
-        <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Only you can see yours. The team’s totals come up in the next few slides.</p>
+        <p style="margin: 0; font-size: 24px; line-height: 1.4; color: ${C.sub}; max-width: 560px">Only you can see yours. The team’s totals come up in the safety moment.</p>
         <div style="display: flex; align-items: baseline; gap: 14px">
           <span style="font-family: var(--mono); font-size: 56px; font-weight: 500; color: ${C.accText}; line-height: 1">${reports}</span>
           <span style="font-size: 22px; color: ${C.sub}">reports sent</span>

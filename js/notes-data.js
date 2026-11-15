@@ -11,7 +11,7 @@ const STARE = CARDS.find(c => c.key === "stare");
 const CARD_TITLES = Object.fromEntries(CARDS.map((c, i) => ["q" + (i + 1), `Card ${i + 1} · ${c.title}`]));
 export const TITLES = {
   agenda: "Agenda (opening)", intro: "Introduction", join: "Join (QR code)", ...CARD_TITLES, wrap: "Wrap-up: reports on phones",
-  courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
+  moment: "Safety moment (opens the talk)", courses: "KPIs · Safety courses", phishing: "KPIs · Phishing", incidents: "KPIs · Safety, the big zero",
   title: "Uncertain times show up in the body", attention: "Attention", hours: "Hours", body: "Body", move: "Body · steps",
   awards: "This morning’s awards", habits: "Three things for this week", close: "If the weeks feel heavy, say so",
   next: "Up next: the next presenter (keep sharing until they share)", discuss: "The floor is open (after the next item)", closing: "Closing: thank you and the reminder",
@@ -22,7 +22,7 @@ export const TITLES = {
 export const TARGETS = {
   agenda: "before anyone scans, about 0:45",
   intro: "while people join, about 0:20",
-  courses: "0:00 to 0:17", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
+  moment: "the first seconds of the talk", courses: "0:05 to 0:20", phishing: "0:17 to 0:32", incidents: "0:32 to 0:50", title: "0:50 to 1:25",
   attention: "1:25 to 2:25", hours: "2:25 to 3:05", body: "3:05 to 4:20", move: "4:20 to 4:45", awards: "4:45 to 5:00",
   habits: "5:00 to 5:35", close: "5:35 to 6:05",
   next: "the handover, right after the close", discuss: "after the next item, about 10 minutes", closing: "the last minute of the meeting"
@@ -102,7 +102,10 @@ Then pick a funny name and join. Nothing goes in under your real name, and there
 
 {played} of us played. Thank you.
 
-Before the safety moment, a quick look at our department’s safety KPIs.`,
+(Press Start the talk.)`,
+  moment: `Now, the safety moment.
+
+But before I begin, allow me to share some safety KPIs for our department.`,
   title: `Now, the safety moment. Keep still for a second. Don’t fix anything. Just notice where your neck is. Where your eyes are. And when you last checked the news.
 
 (Pause for 3 seconds.)

@@ -18,7 +18,7 @@ export const config = Object.freeze({
 
 /* The published build (scripts/publish.sh stamps the commit here), so the notes window can tell when
    it and the presenter page were loaded from different versions */
-export const BUILD = "0557014";
+export const BUILD = "dbdea4a";
 
 export const isSessionCode = code => /^[a-z0-9]{4,32}$/.test(code || "");
 export const topicFor = session => config.topicPrefix + session;

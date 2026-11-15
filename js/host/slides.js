@@ -202,12 +202,15 @@ function kpiIncidents(n, total) {
 }
 
 /* ---------- 2 · Title ---------- */
-/* ---------- The safety moment opens: a section slide, then the safety KPIs ---------- */
+/* ---------- The safety moment opens: a section slide, then the safety KPIs ----------
+   Labelled with the check-up it belongs to (the QR code screen's title), since the game and the
+   safety moment are the two halves of the one agenda item. */
 function moment(n, total) {
   return `
   <div class="slide">
     ${lamp("l12", 210, 150)}
-    <div class="s-body" style="justify-content: center; max-width: 760px">
+    <div class="s-body" style="justify-content: center; max-width: 760px; gap: 18px">
+      <span class="up-lbl">Home office check-up</span>
       <h1 class="h">Safety moment</h1>
     </div>
     ${num(n, total)}

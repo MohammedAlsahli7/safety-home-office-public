@@ -103,7 +103,7 @@ Then pick a funny name and join. Nothing goes in under your real name, and there
 {played} of us played. Thank you.
 
 (Press Start the talk.)`,
-  moment: `Now, the safety moment.
+  moment: `Now, from the game to the safety moment.
 
 But before I begin, allow me to share some safety KPIs for our department.`,
   title: `Now, the safety moment. Keep still for a second. Don’t fix anything. Just notice where your neck is. Where your eyes are. And when you last checked the news.
